@@ -213,6 +213,12 @@ function select_flag(elem) {
     _SELECTED_ELEM = elem;
 }
 
+function next_audio() {
+    populate_audio();
+    const audio_player = document.getElementById("audio-holder").firstChild;
+    audio_player.play();
+}
+
 function populate_audio() {
     const audio_files = get_audio_files();
 
@@ -244,7 +250,7 @@ document.addEventListener("DOMContentLoaded", function() {
         <div style="display: flex; flex-direction: row; flex-wrap: wrap; justify-content: space-around; align-items: center">
             <div id="audio-holder" style="margin-right: 0.5em"></div>
             <div style="margin-right: 1em">
-                <a id="next-chord" onclick="populate_audio()">
+                <a id="next-chord" onclick="next_audio()">
                     <i class="fa fa-arrow-right fa-fw" style="font-size: 3rem;" aria-hidden="true"></i>
                 </a>
             </div>
