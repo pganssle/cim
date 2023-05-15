@@ -1,0 +1,267 @@
+---
+title: "Chord Identification Method Trainer"
+date: 2023-05-15 11:22:42-04:00
+type: page
+
+---
+
+<style>
+div.cim-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+
+div.flag-wrapper{
+    margin-top: 0.5em;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    height: 5em;
+    width: 30%;
+}
+
+div.flag {
+    height: 100%;
+    width: 100%;
+}
+
+div.flag-correct {
+    position: relative;
+    border: 5px green solid !important;
+}
+
+div.flag-correct::before {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateY(-50%) translateX(-50%);
+    content: "\f00c";
+    color: green;
+    font-weight: bold;
+    font-size: 5rem;
+    -webkit-text-stroke-width: 2px;
+    -webkit-text-stroke-color: black;
+}
+
+div.flag-incorrect {
+    border: 5px red solid !important;
+    position: relative;
+    color: red;
+}
+
+div.flag-incorrect::before {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateY(-50%) translateX(-50%);
+    content: "\f00d";
+    color: red;
+    -webkit-text-stroke-width: 2px;
+    -webkit-text-stroke-color: black;
+    font-weight: bold;
+    font-size: 5rem;
+    top: 50%;
+    left: 50%;
+    transform: translateY(-50%) translateX(-50%);
+}
+
+body.colorscheme-dark div.flag {
+    border: 1px solid white;
+}
+
+body.colorscheme-light div.flag {
+    border: 1px solid black;
+}
+
+audio.chord {
+}
+</style>
+
+<script>
+const CHORDS = [
+    ["red", "ceg",],
+    ["yellow", "cfa",],
+    ["blue", "hdg",],
+    ["black", "acf",],
+    ["green", "dgh",],
+    ["orange", "egc",],
+    ["purple", "fac",],
+    ["pink", "ghd",],
+    ["brown", "gce",],
+];
+
+var _COLORS = null;
+var _CORRECT_COLOR = null;
+var _SELECTED_ELEM = null;
+
+function get_selected_colors() {
+    // CHORDS is in the same order as the chord selector, but it doesn't include
+    // the first element, since the first stage includes two chords., so we
+    // always add 1 to the index.
+    const chord_idx = document.getElementById("chord-selector").selectedIndex + 1;
+    if (_COLORS === null) {
+        _COLORS = CHORDS.slice(0, chord_idx + 1).map(([x, _]) => x);
+    }
+
+    return _COLORS;
+}
+
+// TODO: Filter out non-audio files.
+const UNSORTED_AUDIO_FILES = {{% files_to_js_array path="/content/apps/cim/resources" %}};
+let AUDIO_FILES = null;
+
+function get_audio_files() {
+    function af_obj(filename) {
+        [base, ext] = filename.split(".");
+        [chord, color, _] = filename.split("_");
+
+        return {
+            filename: filename,
+            color: color,
+            chord: chord,
+            ext: ext,
+            elem: null,
+        };
+    }
+    if (AUDIO_FILES === null) {
+        AUDIO_FILES = {
+            "mp3": new Map(),
+            "opus": new Map(),
+        };
+        for (const file of UNSORTED_AUDIO_FILES) {
+            let audio_file_obj = af_obj(file);
+            let out_map = AUDIO_FILES[audio_file_obj["ext"]];
+            if (!out_map.has(audio_file_obj.color)) {
+                out_map.set(audio_file_obj.color, []);
+            }
+
+            out_map.get(audio_file_obj.color).push(audio_file_obj);
+        }
+    }
+
+    return AUDIO_FILES;
+}
+
+function make_flag(flag_color) {
+    const wrapper_id = flag_color + "-flag";
+    let wrapper_div = document.getElementById(wrapper_id);
+    if (wrapper_div === null) {
+        wrapper_div = document.createElement("div");
+        wrapper_div.classList.add("flag-wrapper");
+        wrapper_div.id = wrapper_id;
+
+        let inner_div = document.createElement("div");
+        inner_div.classList.add("flag");
+        inner_div.classList.add("fa");
+        inner_div.style.background = flag_color;
+
+        inner_div.onclick = () => select_flag(inner_div);
+        wrapper_div.appendChild(inner_div);
+    }
+
+    return wrapper_div;
+}
+
+function populate_flags() {
+    const colors = get_selected_colors();
+    const base_elem = document.getElementById("flag-holder");
+
+    while (base_elem.firstChild) {
+        base_elem.removeChild(base_elem.lastChild);
+    }
+
+    for (const color of colors) {
+        const flag = make_flag(color);
+        base_elem.appendChild(flag);
+    }
+}
+
+function audio_file_elem(audio_file) {
+    if (audio_file.elem === null) {
+        audio_file.elem = document.createElement("audio");
+        audio_file.elem.classList.add("chord");
+        audio_file.elem.controls = true;
+        audio_file.elem.src = "/apps/cim/resources/" + audio_file.filename;
+    }
+
+    return audio_file.elem;
+}
+
+function random_elem(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function select_new_color() {
+    _CORRECT_COLOR = random_elem(get_selected_colors());
+    if (_SELECTED_ELEM !== null) {
+        _SELECTED_ELEM.classList.remove("flag-correct");
+        _SELECTED_ELEM.classList.remove("flag-incorrect");
+        _SELECTED_ELEM = null;
+    }
+}
+
+function select_flag(elem) {
+    if (_SELECTED_ELEM !== null) {
+        return;
+    }
+    const id = elem.parentElement.id;
+    if (id === _CORRECT_COLOR + "-flag") {
+        elem.classList.add("flag-correct");
+    } else {
+        elem.classList.add("flag-incorrect");
+    }
+    _SELECTED_ELEM = elem;
+}
+
+function populate_audio() {
+    const audio_files = get_audio_files();
+
+    // Choose a color at random
+    select_new_color();
+    let audio_file = random_elem(audio_files.mp3.get(_CORRECT_COLOR));
+
+    let audio_holder = document.getElementById("audio-holder");
+    if (audio_holder.firstChild) {
+        audio_holder.removeChild(audio_holder.firstChild);
+    }
+
+    audio_holder.appendChild(audio_file_elem(audio_file));
+}
+
+function change_selector() {
+    _COLORS = null;
+    populate_flags();
+    populate_audio();
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    change_selector();
+});
+</script>
+
+<div class="cim-container">
+    <div style="display: flex; justify-content: space-around; width: 100%">
+        <div style="display: flex; flex-direction: row; flex-wrap: wrap; justify-content: space-around; align-items: center">
+            <div id="audio-holder" style="margin-right: 0.5em"></div>
+            <div style="margin-right: 1em">
+                <a id="next-chord" onclick="populate_audio()">
+                    <i class="fa fa-arrow-right fa-fw" style="font-size: 3rem;" aria-hidden="true"></i>
+                </a>
+            </div>
+            <select name="chords" id="chord-selector" onchange="change_selector()">
+                <option value="yellow">Yellow (CFA)</option>
+                <option value="blue">Blue (HDG)</option>
+                <option value="black">Black (ACF)</option>
+                <option value="green">Green (DGH)</option>
+                <option value="orange">Orange (EGC)</option>
+                <option value="purple">Purple (FAC)</option>
+                <option value="pink">Pink (GHD)</option>
+                <option value="brown">Brown (GCE)</option>
+            </select>
+        </div>
+    </div>
+    <div style="display:flex; justify-content: space-around; flex-wrap: wrap;" id="flag-holder">
+    </div>
+
+
+</div>
