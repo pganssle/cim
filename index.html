@@ -93,6 +93,7 @@ const CHORDS = [
 var _COLORS = null;
 var _CORRECT_COLOR = null;
 var _SELECTED_ELEM = null;
+var _CORRECT_ELEM = null;
 
 function get_selected_colors() {
     // CHORDS is in the same order as the chord selector, but it doesn't include
@@ -198,6 +199,12 @@ function select_new_color() {
         _SELECTED_ELEM.classList.remove("flag-incorrect");
         _SELECTED_ELEM = null;
     }
+
+    if (_CORRECT_ELEM !== null) {
+        _CORRECT_ELEM.classList.remove("flag-correct");
+        _CORRECT_ELEM.classList.remove("flag-incorrect");
+        _CORRECT_ELEM = null;
+    }
 }
 
 function select_flag(elem) {
@@ -209,6 +216,8 @@ function select_flag(elem) {
         elem.classList.add("flag-correct");
     } else {
         elem.classList.add("flag-incorrect");
+        _CORRECT_ELEM = document.getElementById(_CORRECT_COLOR + "-flag").firstChild;
+        _CORRECT_ELEM.classList.add("flag-correct");
     }
     _SELECTED_ELEM = elem;
 }
