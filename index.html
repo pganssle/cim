@@ -12,6 +12,33 @@ div.cim-container {
     justify-content: space-around;
 }
 
+div.controls {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center;
+}
+
+div.controls a i {
+    font-size: 5rem;
+    margin-right: 0.25em;
+    margin-left: 0.25em;
+    margin-right: 0.25em;
+}
+
+body.colorscheme-dark div.controls i.fa {
+    color: #abd1f2;
+}
+
+body.colorscheme-light div.controls i.fa {
+    color: #0077be;
+}
+
+div.controls a.deactivated i.fa {
+    color: #0077be50;
+}
+
 div.flag-wrapper{
     margin-top: 0.5em;
     margin-left: 0.5em;
@@ -94,6 +121,7 @@ var _COLORS = null;
 var _CORRECT_COLOR = null;
 var _SELECTED_ELEM = null;
 var _CORRECT_ELEM = null;
+var _CURRENT_AUDIO = null;
 
 function get_selected_colors() {
     // CHORDS is in the same order as the chord selector, but it doesn't include
@@ -220,12 +248,28 @@ function select_flag(elem) {
         _CORRECT_ELEM.classList.add("flag-correct");
     }
     _SELECTED_ELEM = elem;
+
+    let next_button = document.getElementById("next-chord");
+    next_button.classList.remove("deactivated");
+}
+
+function play_audio() {
+    if (document.getElementById("play-button").classList.contains("deactivated")) {
+        return;
+    }
+    _CURRENT_AUDIO.play();
+
 }
 
 function next_audio() {
+    let next_button = document.getElementById("next-chord");
+    if (next_button.classList.contains("deactivated")) {
+        return;
+    }
     populate_audio();
-    const audio_player = document.getElementById("audio-holder").firstChild;
-    audio_player.play();
+    _CURRENT_AUDIO.play();
+
+    next_button.classList.add("deactivated");
 }
 
 function populate_audio() {
@@ -233,14 +277,11 @@ function populate_audio() {
 
     // Choose a color at random
     select_new_color();
-    let audio_file = random_elem(audio_files.mp3.get(_CORRECT_COLOR));
+    let new_audio_file = random_elem(audio_files.mp3.get(_CORRECT_COLOR));
+    _CURRENT_AUDIO = audio_file_elem(new_audio_file);
 
-    let audio_holder = document.getElementById("audio-holder");
-    if (audio_holder.firstChild) {
-        audio_holder.removeChild(audio_holder.firstChild);
-    }
-
-    audio_holder.appendChild(audio_file_elem(audio_file));
+    let play_button = document.getElementById("play-button");
+    play_button.classList.remove("deactivated");
 }
 
 function change_selector() {
@@ -257,10 +298,12 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="cim-container">
     <div style="display: flex; justify-content: space-around; width: 100%">
         <div style="display: flex; flex-direction: row; flex-wrap: wrap; justify-content: space-around; align-items: center">
-            <div id="audio-holder" style="margin-right: 0.5em"></div>
-            <div style="margin-right: 1em">
-                <a id="next-chord" onclick="next_audio()">
-                    <i class="fa fa-arrow-right fa-fw" style="font-size: 3rem;" aria-hidden="true"></i>
+            <div class="controls">
+                <a id="play-button" class="deactivated" onclick="play_audio()">
+                    <i class="fa fa-play" aria-hidden="true"></i>
+                </a>
+                <a id="next-chord" class="deactivated" onclick="next_audio()">
+                    <i class="fa fa-arrow-right" aria-hidden="true"></i>
                 </a>
             </div>
             <select name="chords" id="chord-selector" onchange="change_selector()">
