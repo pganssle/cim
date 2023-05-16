@@ -39,6 +39,28 @@ div.controls a.deactivated i.fa {
     color: #0077be50;
 }
 
+div.stats {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+}
+
+div.stats div {
+    margin-right: 0.5em;
+    margin-left: 0.5em;
+}
+
+div.stats i.fa {
+    font-size: 2em;
+}
+
+div.stats-display {
+    font-size: 3rem;
+    font-weight: bold;
+}
+
 div.flag-wrapper{
     margin-top: 0.5em;
     margin-left: 0.5em;
@@ -117,11 +139,21 @@ const CHORDS = [
     ["brown", "gce",],
 ];
 
-var _COLORS = null;
-var _CORRECT_COLOR = null;
-var _SELECTED_ELEM = null;
-var _CORRECT_ELEM = null;
-var _CURRENT_AUDIO = null;
+
+function new_stats() {
+    return {
+        identifications: 0,
+        correct: 0,
+        confusion_matrix: new Map(),
+    }
+}
+
+let _STATS = new_stats();
+let _COLORS = null;
+let _CORRECT_COLOR = null;
+let _SELECTED_ELEM = null;
+let _CORRECT_ELEM = null;
+let _CURRENT_AUDIO = null;
 
 function get_selected_colors() {
     // CHORDS is in the same order as the chord selector, but it doesn't include
@@ -235,12 +267,44 @@ function select_new_color() {
     }
 }
 
+function update_stats(correct_color, chosen_color) {
+    const correct = correct_color === chosen_color;
+    _STATS.identifications++;
+    if (correct) {
+        _STATS.correct++;
+    }
+
+    if (!_STATS.confusion_matrix.has(correct_color)) {
+        _STATS.confusion_matrix.set(correct_color, new Map());
+    }
+
+    let row = _STATS.confusion_matrix.get(correct_color);
+    if (!row.has(chosen_color)) {
+        row.set(chosen_color, 0);
+    }
+
+    row.set(chosen_color, row.get(chosen_color) + 1);
+}
+
+function update_stats_display() {
+    let correct_elem = document.getElementById("stats-correct");
+    let total_elem = document.getElementById("stats-total");
+
+    correct_elem.innerHTML = _STATS.correct;
+    total_elem.innerHTML = _STATS.identifications;
+}
+
 function select_flag(elem) {
     if (_SELECTED_ELEM !== null) {
         return;
     }
     const id = elem.parentElement.id;
-    if (id === _CORRECT_COLOR + "-flag") {
+    const chosen_color = id.split("-")[0];
+
+    update_stats(_CORRECT_COLOR, chosen_color);
+    update_stats_display();
+
+    if (chosen_color === _CORRECT_COLOR) {
         elem.classList.add("flag-correct");
     } else {
         elem.classList.add("flag-incorrect");
@@ -290,6 +354,11 @@ function change_selector() {
     populate_audio();
 }
 
+function reset_stats() {
+    _STATS = new_stats();
+    update_stats_display();
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     change_selector();
 });
@@ -310,7 +379,15 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
     <div style="display:flex; justify-content: space-around; flex-wrap: wrap;" id="flag-holder">
     </div>
-    <div style="display: flex; justify-content: space-around; margin-top: 3em">
+    <div class="stats controls">
+        <div class="stats-display">
+            <span id="stats-correct">0</span> / <span id="stats-total">0</span>
+        </div>
+        <a id="reset-button" onclick="reset_stats()">
+            <i class="fa fa-refresh" aria-hidden="true"></i>
+        </a>
+    </div>
+    <div style="display: flex; justify-content: space-around; margin-top: 0.5em">
         <select name="chords" id="chord-selector" onchange="change_selector()">
             <option value="yellow">Yellow (CFA)</option>
             <option value="blue">Blue (HDG)</option>
