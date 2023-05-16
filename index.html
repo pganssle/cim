@@ -124,6 +124,52 @@ body.colorscheme-light div.flag {
 
 audio.chord {
 }
+
+/* Container styles */
+.infobox-container {
+  position: absolute;
+  left: 78%;
+  display: inline-block;
+  font-size: 1.5em;
+}
+
+/* Infobox styles */
+.infobox {
+  position: absolute;
+  top: 100%;
+  left: 00%;
+  transform: translateX(-100%);
+  width: 60vw;
+  padding: 10px;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s, opacity 0.3s;
+  z-index: 100;
+}
+
+/* Infobox arrow styles */
+.infobox::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 10px;
+  border-style: solid;
+  border-color: transparent transparent #ffffff transparent;
+}
+
+/* Show the infobox on hover */
+.infobox-container:hover .infobox,
+.infobox-container:active,
+.infobox-container .infobox-trigger:active + .infobox {
+  visibility: visible;
+  opacity: 1;
+}
 </style>
 
 <script>
@@ -372,6 +418,17 @@ document.addEventListener("DOMContentLoaded", function() {
                     <i class="fa fa-arrow-right" aria-hidden="true"></i>
                 </a>
             </div>
+        </div>
+        <div class="infobox-container">
+          <a href="#" class="infobox-trigger">
+            <i class="fa fa-solid fa-info-circle"></i>
+          </a>
+          <div class="infobox">
+            <p>This is an implementation of <a href="http://pom.sagepub.com/content/42/1/86">Eguchi's Chord Identification method</a> (paper access can be found via <a href="https://en.wikipedia.org/wiki/Sci-Hub">Sci-Hub</a>).</p>
+            <p>This is a method for teaching absolute pitch to children aged 2-6. Children should practice ~5x per day for 2-3 minutes (about 20-25 identifications). Chords are always identified with colors, and progress in the sequence red (CEG), yellow (CFA), blue (HDG), black (ACF), green (DGH), orange (EGC), purple (FAC), pink (GHD), brown (GCE).</p>
+            <p>Introduce the chords to the children one at a time, spacing out new chord introductions by at least 2 weeks each time. Do not introduce a new chord until the child can identify all presented chords with 100% accuracy.</p>
+            <p><b>Note</b>: This application is an early alpha. I'm still in the first training phase so I've put off work on the later parts of the method until my son catches up. Let me know if you need a feature to make this work, of if it seems that I've misunderstood the method as described in the paper.</p>
+          </div>
         </div>
     </div>
     <div style="display:flex; justify-content: space-around; flex-wrap: wrap;" id="flag-holder">
