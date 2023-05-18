@@ -239,6 +239,12 @@ function change_selector(to) {
     save_state();
 }
 
+function reset_local_storage() {
+    // Not exposed at the moment, useful for debugging.
+    localStorage.removeItem(STATE_KEY);
+    localStorage.removeItem(SESSION_HISTORY_KEY);
+}
+
 function reset_stats() {
     save_session_history();
     STATE.stats = new_stats();
