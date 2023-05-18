@@ -10,22 +10,25 @@ const CHORDS = [
     ["brown", "gce",],
 ];
 
-
 function new_stats() {
     return {
         identifications: 0,
         correct: 0,
-        confusion_matrix: new Map(),
+        confusion_matrix: {},
     }
 }
 
-let _STATS = new_stats();
 let _COLORS = null;
 let _CORRECT_COLOR = null;
 let _SELECTED_ELEM = null;
 let _CORRECT_ELEM = null;
 let _CURRENT_AUDIO = null;
 let AUDIO_FILES = null;
+
+const STATE_KEY = "cim_state";
+const SESSION_HISTORY_KEY = "cim_session_history";
+
+let STATE = null;
 
 function get_selected_colors() {
     const chord_idx = document.getElementById("chord-selector").selectedIndex;
@@ -136,29 +139,31 @@ function select_new_color() {
 
 function update_stats(correct_color, chosen_color) {
     const correct = correct_color === chosen_color;
-    _STATS.identifications++;
+    STATE.stats.identifications++;
     if (correct) {
-        _STATS.correct++;
+        STATE.stats.correct++;
     }
 
-    if (!_STATS.confusion_matrix.has(correct_color)) {
-        _STATS.confusion_matrix.set(correct_color, new Map());
+    if (STATE.stats.confusion_matrix[correct_color] === undefined) {
+        STATE.stats.confusion_matrix[correct_color] = {};
     }
 
-    let row = _STATS.confusion_matrix.get(correct_color);
-    if (!row.has(chosen_color)) {
-        row.set(chosen_color, 0);
+    let row = STATE.stats.confusion_matrix[correct_color];
+    if (row[chosen_color] === undefined) {
+        row[chosen_color] = 0;
     }
 
-    row.set(chosen_color, row.get(chosen_color) + 1);
+    row[chosen_color] = row[chosen_color] + 1;
+
+    save_state();
 }
 
 function update_stats_display() {
     let correct_elem = document.getElementById("stats-correct");
     let total_elem = document.getElementById("stats-total");
 
-    correct_elem.innerHTML = _STATS.correct;
-    total_elem.innerHTML = _STATS.identifications;
+    correct_elem.innerHTML = STATE.stats.correct;
+    total_elem.innerHTML = STATE.stats.identifications;
 }
 
 function select_flag(elem) {
@@ -215,17 +220,68 @@ function populate_audio() {
     play_button.classList.remove("deactivated");
 }
 
-function change_selector() {
+function change_selector(to) {
+    let chord_selector = document.getElementById("chord-selector");
+    if (to !== undefined) {
+        chord_selector.value = to;
+    }
     _COLORS = null;
     populate_flags();
     populate_audio();
+    STATE.current_chord = chord_selector.value;
+    save_state();
 }
 
 function reset_stats() {
-    _STATS = new_stats();
+    save_session_history();
+    STATE.stats = new_stats();
+    save_state();
     update_stats_display();
 }
 
+function get_session_history() {
+    let history = localStorage.getObject(SESSION_HISTORY_KEY);
+    if (history === null) {
+        return [];
+    } else {
+        return history;
+    }
+}
+
+function save_session_history() {
+    let session_history = get_session_history();
+    session_history.push(STATE.stats);
+    localStorage.setObject(SESSION_HISTORY_KEY, session_history);
+}
+
+function save_state() {
+    localStorage.setObject(STATE_KEY, STATE);
+}
+
+function load_state() {
+    let state = localStorage.getObject(STATE_KEY);
+    if (state === null) {
+        state = {
+            stats: new_stats(),
+            current_chord: document.getElementById("chord-selector").value,
+        }
+    };
+
+    STATE = state;
+}
+
 document.addEventListener("DOMContentLoaded", function() {
-    change_selector();
+    load_state();
+    change_selector(STATE.current_chord);
+    update_stats_display();
 });
+
+// Support storing and retrieving objects from localStorage
+Storage.prototype.setObject = function(key, value) {
+    this.setItem(key, JSON.stringify(value));
+}
+
+Storage.prototype.getObject = function(key) {
+    var value = this.getItem(key);
+    return value && JSON.parse(value);
+}
