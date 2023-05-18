@@ -10,8 +10,14 @@ const CHORDS = [
     ["brown", "gce",],
 ];
 
+function get_current_timestamp() {
+    return Date.now() / 1000;
+}
+
 function new_stats() {
     return {
+        start_time: get_current_timestamp(),
+        updated_time: get_current_timestamp(),
         identifications: 0,
         correct: 0,
         confusion_matrix: {},
@@ -155,6 +161,7 @@ function update_stats(correct_color, chosen_color) {
 
     row[chosen_color] = row[chosen_color] + 1;
 
+    STATE.stats.updated_time = get_current_timestamp();
     save_state();
 }
 
