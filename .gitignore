@@ -1,0 +1,7 @@
+# Bundle artifacts
+.vendor/
+vendor/
+.bundle/
+.jekyll_cache
+
+_site/
