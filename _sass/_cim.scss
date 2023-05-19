@@ -1,8 +1,70 @@
+div.container {
+    display: flex;
+    flex-direction: column;
+}
+
+div.header-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+div.header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 80%;
+}
+
+div.header h1 {
+    flex-grow: 3;
+    font-size: 3rem;
+    @media only screen and (max-width: 768px) {
+        font-size: 1.25rem;
+
+    }
+}
+
+
+div.expansion-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    flex-grow: 1;
+}
+
 div.cim-container {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
 }
+
+div.cim {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: space-around;
+    width: 100%
+}
+
+div.control-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center;
+}
+
+div.flag-container {
+    display:flex;
+    flex-direction: row;
+    justify-content: space-around;
+    flex-wrap: wrap;
+}
+
 
 div.controls {
     display: flex;
@@ -37,6 +99,7 @@ div.stats {
     flex-wrap: nowrap;
     justify-content: center;
     align-items: center;
+    margin-top: 3rem;
 }
 
 div.stats div {
@@ -45,7 +108,7 @@ div.stats div {
 }
 
 div.stats i.fa {
-    font-size: 2em;
+    font-size: 2rem;
 }
 
 div.stats-display {
@@ -59,6 +122,12 @@ div.flag-wrapper{
     margin-right: 0.5em;
     height: 5em;
     width: 30%;
+
+    @media only screen and (max-width: 768px) {
+        margin-left: 2%;
+        margin-right: 2%;
+        width: 40%;
+    }
 }
 
 div.flag {
@@ -119,10 +188,9 @@ audio.chord {
 
 /* Container styles */
 .infobox-container {
-  position: absolute;
-  left: 78%;
   display: inline-block;
-  font-size: 1.5em;
+  position: relative;
+  font-size: 1.5rem;
 }
 
 /* Infobox styles */
@@ -162,4 +230,43 @@ audio.chord {
 .infobox-container .infobox-trigger:active + .infobox {
   visibility: visible;
   opacity: 1;
+}
+
+/* Flags */
+$red: red;
+$yellow: yellow;
+$blue: blue;
+$black: black;
+$green: green;
+$orange: #FF8200;
+$purple: purple;
+$pink: pink;
+$brown: #81613C;
+
+div#red-flag-inner {
+    background-color: $red;
+}
+div#yellow-flag-inner {
+    background-color: $yellow;
+}
+div#blue-flag-inner {
+    background-color: $blue;
+}
+div#black-flag-inner {
+    background-color: $black;
+}
+div#green-flag-inner {
+    background-color: $green;
+}
+div#orange-flag-inner {
+    background-color: $orange;
+}
+div#purple-flag-inner {
+    background-color: $purple;
+}
+div#pink-flag-inner {
+    background-color: $pink;
+}
+div#brown-flag-inner {
+    background-color: $brown;
 }

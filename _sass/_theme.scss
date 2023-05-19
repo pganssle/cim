@@ -1,0 +1,82 @@
+// Fonts
+$font-family: -apple-system,
+BlinkMacSystemFont,
+"Segoe UI",
+Roboto,
+Oxygen-Sans,
+Ubuntu,
+Cantarell,
+"Helvetica Neue",
+Helvetica,
+"PingFang SC",
+STXihei,"华文细黑",
+"Microsoft YaHei","微软雅黑",
+SimSun,"宋体",
+Heiti,"黑体",
+sans-serif;
+$code-font-family: SFMono-Regular,
+Consolas,
+Liberation Mono,
+Menlo,
+monospace;
+
+// Colors
+$bg-color: #fafafa !default;
+$fg-color: #212121 !default;
+$link-color: #1565c0 !default;
+
+// Dark colors
+$bg-color-dark: #212121 !default;
+$fg-color-dark: #dadada !default;
+$link-color-dark: #42a5f5 !default;
+
+body {
+  font-family: $font-family;
+  font-size: 1.8em;
+  font-weight: 400;
+  line-height: 1.8em;
+
+  @media only screen and (max-width: 768px) {
+    font-size: 1.6em;
+    line-height: 1.6em;
+  }
+}
+
+body.colorscheme-light {
+  color: $fg-color;
+  background-color: $bg-color;
+}
+
+body.colorscheme-dark {
+    color: $fg-color-dark;
+    background-color: $bg-color-dark;
+
+}
+
+a {
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.25s ease-in;
+
+  &:focus,
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+body.colorscheme-light a {
+  color: $link-color;
+}
+
+body.colorscheme-dark a {
+  color: $link-color-dark;
+}
+
+p {
+  margin: 2rem 0 2rem 0;
+}
+
+b,
+strong {
+  font-weight: 700;
+}

@@ -90,7 +90,7 @@ function make_flag(flag_color) {
         let inner_div = document.createElement("div");
         inner_div.classList.add("flag");
         inner_div.classList.add("fa");
-        inner_div.style.background = flag_color;
+        inner_div.id = wrapper_id + "-inner";
 
         inner_div.onclick = () => select_flag(inner_div);
         wrapper_div.appendChild(inner_div);
@@ -118,7 +118,7 @@ function audio_file_elem(audio_file) {
         audio_file.elem = document.createElement("audio");
         audio_file.elem.classList.add("chord");
         audio_file.elem.controls = true;
-        audio_file.elem.src = "/apps/cim/resources/" + audio_file.filename;
+        audio_file.elem.src = "/static_files/chords/" + audio_file.filename;
     }
 
     return audio_file.elem;
