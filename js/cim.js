@@ -2,8 +2,7 @@ const CHORDS = [
     ["red", "ceg",],
     ["yellow", "cfa",],
     ["blue", "hdg",],
-    ["black", "acf",],
-    ["green", "dgh",],
+    ["black", "acf",], ["green", "dgh",],
     ["orange", "egc",],
     ["purple", "fac",],
     ["pink", "ghd",],
@@ -281,6 +280,11 @@ function load_state() {
     };
 
     STATE = state;
+}
+
+function toggle_infobox_visibility() {
+    let ibox_elem = document.getElementById("i-infobox");
+    ibox_elem.classList.toggle("visible");
 }
 
 document.addEventListener("DOMContentLoaded", function() {

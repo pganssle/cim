@@ -224,12 +224,9 @@ audio.chord {
   border-color: transparent transparent #ffffff transparent;
 }
 
-/* Show the infobox on hover */
-.infobox-container:hover .infobox,
-.infobox-container:active,
-.infobox-container .infobox-trigger:active + .infobox {
-  visibility: visible;
-  opacity: 1;
+.infobox.visible {
+    visibility: visible;
+    opacity: 1;
 }
 
 /* Flags */
