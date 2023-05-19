@@ -1,2 +1,6 @@
 # Bundle artifacts
 .vendor/
+vendor/
+.bundle/
+
+_site/
