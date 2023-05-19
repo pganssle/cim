@@ -1,63 +1,85 @@
 ---
-title: "Chord Identification Method Trainer"
-date: 2023-05-15 11:22:42-04:00
-type: page
-
 ---
-
-<script>
-const UNSORTED_AUDIO_FILES = {{% files_to_js_array path="/content/apps/cim/resources" %}};
-</script>
-<script src="cim.js"></script>
-<link href="cim.css" type="text/css" rel="stylesheet" />
-
-<div class="cim-container">
-    <div style="display: flex; justify-content: space-around; width: 100%">
-        <div style="display: flex; flex-direction: row; flex-wrap: wrap; justify-content: space-around; align-items: center">
-            <div class="controls">
-                <a id="play-button" class="deactivated" onclick="play_audio()">
-                    <i class="fa fa-play" aria-hidden="true"></i>
-                </a>
-                <a id="next-chord" class="deactivated" onclick="next_audio()">
-                    <i class="fa fa-arrow-right" aria-hidden="true"></i>
-                </a>
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta http-equiv="Content-Language" content="en">
+        <meta name="color-scheme" content="light dark">
+        <meta name="description" content="This is an implementation of Eguchi's Chord Identification method (paper access can be found via Sci-Hub). See also Ichionkai Music School.
+This is a method for teaching absolute pitch to children aged 2-6. Children should practice ~5x per day for 2-3 minutes (about 20-25 identifications). Chords are always identified with colors, and progress in the sequence red (CEG), yellow (CFA), blue (HDG), black (ACF), green (DGH), orange (EGC), purple (FAC), pink (GHD), brown (GCE).">
+        <link rel="preload" href={{ "/assets/fonts/forkawesome-webfont.woff2?v=1.2.0" | relative_url }}
+                            as="font" type="font/woff2" crossorigin="">
+        <link rel="stylesheet" href="{{ "/assets/css/style.css" | relative_url }}">
+    </head>
+    <script>
+        const UNSORTED_AUDIO_FILES = [
+        {%- for file in site.static_files -%}
+            {%- if file.extname == ".mp3" and file.path contains "/static_files/chords" -%}
+                "{{ file.name  | relative_url }}",
+            {%- endif -%}
+        {%- endfor -%}
+        ];
+    </script>
+    <script src="js/cim.js"></script>
+    </head>
+    <body class="colorscheme-dark">
+    <div class="container">
+        <div class="header-container">
+            <div class="header">
+                <h1>Chord Identification Method Trainer</h1>
+                    <div class="expansion-container">
+                        <div class="infobox-container">
+                            <a href="#" class="infobox-trigger" onclick="toggle_infobox()">
+                            <i class="fa fa-solid fa-info-circle"></i>
+                          </a>
+                          <div class="infobox" id="i-infobox">
+                            <p>This is an implementation of <a href="http://pom.sagepub.com/content/42/1/86">Eguchi's Chord Identification method</a> (paper access can be found via <a href="https://en.wikipedia.org/wiki/Sci-Hub">Sci-Hub</a>). See also <a href="https://ichionkai.co.jp/english3.html">Ichionkai Music School</a>.</p>
+                            <p>This is a method for teaching absolute pitch to children aged 2-6. Children should practice ~5x per day for 2-3 minutes (about 20-25 identifications). Chords are always identified with colors, and progress in the sequence red (CEG), yellow (CFA), blue (HDG), black (ACF), green (DGH), orange (EGC), purple (FAC), pink (GHD), brown (GCE).</p>
+                            <p>Introduce the chords to the children one at a time, spacing out new chord introductions by at least 2 weeks each time. Do not introduce a new chord until the child can identify all presented chords with 100% accuracy.</p>
+                            <p><b>Note</b>: This application is an early alpha. I'm still in the first training phase so I've put off work on the later parts of the method until my son catches up. Let me know if you need a feature to make this work, of if it seems that I've misunderstood the method as described in the paper.</p>
+                          </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="infobox-container">
-          <a href="#" class="infobox-trigger">
-            <i class="fa fa-solid fa-info-circle"></i>
-          </a>
-          <div class="infobox">
-            <p>This is an implementation of <a href="http://pom.sagepub.com/content/42/1/86">Eguchi's Chord Identification method</a> (paper access can be found via <a href="https://en.wikipedia.org/wiki/Sci-Hub">Sci-Hub</a>). See also <a href="https://ichionkai.co.jp/english3.html">Ichionkai Music School</a>.</p>
-            <p>This is a method for teaching absolute pitch to children aged 2-6. Children should practice ~5x per day for 2-3 minutes (about 20-25 identifications). Chords are always identified with colors, and progress in the sequence red (CEG), yellow (CFA), blue (HDG), black (ACF), green (DGH), orange (EGC), purple (FAC), pink (GHD), brown (GCE).</p>
-            <p>Introduce the chords to the children one at a time, spacing out new chord introductions by at least 2 weeks each time. Do not introduce a new chord until the child can identify all presented chords with 100% accuracy.</p>
-            <p><b>Note</b>: This application is an early alpha. I'm still in the first training phase so I've put off work on the later parts of the method until my son catches up. Let me know if you need a feature to make this work, of if it seems that I've misunderstood the method as described in the paper.</p>
-          </div>
-        </div>
+        <div class="cim-container">
+            <div class="control-container">
+                <div class="controls">
+                    <a id="play-button" class="deactivated" onclick="play_audio()">
+                        <i class="fa fa-play" aria-hidden="true"></i>
+                    </a>
+                    <a id="next-chord" class="deactivated" onclick="next_audio()">
+                        <i class="fa fa-arrow-right" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="flag-container" id="flag-holder">
+            </div>
+            <div class="stats controls">
+                <div class="stats-display">
+                    <span id="stats-correct">0</span> / <span id="stats-total">0</span>
+                </div>
+                <a id="reset-button" onclick="reset_stats()">
+                    <i class="fa fa-refresh" aria-hidden="true"></i>
+                </a>
+            </div>
+            <div style="display: flex; justify-content: space-around; margin-top: 2rem">
+                <select name="chords" id="chord-selector" onchange="change_selector()">
+                    <option value="red">Red (CEG)</option>
+                    <option value="yellow">Yellow (CFA)</option>
+                    <option value="blue">Blue (HDG)</option>
+                    <option value="black">Black (ACF)</option>
+                    <option value="green">Green (DGH)</option>
+                    <option value="orange">Orange (EGC)</option>
+                    <option value="purple">Purple (FAC)</option>
+                    <option value="pink">Pink (GHD)</option>
+                    <option value="brown">Brown (GCE)</option>
+                </select>
+            </div>
     </div>
-    <div style="display:flex; justify-content: space-around; flex-wrap: wrap;" id="flag-holder">
-    </div>
-    <div class="stats controls">
-        <div class="stats-display">
-            <span id="stats-correct">0</span> / <span id="stats-total">0</span>
-        </div>
-        <a id="reset-button" onclick="reset_stats()">
-            <i class="fa fa-refresh" aria-hidden="true"></i>
-        </a>
-    </div>
-    <div style="display: flex; justify-content: space-around; margin-top: 0.5em">
-        <select name="chords" id="chord-selector" onchange="change_selector()">
-            <option value="red">Red (CEG)</option>
-            <option value="yellow">Yellow (CFA)</option>
-            <option value="blue">Blue (HDG)</option>
-            <option value="black">Black (ACF)</option>
-            <option value="green">Green (DGH)</option>
-            <option value="orange">Orange (EGC)</option>
-            <option value="purple">Purple (FAC)</option>
-            <option value="pink">Pink (GHD)</option>
-            <option value="brown">Brown (GCE)</option>
-        </select>
-    </div>
-
-
-</div>
+    </body>
+</html>
