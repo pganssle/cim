@@ -10,15 +10,15 @@
         <meta name="color-scheme" content="light dark">
         <meta name="description" content="This is an implementation of Eguchi's Chord Identification method (paper access can be found via Sci-Hub). See also Ichionkai Music School.
 This is a method for teaching absolute pitch to children aged 2-6. Children should practice ~5x per day for 2-3 minutes (about 20-25 identifications). Chords are always identified with colors, and progress in the sequence red (CEG), yellow (CFA), blue (HDG), black (ACF), green (DGH), orange (EGC), purple (FAC), pink (GHD), brown (GCE).">
-        <link rel="preload" href={{ "/assets/fonts/forkawesome-webfont.woff2?v=1.2.0" | relative_url }}
+        <link rel="preload" href={{ "assets/fonts/forkawesome-webfont.woff2?v=1.2.0" }}
                             as="font" type="font/woff2" crossorigin="">
-        <link rel="stylesheet" href="{{ "/assets/css/style.css" | relative_url }}">
+        <link rel="stylesheet" href="{{ "assets/css/style.css" }}">
     </head>
     <script>
         const UNSORTED_AUDIO_FILES = [
         {%- for file in site.static_files -%}
             {%- if file.extname == ".mp3" and file.path contains "/static_files/chords" -%}
-                "{{ file.name  | relative_url }}",
+                "{{ file.name }}",
             {%- endif -%}
         {%- endfor -%}
         ];

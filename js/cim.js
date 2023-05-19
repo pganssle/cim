@@ -118,7 +118,7 @@ function audio_file_elem(audio_file) {
         audio_file.elem = document.createElement("audio");
         audio_file.elem.classList.add("chord");
         audio_file.elem.controls = true;
-        audio_file.elem.src = "/static_files/chords/" + audio_file.filename;
+        audio_file.elem.src = "static_files/chords/" + audio_file.filename;
     }
 
     return audio_file.elem;
