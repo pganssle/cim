@@ -180,9 +180,18 @@ function update_stats(correct_color, chosen_color) {
 function update_stats_display() {
     let correct_elem = document.getElementById("stats-correct");
     let total_elem = document.getElementById("stats-total");
+    let perc_elem = document.getElementById("stats-percent");
 
-    correct_elem.innerHTML = STATE.stats.correct;
-    total_elem.innerHTML = STATE.stats.identifications;
+    const correct = STATE.stats.correct;
+    const identifications = STATE.stats.identifications;
+
+    correct_elem.innerHTML = correct;
+    total_elem.innerHTML = identifications;
+    if (identifications > 0) {
+        perc_elem.innerHTML = "(" + (100 * correct / identifications).toFixed(1) + "%)";
+    } else {
+        perc_elem.innerHTML = "";
+    }
 }
 
 function select_flag(elem) {

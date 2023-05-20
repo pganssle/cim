@@ -133,6 +133,11 @@ div.stats i.fa {
 div.stats-display {
     font-size: 3rem;
     font-weight: bold;
+    text-align: center;
+}
+
+div.stats-display span#stats-percent {
+    font-size: 1.5rem;
 }
 
 div.flag-wrapper{
