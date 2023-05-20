@@ -67,6 +67,23 @@ div.flag-container {
     flex-wrap: wrap;
 }
 
+div.trainer-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+}
+
+div.flag.trainer {
+    height: 10vh;
+    width: 45%;
+
+    @media only screen and (max-width: 768px) {
+        max-width: 80%;
+    }
+}
 
 div.controls {
     display: flex;
@@ -193,6 +210,9 @@ audio.chord {
   display: inline-block;
   position: relative;
   font-size: 1.5rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+
 }
 
 /* Infobox styles */
@@ -265,3 +285,4 @@ div.pink {
 div.brown {
     background-color: $brown;
 }
+

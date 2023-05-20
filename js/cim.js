@@ -203,6 +203,12 @@ function play_audio() {
 
 }
 
+function play_chord(color) {
+    const audio_files = get_audio_files();
+    const audio_file = random_elem(audio_files["mp3"].get(color));
+    audio_file_elem(audio_file).play();
+}
+
 function next_audio() {
     let next_button = document.getElementById("next-chord");
     if (next_button.classList.contains("deactivated")) {
@@ -282,11 +288,17 @@ function load_state() {
     STATE = state;
 }
 
-function toggle_infobox_visibility() {
-    let ibox_elem = document.getElementById("i-infobox");
+function toggle_visibility(ibox_elem) {
     ibox_elem.classList.toggle("visible");
 }
 
+function toggle_trainer_visibility() {
+    toggle_visibility(document.getElementById("trainer-infobox"));
+}
+
+function toggle_infobox_visibility() {
+    toggle_visibility(document.getElementById("i-infobox"));
+}
 
 function toggle_theme_mode() {
     document.body.classList.toggle("colorscheme-dark");
