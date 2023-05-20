@@ -36,7 +36,9 @@ const SESSION_HISTORY_KEY = "cim_session_history";
 let STATE = null;
 
 function get_selected_colors() {
-    const chord_idx = document.getElementById("chord-selector").selectedIndex;
+    // The chord selector does not include "red" as an option, so we need to
+    // shift the index up by 1.
+    const chord_idx = document.getElementById("chord-selector").selectedIndex + 1;
     if (_COLORS === null) {
         _COLORS = CHORDS.slice(0, chord_idx + 1).map(([x, _]) => x);
     }
