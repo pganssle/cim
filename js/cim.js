@@ -41,6 +41,9 @@ let AUDIO_FILES = null;
 const STATE_KEY = "cim_state";
 const SESSION_HISTORY_KEY = "cim_session_history";
 
+// After 30 minutes of inactivity call it a new session
+const SESSION_TIMEOUT_TIME_SECONDS = 60 * 30;
+
 let STATE = null;
 
 function get_selected_colors() {
@@ -333,6 +336,11 @@ function toggle_theme_mode() {
 
 document.addEventListener("DOMContentLoaded", function() {
     load_state();
+    if (STATE.stats !== undefined && STATE.stats.updated_time !== undefined) {
+        if (get_current_timestamp() - STATE.stats.updated_time > SESSION_TIMEOUT_TIME_SECONDS) {
+            reset_stats();
+        }
+    }
     populate_infobox_triggers();
     change_selector(STATE.current_chord);
     update_stats_display();
