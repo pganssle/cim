@@ -28,6 +28,14 @@ let _CORRECT_COLOR = null;
 let _SELECTED_ELEM = null;
 let _CORRECT_ELEM = null;
 let _CURRENT_AUDIO = null;
+let _CURRENT_INFOBOX = null;
+let _INFOBOX_TRIGGERS = [];
+
+const _INFOBOX_TRIGGER_IDS = [
+    "trainer-infobox-trigger",
+    "i-infobox-trigger",
+];
+
 let AUDIO_FILES = null;
 
 const STATE_KEY = "cim_state";
@@ -291,7 +299,23 @@ function load_state() {
 }
 
 function toggle_visibility(ibox_elem) {
-    ibox_elem.classList.toggle("visible");
+    if (ibox_elem === _CURRENT_INFOBOX) {
+        _CURRENT_INFOBOX = null;
+        ibox_elem.classList.remove("visible");
+    } else {
+        if (_CURRENT_INFOBOX !== null) {
+            toggle_visibility(_CURRENT_INFOBOX);
+        }
+
+        ibox_elem.classList.add("visible");
+        _CURRENT_INFOBOX = ibox_elem;
+    }
+}
+
+function populate_infobox_triggers() {
+    for (const trigger_id of _INFOBOX_TRIGGER_IDS) {
+        _INFOBOX_TRIGGERS.push(document.getElementById(trigger_id));
+    }
 }
 
 function toggle_trainer_visibility() {
@@ -309,8 +333,23 @@ function toggle_theme_mode() {
 
 document.addEventListener("DOMContentLoaded", function() {
     load_state();
+    populate_infobox_triggers();
     change_selector(STATE.current_chord);
     update_stats_display();
+});
+
+document.addEventListener("click", function(event) {
+    if (_CURRENT_INFOBOX === null || _CURRENT_INFOBOX.contains(event.target)) {
+        return;
+    }
+
+    for (const infobox_trigger of _INFOBOX_TRIGGERS) {
+        if (infobox_trigger.contains(event.target) ) {
+            return;
+        }
+    }
+
+    toggle_visibility(_CURRENT_INFOBOX);
 });
 
 // Support storing and retrieving objects from localStorage
