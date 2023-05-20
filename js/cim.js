@@ -89,7 +89,7 @@ function make_flag(flag_color) {
         let inner_div = document.createElement("div");
         inner_div.classList.add("flag");
         inner_div.classList.add("fa");
-        inner_div.id = wrapper_id + "-inner";
+        inner_div.classList.add(flag_color);
 
         inner_div.onclick = () => select_flag(inner_div);
         wrapper_div.appendChild(inner_div);
