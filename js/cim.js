@@ -30,6 +30,7 @@ let _CORRECT_ELEM = null;
 let _CURRENT_AUDIO = null;
 let _CURRENT_INFOBOX = null;
 let _INFOBOX_TRIGGERS = [];
+let _AUDIO_PLAYED = false;
 
 const _INFOBOX_TRIGGER_IDS = [
     "trainer-infobox-trigger",
@@ -131,6 +132,8 @@ function audio_file_elem(audio_file) {
         audio_file.elem.classList.add("chord");
         audio_file.elem.controls = true;
         audio_file.elem.src = "static_files/chords/" + audio_file.filename;
+        audio_file.elem.onended = () => { _AUDIO_PLAYED = true; };
+        audio_file.elem.onplay = register_playing(audio_file.elem);
     }
 
     return audio_file.elem;
@@ -198,6 +201,9 @@ function select_flag(elem) {
     if (_SELECTED_ELEM !== null) {
         return;
     }
+    if (_AUDIO_PLAYED === false) {
+        return;
+    }
     const id = elem.parentElement.id;
     const chosen_color = id.split("-")[0];
 
@@ -217,12 +223,18 @@ function select_flag(elem) {
     next_button.classList.remove("deactivated");
 }
 
+function register_playing(elem) {
+    return function() {
+        setTimeout(() => { _AUDIO_PLAYED = true; },
+                   elem.duration * 0.8);
+    }
+}
+
 function play_audio() {
     if (document.getElementById("play-button").classList.contains("deactivated")) {
         return;
     }
     _CURRENT_AUDIO.play();
-
 }
 
 function play_chord(color) {
@@ -252,6 +264,7 @@ function populate_audio() {
 
     let play_button = document.getElementById("play-button");
     play_button.classList.remove("deactivated");
+    _AUDIO_PLAYED = false;
 }
 
 function change_selector(to) {
