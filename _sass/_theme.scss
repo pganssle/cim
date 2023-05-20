@@ -1,3 +1,5 @@
+@import "variables";
+
 // Fonts
 $font-family: -apple-system,
 BlinkMacSystemFont,
@@ -19,16 +21,6 @@ Consolas,
 Liberation Mono,
 Menlo,
 monospace;
-
-// Colors
-$bg-color: #fafafa !default;
-$fg-color: #212121 !default;
-$link-color: #1565c0 !default;
-
-// Dark colors
-$bg-color-dark: #212121 !default;
-$fg-color-dark: #dadada !default;
-$link-color-dark: #42a5f5 !default;
 
 body {
   font-family: $font-family;

@@ -1,3 +1,5 @@
+@import "variables";
+
 div.container {
     display: flex;
     flex-direction: column;
@@ -201,8 +203,6 @@ audio.chord {
   transform: translateX(-100%);
   width: 60vw;
   padding: 10px;
-  color: #1e1e1e;
-  background-color: #ffffff;
   border: 1px solid #cccccc;
   border-radius: 5px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
@@ -212,16 +212,14 @@ audio.chord {
   z-index: 100;
 }
 
-/* Infobox arrow styles */
-.infobox::after {
-  content: "";
-  position: absolute;
-  top: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 10px;
-  border-style: solid;
-  border-color: transparent transparent #ffffff transparent;
+body.colorscheme-light .infobox {
+  color: $fg-color;
+  background-color: $bg-color;
+}
+
+body.colorscheme-dark .infobox {
+  color: $fg-color-dark;
+  background-color: $bg-color-dark;
 }
 
 .infobox.visible {
