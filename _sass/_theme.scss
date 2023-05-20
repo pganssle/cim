@@ -72,3 +72,24 @@ b,
 strong {
   font-weight: 700;
 }
+
+/* Floating theme toggle button */
+div.mode-toggle-container {
+    display: inline-block;
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 100;
+    font-size: 1.5rem;
+}
+
+body.colorscheme-dark a.colorscheme-toggle {
+    color: #dadada;
+    background-color: #424242;
+}
+
+body.colorscheme-light a.colorscheme-toggle {
+    color: #000;
+    background-color: #e0e0e0;
+}
+

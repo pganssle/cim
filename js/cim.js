@@ -287,6 +287,12 @@ function toggle_infobox_visibility() {
     ibox_elem.classList.toggle("visible");
 }
 
+
+function toggle_theme_mode() {
+    document.body.classList.toggle("colorscheme-dark");
+    document.body.classList.toggle("colorscheme-light");
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     load_state();
     change_selector(STATE.current_chord);
