@@ -31,6 +31,7 @@ let _CURRENT_AUDIO = null;
 let _CURRENT_INFOBOX = null;
 let _INFOBOX_TRIGGERS = [];
 let _AUDIO_PLAYED = false;
+let _EMOJI_LOCK = false;
 
 const _INFOBOX_TRIGGER_IDS = [
     "trainer-infobox-trigger",
@@ -180,6 +181,35 @@ function update_stats(correct_color, chosen_color) {
     save_state();
 }
 
+function set_cat_emoji(level) {
+    const emoji_levels = {
+        0: '😿',
+        1: '😾',
+        2: '🐱',
+        3: '😺',
+        4: '😸',
+        5: '🙀',
+        6: '😻',
+    };
+
+    document.getElementById("reaction-emoji").innerHTML = emoji_levels[level];
+}
+
+
+function calculate_neutral_level(percentage) {
+    const level = Math.min(Math.floor(percentage / 20), 4);
+    return level;
+}
+
+function calculate_percentage() {
+    if (STATE.stats.identifications == 0) {
+        return 50;
+    }
+
+    return 100 * STATE.stats.correct / STATE.stats.identifications;
+}
+
+
 function update_stats_display() {
     let correct_elem = document.getElementById("stats-correct");
     let total_elem = document.getElementById("stats-total");
@@ -190,11 +220,20 @@ function update_stats_display() {
 
     correct_elem.innerHTML = correct;
     total_elem.innerHTML = identifications;
+    let percentage = calculate_percentage();
     if (identifications > 0) {
-        perc_elem.innerHTML = "(" + (100 * correct / identifications).toFixed(1) + "%)";
+        perc_elem.innerHTML = "(" + percentage.toFixed(1) + "%)";
     } else {
         perc_elem.innerHTML = "";
     }
+
+    if(!_EMOJI_LOCK) {
+        reset_cat_emoji();
+    }
+}
+
+function reset_cat_emoji() {
+    set_cat_emoji(calculate_neutral_level(calculate_percentage()));
 }
 
 function select_flag(elem) {
@@ -207,17 +246,22 @@ function select_flag(elem) {
     const id = elem.parentElement.id;
     const chosen_color = id.split("-")[0];
 
+    _EMOJI_LOCK = true;
     update_stats(_CORRECT_COLOR, chosen_color);
     update_stats_display();
 
     if (chosen_color === _CORRECT_COLOR) {
         elem.classList.add("flag-correct");
+        set_cat_emoji(6);
     } else {
         elem.classList.add("flag-incorrect");
         _CORRECT_ELEM = document.getElementById(_CORRECT_COLOR + "-flag").firstChild;
         _CORRECT_ELEM.classList.add("flag-correct");
+        set_cat_emoji(5)
     }
     _SELECTED_ELEM = elem;
+
+    setTimeout(function() { _EMOJI_LOCK = false; reset_cat_emoji(); }, 1500);
 
     let next_button = document.getElementById("next-chord");
     next_button.classList.remove("deactivated");
