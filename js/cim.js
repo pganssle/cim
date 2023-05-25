@@ -32,6 +32,7 @@ let _CURRENT_INFOBOX = null;
 let _INFOBOX_TRIGGERS = [];
 let _AUDIO_PLAYED = false;
 let _EMOJI_LOCK = false;
+let _TRAINER_PRELOADED = false;
 
 const _INFOBOX_TRIGGER_IDS = [
     "trainer-infobox-trigger",
@@ -298,6 +299,12 @@ function next_audio() {
     next_button.classList.add("deactivated");
 }
 
+function preload_audio(color) {
+    for (const audio_file of get_audio_files()["mp3"]) {
+        audio_file_elem(audio_file);
+    }
+}
+
 function populate_audio() {
     const audio_files = get_audio_files();
 
@@ -321,6 +328,11 @@ function change_selector(to) {
     populate_audio();
     STATE.current_chord = chord_selector.value;
     save_state();
+
+    // Pre-download chord MP3s
+    for (const color of _COLORS) {
+        preload_audio(color);
+    }
 }
 
 function reset_local_storage() {
@@ -389,6 +401,11 @@ function populate_infobox_triggers() {
 
 function toggle_trainer_visibility() {
     toggle_visibility(document.getElementById("trainer-infobox"));
+    if (!_TRAINER_PRELOADED) {
+        for (const [color, _] of CHORDS) {
+            preload_audio(color);
+        }
+    }
 }
 
 function toggle_infobox_visibility() {
