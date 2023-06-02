@@ -198,13 +198,13 @@ function set_cat_emoji(level) {
 
 
 function calculate_neutral_level(percentage) {
-    const level = Math.min(Math.floor(percentage / 20), 4);
+    const level = Math.min(Math.max(0, Math.floor((percentage - 50) / 10)), 4);
     return level;
 }
 
 function calculate_percentage() {
     if (STATE.stats.identifications == 0) {
-        return 50;
+        return 75;
     }
 
     return 100 * STATE.stats.correct / STATE.stats.identifications;
