@@ -212,6 +212,7 @@ function calculate_percentage() {
 
 
 function update_stats_display() {
+    let container_elem = document.getElementById("stats-container");
     let correct_elem = document.getElementById("stats-correct");
     let total_elem = document.getElementById("stats-total");
     let perc_elem = document.getElementById("stats-percent");
@@ -226,6 +227,12 @@ function update_stats_display() {
         perc_elem.innerHTML = "(" + percentage.toFixed(1) + "%)";
     } else {
         perc_elem.innerHTML = "";
+    }
+
+    if (identifications >= 25) {
+        container_elem.classList.add("done");
+    } else {
+        container_elem.classList.remove("done");
     }
 
     if(!_EMOJI_LOCK) {

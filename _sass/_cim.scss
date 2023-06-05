@@ -134,6 +134,14 @@ div.stats i.fa {
     font-size: 2rem;
 }
 
+body.colorscheme-light div.stats.done span#stats-total {
+    color: "green";
+}
+
+body.colorscheme-dark div.stats.done span#stats-total {
+    color: #00bf00;
+}
+
 div.stats-display {
     font-size: 3rem;
     font-weight: bold;
