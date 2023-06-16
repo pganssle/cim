@@ -63,6 +63,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                               </div>
                           </div>
                         </div>
+                        <!-- Infobox -->
                         <div class="infobox-container">
                             <a href="#" class="infobox-trigger"
                                id="i-infobox-trigger"
@@ -75,6 +76,23 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                             <p>This is a method for teaching absolute pitch to children aged 2-6. Children should practice ~5x per day for 2-3 minutes (about 20-25 identifications). Chords are always identified with colors, and progress in the sequence red (CEG), yellow (CFA), blue (HDG), black (ACF), green (DGH), orange (EGC), purple (FAC), pink (GHD), brown (GCE).</p>
                             <p>Introduce the chords to the children one at a time, spacing out new chord introductions by at least 2 weeks each time. Do not introduce a new chord until the child can identify all presented chords with 100% accuracy.</p>
                             <p><b>Note</b>: This application is an early alpha. I'm still in the first training phase so I've put off work on the later parts of the method until my son catches up. Let me know if you need a feature to make this work, of if it seems that I've misunderstood the method as described in the paper. Please feel free to make pull requests or report issues on <a href="https://github.com/pganssle/cim">the GitHub repository</a>.</p>
+                          </div>
+                        </div>
+                        <!-- Profiles -->
+                        <div class="infobox-container">
+                            <div class="trigger-container" id="user-container">
+                                <a href="#"
+                                   id="profile-infobox-trigger"
+                                   class="infobox-trigger"
+                                   onclick="toggle_profile_visibility()">
+                                <i class="fa fa-solid fa-user" id="profile-icon"></i>
+                              </a>
+                              <span id="profile-text">Guest</span>
+                            </div>
+                          <div class="pulldown infobox" id="profile-container">
+                              <div class="pulldown-item" onclick="add_profile()">
+                                  <i class="profile-icon fa fa-solid fa-user-plus"></i><span class="profile-name">Add Profile</span>
+                              </div>
                           </div>
                         </div>
                     </div>
