@@ -38,6 +38,7 @@ const _TARGET_NUMBER = 25;
 const _INFOBOX_TRIGGER_IDS = [
     "trainer-infobox-trigger",
     "i-infobox-trigger",
+    "profile-infobox-trigger",
 ];
 
 let AUDIO_FILES = null;
@@ -385,12 +386,34 @@ function load_state() {
     let state = localStorage.getObject(STATE_KEY);
     if (state === null) {
         state = {
-            stats: new_stats(),
+            profiles: {
+                100: new_profile("Guest", "fa-user"),
+            },
             current_chord: document.getElementById("chord-selector").value,
         }
-    };
+    } else if (state["profiles"] === undefined) {
+        // Need to convert old-style state into profile-based state
+        updated_state = {
+            profiles: {
+                0: new_profile("Legacy User", "fa-user"),
+                100: new_profile("Guest", "fa-user"),
+            },
+            current_chord: state["current_chord"],
+        }
+
+        updated_state["profiles"][0]["stats"] = state["stats"];
+        state = updated_state;
+    }
 
     STATE = state;
+}
+
+function new_profile(name, icon) {
+    return {
+        name: name,
+        icon: icon,
+        stats: new_stats(),
+    }
 }
 
 function toggle_visibility(ibox_elem) {
@@ -411,6 +434,10 @@ function populate_infobox_triggers() {
     for (const trigger_id of _INFOBOX_TRIGGER_IDS) {
         _INFOBOX_TRIGGERS.push(document.getElementById(trigger_id));
     }
+}
+
+function toggle_profile_visibility() {
+    toggle_visibility(document.getElementById("profile-container"));
 }
 
 function toggle_trainer_visibility() {

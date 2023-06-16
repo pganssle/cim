@@ -233,7 +233,6 @@ audio.chord {
   font-size: 1.5rem;
   margin-left: 0.5rem;
   margin-right: 0.5rem;
-
 }
 
 /* Infobox styles */
@@ -251,6 +250,45 @@ audio.chord {
   opacity: 0;
   transition: visibility 0s, opacity 0.3s;
   z-index: 100;
+}
+
+div.infobox.pulldown {
+  width: auto;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+div.pulldown-item {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    align-items: center;
+    padding-left: 5px;
+    padding-right: 10px;
+}
+
+body.colorscheme-dark div.pulldown-item:hover {
+    background-color: lighten($bg-color-dark, 12.5);
+}
+
+body.colorscheme-light div.pulldown-item:hover {
+    background-color: darken($bg-color, 12.5);
+}
+
+div.pulldown-item > i.profile-icon {
+    margin-right: 0.75rem;
+}
+
+div.pulldown-item > span.profile-name {
+    white-space: nowrap;
+}
+
+div.trigger-container > a {
+    text-decoration: none;
+}
+
+div.trigger-container > a:hover {
+    text-decoration: none;
 }
 
 body.colorscheme-light .infobox {
