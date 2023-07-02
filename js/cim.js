@@ -229,6 +229,12 @@ function update_stats_display() {
         perc_elem.innerHTML = "";
     }
 
+    if (correct == identifications) {
+        container_elem.classList.add("perfect");
+    } else {
+        container_elem.classList.remove("perfect");
+    }
+
     if (identifications >= 25) {
         container_elem.classList.add("done");
     } else {
