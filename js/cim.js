@@ -33,6 +33,7 @@ let _INFOBOX_TRIGGERS = [];
 let _AUDIO_PLAYED = false;
 let _EMOJI_LOCK = false;
 let _TRAINER_PRELOADED = false;
+const _TARGET_NUMBER = 25;
 
 const _INFOBOX_TRIGGER_IDS = [
     "trainer-infobox-trigger",
@@ -235,7 +236,7 @@ function update_stats_display() {
         container_elem.classList.remove("perfect");
     }
 
-    if (identifications >= 25) {
+    if (identifications >= _TARGET_NUMBER) {
         container_elem.classList.add("done");
     } else {
         container_elem.classList.remove("done");
