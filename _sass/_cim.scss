@@ -134,11 +134,13 @@ div.stats i.fa {
     font-size: 2rem;
 }
 
+body.colorscheme-light div.stats.done.perfect span#stats-divider,
 body.colorscheme-light div.stats.done.perfect span#stats-correct,
 body.colorscheme-light div.stats.done span#stats-total {
     color: green;
 }
 
+body.colorscheme-dark div.stats.done.perfect span#stats-divider,
 body.colorscheme-dark div.stats.done.perfect span#stats-correct,
 body.colorscheme-dark div.stats.done span#stats-total {
     color: #00bf00;
