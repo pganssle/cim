@@ -26,6 +26,14 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         ];
     </script>
     <script src="js/cim.js"></script>
+    <script>
+        // Disable zoom on iOS 10+ (normally I would be against this, but it's
+        // causing usability problems)
+        document.addEventListener('gesturestart', function (e) {
+            e.preventDefault();
+        });
+    </script>
+
     </head>
     <body class="colorscheme-dark">
     <div class="container">
