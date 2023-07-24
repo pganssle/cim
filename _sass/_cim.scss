@@ -256,6 +256,17 @@ div.infobox.pulldown {
   width: auto;
   padding-left: 0;
   padding-right: 0;
+  transform: unset;
+  left: unset;
+  right: 0%;
+}
+
+body.colorscheme-light span.pulldown-target {
+    color: $fg-color;
+}
+
+body.colorscheme-dark span.pulldown-target {
+    color: $fg-color-dark;
 }
 
 div.pulldown-item {
@@ -275,6 +286,7 @@ body.colorscheme-light div.pulldown-item:hover {
     background-color: darken($bg-color, 12.5);
 }
 
+div.pulldown-item > i.profile-settings-icon,
 div.pulldown-item > i.profile-icon {
     margin-right: 0.75rem;
 }
