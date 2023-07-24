@@ -46,6 +46,8 @@ let AUDIO_FILES = null;
 
 const STATE_KEY = "cim_state";
 const SESSION_HISTORY_KEY = "cim_session_history";
+const _LEGACY_USER_ID = 0;
+const _GUEST_USER_ID = 100;
 
 // After 30 minutes of inactivity call it a new session
 const SESSION_TIMEOUT_TIME_SECONDS = 60 * 30;
@@ -165,23 +167,24 @@ function select_new_color() {
 
 function update_stats(correct_color, chosen_color) {
     const correct = correct_color === chosen_color;
-    STATE.stats.identifications++;
+    let stats = get_current_profile().stats;
+    stats.identifications++;
     if (correct) {
-        STATE.stats.correct++;
+        stats.correct++;
     }
 
-    if (STATE.stats.confusion_matrix[correct_color] === undefined) {
-        STATE.stats.confusion_matrix[correct_color] = {};
+    if (stats.confusion_matrix[correct_color] === undefined) {
+        stats.confusion_matrix[correct_color] = {};
     }
 
-    let row = STATE.stats.confusion_matrix[correct_color];
+    let row = stats.confusion_matrix[correct_color];
     if (row[chosen_color] === undefined) {
         row[chosen_color] = 0;
     }
 
     row[chosen_color] = row[chosen_color] + 1;
 
-    STATE.stats.updated_time = get_current_timestamp();
+    stats.updated_time = get_current_timestamp();
     save_state();
 }
 
@@ -206,11 +209,12 @@ function calculate_neutral_level(percentage) {
 }
 
 function calculate_percentage() {
-    if (STATE.stats.identifications == 0) {
+    let stats = get_current_profile().stats;
+    if (stats.identifications == 0) {
         return 75;
     }
 
-    return 100 * STATE.stats.correct / STATE.stats.identifications;
+    return 100 * stats.correct / stats.identifications;
 }
 
 
@@ -220,8 +224,9 @@ function update_stats_display() {
     let total_elem = document.getElementById("stats-total");
     let perc_elem = document.getElementById("stats-percent");
 
-    const correct = STATE.stats.correct;
-    const identifications = STATE.stats.identifications;
+    const stats = get_current_profile().stats;
+    const correct = stats.correct;
+    const identifications = stats.identifications;
 
     correct_elem.innerHTML = correct;
     total_elem.innerHTML = identifications;
@@ -359,23 +364,47 @@ function reset_local_storage() {
 
 function reset_stats() {
     save_session_history();
-    STATE.stats = new_stats();
+    get_current_profile().stats = new_stats();
     save_state();
     update_stats_display();
 }
 
 function get_session_history() {
     let history = localStorage.getObject(SESSION_HISTORY_KEY);
-    if (history === null) {
-        return [];
-    } else {
-        return history;
+    if (history === null || history.length == 0) {
+        return {};
+    } else if (Array.isArray(history)) {
+        // If it's an array, we need to upgrade it. The session history will
+        // be moved into "Legacy User".
+        history = {_LEGACY_USER_ID: history};
     }
+
+    return history;
+}
+
+function get_current_session_history() {
+    let full_history = get_session_history();
+    const profile_id = get_current_profile()["id"];
+    let history = full_history[profile_id];
+    if (history === undefined) {
+        history = [];
+        full_history[profile_id] = history;
+    }
+
+    return history;
 }
 
 function save_session_history() {
     let session_history = get_session_history();
-    session_history.push(STATE.stats);
+    const profile_id = get_current_profile()["id"];
+
+    let current_session_history = session_history[profile_id];
+    if (current_session_history === undefined) {
+        current_session_history = [];
+    }
+
+    current_session_history.push(get_current_profile().stats);
+    session_history[profile_id] = current_session_history;
     localStorage.setObject(SESSION_HISTORY_KEY, session_history);
 }
 
@@ -388,7 +417,7 @@ function load_state() {
     if (state === null) {
         state = {
             profiles: {
-                100: new_profile("Guest", "fa-user", 100),
+                _GUEST_USER_ID: new_profile("Guest", "fa-user", _GUEST_USER_ID),
             },
             current_chord: document.getElementById("chord-selector").value,
         }
@@ -396,8 +425,8 @@ function load_state() {
         // Need to convert old-style state into profile-based state
         updated_state = {
             profiles: {
-                0: new_profile("Legacy User", "fa-user", 0),
-                100: new_profile("Guest", "fa-user", 100),
+                _LEGACY_USER_ID: new_profile("Legacy User", "fa-user", _LEGACY_USER_ID),
+                _GUEST_USER_ID: new_profile("Guest", "fa-user", _GUEST_USER_ID),
             },
             current_chord: state["current_chord"],
         }
@@ -407,7 +436,7 @@ function load_state() {
     }
 
     if (state["current_profile"] === undefined || state["current_profile"] === null) {
-        state["current_profile"] = 100;
+        state["current_profile"] = _GUEST_USER_ID;
     }
 
     STATE = state;
@@ -415,7 +444,7 @@ function load_state() {
 
 function new_profile(name, icon, id) {
     if (id === undefined) {
-        id = 101;
+        id = _GUEST_USER_ID + 1;
         while (id in STATE["profiles"]) {
             id++;
         }
@@ -513,6 +542,10 @@ function populate_profile_pulldown() {
     }
 }
 
+function get_current_profile() {
+    return STATE["profiles"][STATE["current_profile"]];
+}
+
 function select_new_profile(elem) {
     const id = elem.dataset.profileId;
     STATE["current_profile"] = id;
@@ -576,13 +609,14 @@ function toggle_theme_mode() {
 
 document.addEventListener("DOMContentLoaded", function() {
     load_state();
-    if (STATE.stats !== undefined && STATE.stats.updated_time !== undefined) {
-        if (get_current_timestamp() - STATE.stats.updated_time > SESSION_TIMEOUT_TIME_SECONDS) {
+    set_current_profile(get_current_profile());
+    let stats = get_current_profile().stats;
+    if (stats !== undefined && stats.updated_time !== undefined) {
+        if (get_current_timestamp() - stats.updated_time > SESSION_TIMEOUT_TIME_SECONDS) {
             reset_stats();
         }
     }
 
-    set_current_profile(STATE["profiles"][STATE["current_profile"]]);
     populate_infobox_triggers();
     populate_profile_pulldown();
     change_selector(STATE.current_chord);
