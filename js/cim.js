@@ -29,6 +29,7 @@ let _SELECTED_ELEM = null;
 let _CORRECT_ELEM = null;
 let _CURRENT_AUDIO = null;
 let _CURRENT_INFOBOX = null;
+let _PROFILE_CONTAINER = null;
 let _INFOBOX_TRIGGERS = [];
 let _AUDIO_PLAYED = false;
 let _EMOJI_LOCK = false;
@@ -405,6 +406,10 @@ function load_state() {
         state = updated_state;
     }
 
+    if (state["current_profile"] === undefined || state["current_profile"] === null) {
+        state["current_profile"] = 100;
+    }
+
     STATE = state;
 }
 
@@ -444,12 +449,35 @@ function clear_profile_pulldown() {
     }
 }
 
+function _make_profile_click_handler(elem, profile) {
+    document.addEventListener("click", function(event) {
+        if (!(elem.contains(event.target))) {
+            return;
+        }
+
+        if (event.target.classList.contains("profile-settings-icon")) {
+            profile_settings(profile);
+        } else {
+            set_current_profile(profile);
+        }
+
+        toggle_profile_visibility();
+    });
+}
+
 function add_profile_pulldown_element(profile) {
-    let pulldownContainer = document.getElementById("profile-container");
+    if (_PROFILE_CONTAINER === null) {
+        _PROFILE_CONTAINER = document.getElementById("profile-container");
+    }
+
+
+    let pulldownContainer = _PROFILE_CONTAINER;
 
     let divElem = document.createElement("div");
     divElem.classList.add("pulldown-item");
     divElem.classList.add("pulldown-profile");
+    divElem.dataset.profileId = profile["id"];
+    _make_profile_click_handler(divElem, profile);
     pulldownContainer.insertBefore(divElem, pulldownContainer.lastElementChild);
 
     let iconElem = document.createElement("i");
@@ -460,7 +488,6 @@ function add_profile_pulldown_element(profile) {
     divElem.appendChild(iconElem);
 
     let settingsIconElem = document.createElement("i");
-    settingsIconElem.dataset.profileId = profile["id"];
     settingsIconElem.classList.add("profile-settings-icon");
     settingsIconElem.classList.add("fa");
     settingsIconElem.classList.add("fa-solid");
@@ -477,12 +504,46 @@ function populate_profile_pulldown() {
     if (STATE === null) {
         return;
     }
+
     // Remove all existing pulldown items
     clear_profile_pulldown();
 
     for (const profile of Object.values(STATE["profiles"])) {
         add_profile_pulldown_element(profile);
     }
+}
+
+function select_new_profile(elem) {
+    const id = elem.dataset.profileId;
+    STATE["current_profile"] = id;
+    set_current_profile(STATE["profiles"][id]);
+}
+
+function add_profile() {
+    //TODO: Implement
+    console.log("Creating new profile");
+}
+
+function profile_settings(profile) {
+    // TODO: Implement
+    console.log("Modifying settings for " + profile["name"]);
+}
+
+function set_current_profile(profile) {
+    let profileIconElem = document.getElementById("profile-icon");
+    if (profileIconElem.dataset.userIcon !== undefined) {
+        profileIconElem.classList.remove(profileIconElem.dataset.userIcon);
+    }
+
+    const user_icon = profile["icon"];
+    profileIconElem.classList.add(user_icon);
+    profileIconElem.dataset.userIcon = user_icon;
+
+    let profileNameSpanElem = document.getElementById("profile-text");
+    profileNameSpanElem.textContent = profile["name"];
+
+    STATE["current_profile"] = profile["id"];
+    save_state();
 }
 
 function populate_infobox_triggers() {
@@ -520,6 +581,8 @@ document.addEventListener("DOMContentLoaded", function() {
             reset_stats();
         }
     }
+
+    set_current_profile(STATE["profiles"][STATE["current_profile"]]);
     populate_infobox_triggers();
     populate_profile_pulldown();
     change_selector(STATE.current_chord);
