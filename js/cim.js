@@ -387,7 +387,7 @@ function load_state() {
     if (state === null) {
         state = {
             profiles: {
-                100: new_profile("Guest", "fa-user"),
+                100: new_profile("Guest", "fa-user", 100),
             },
             current_chord: document.getElementById("chord-selector").value,
         }
@@ -395,8 +395,8 @@ function load_state() {
         // Need to convert old-style state into profile-based state
         updated_state = {
             profiles: {
-                0: new_profile("Legacy User", "fa-user"),
-                100: new_profile("Guest", "fa-user"),
+                0: new_profile("Legacy User", "fa-user", 0),
+                100: new_profile("Guest", "fa-user", 100),
             },
             current_chord: state["current_chord"],
         }
@@ -408,8 +408,16 @@ function load_state() {
     STATE = state;
 }
 
-function new_profile(name, icon) {
+function new_profile(name, icon, id) {
+    if (id === undefined) {
+        id = 101;
+        while (id in STATE["profiles"]) {
+            id++;
+        }
+    }
+
     return {
+        id: id,
         name: name,
         icon: icon,
         stats: new_stats(),
@@ -427,6 +435,53 @@ function toggle_visibility(ibox_elem) {
 
         ibox_elem.classList.add("visible");
         _CURRENT_INFOBOX = ibox_elem;
+    }
+}
+
+function clear_profile_pulldown() {
+    for (var elem of document.getElementsByClassName("pulldown-profile")) {
+        elem.remove();
+    }
+}
+
+function add_profile_pulldown_element(profile) {
+    let pulldownContainer = document.getElementById("profile-container");
+
+    let divElem = document.createElement("div");
+    divElem.classList.add("pulldown-item");
+    divElem.classList.add("pulldown-profile");
+    pulldownContainer.insertBefore(divElem, pulldownContainer.lastElementChild);
+
+    let iconElem = document.createElement("i");
+    iconElem.classList.add("profile-icon");
+    iconElem.classList.add("fa");
+    iconElem.classList.add("fa-solid");
+    iconElem.classList.add(profile["icon"]);
+    divElem.appendChild(iconElem);
+
+    let settingsIconElem = document.createElement("i");
+    settingsIconElem.dataset.profileId = profile["id"];
+    settingsIconElem.classList.add("profile-settings-icon");
+    settingsIconElem.classList.add("fa");
+    settingsIconElem.classList.add("fa-solid");
+    settingsIconElem.classList.add("fa-gear");
+    divElem.appendChild(settingsIconElem);
+
+    let spanElem = document.createElement("span");
+    spanElem.classList.add("profile-name");
+    spanElem.textContent = profile["name"];
+    divElem.appendChild(spanElem);
+}
+
+function populate_profile_pulldown() {
+    if (STATE === null) {
+        return;
+    }
+    // Remove all existing pulldown items
+    clear_profile_pulldown();
+
+    for (const profile of Object.values(STATE["profiles"])) {
+        add_profile_pulldown_element(profile);
     }
 }
 
@@ -466,6 +521,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
     populate_infobox_triggers();
+    populate_profile_pulldown();
     change_selector(STATE.current_chord);
     update_stats_display();
 });
