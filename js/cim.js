@@ -13,13 +13,19 @@ function get_current_timestamp() {
     return Date.now() / 1000;
 }
 
+function is_recent(timestamp) {
+    return (get_current_timestamp() - timestamp) <= SESSION_TIMEOUT_TIME_SECONDS;
+}
+
 function new_stats() {
     return {
+        current_chord: get_selected_chord(),
         start_time: get_current_timestamp(),
         updated_time: get_current_timestamp(),
         identifications: 0,
         correct: 0,
         confusion_matrix: {},
+        done: false,
     }
 }
 
@@ -34,6 +40,8 @@ let _INFOBOX_TRIGGERS = [];
 let _AUDIO_PLAYED = false;
 let _EMOJI_LOCK = false;
 let _TRAINER_PRELOADED = false;
+let _SESSION_HISTORY = null;
+
 const _TARGET_NUMBER = 25;
 
 const _INFOBOX_TRIGGER_IDS = [
@@ -341,13 +349,40 @@ function populate_audio() {
 
 function change_selector(to) {
     let chord_selector = document.getElementById("chord-selector");
+
+    console.log("Changing current chord from " + STATE.current_chord +
+        " to " + chord_selector.value);
     if (to !== undefined) {
         chord_selector.value = to;
     }
+
+    if (STATE.current_chord !== chord_selector.value) {
+        const stats = get_current_profile().stats;
+        reset_stats(false);
+        STATE.current_chord = chord_selector.value;
+
+        // We don't want the statistics from a different selected chord level
+        // to carry over when we change chords, so we need to reset the stats;
+        // we also don't want to reset the statistics if someone accidentally
+        // selects a different chord and then tries to jump back, so we'll
+        // search the recent history for active sessions in other chords.
+        let current_history = get_current_session_history();
+        if (current_history !== undefined && current_history.length > 0) {
+            let last_session = current_history[current_history.length - 1];
+            if (!last_session.done) {
+                get_current_profile().stats = current_history.pop();
+                if (!is_recent(last_session.updated_time)) {
+                    reset_stats(true);
+                }
+            }
+        }
+        update_stats_display();
+    }
+
     _COLORS = null;
     populate_flags();
     populate_audio();
-    STATE.current_chord = chord_selector.value;
+
     save_state();
 
     // Pre-download chord MP3s
@@ -356,28 +391,40 @@ function change_selector(to) {
     }
 }
 
+function get_selected_chord() {
+    return document.getElementById("chord-selector").value;
+}
+
 function reset_local_storage() {
     // Not exposed at the moment, useful for debugging.
     localStorage.removeItem(STATE_KEY);
     localStorage.removeItem(SESSION_HISTORY_KEY);
 }
 
-function reset_stats() {
-    save_session_history();
+function reset_stats(done = true) {
+    get_current_profile().stats["done"] = done;
+    if (!done || (get_current_profile().stats.identifications > 0)) {
+        save_session_history();
+    }
     get_current_profile().stats = new_stats();
     save_state();
     update_stats_display();
 }
 
 function get_session_history() {
-    let history = localStorage.getObject(SESSION_HISTORY_KEY);
-    if (history === null || history.length == 0) {
-        return {};
-    } else if (Array.isArray(history)) {
-        // If it's an array, we need to upgrade it. The session history will
-        // be moved into "Legacy User".
-        history = {_LEGACY_USER_ID: history};
+    let history = _SESSION_HISTORY;
+    if (history === null) {
+        history = localStorage.getObject(SESSION_HISTORY_KEY);
     }
+    // If the history is unset or empty, we'll create a new object. If it's an
+    // array it's from before the format change; since this was never used or
+    // exposed before, we can just discard it.  If it's an array, we need to
+    // upgrade it. The session history will be moved into "Legacy User".
+    if (history === null || history.length == 0 || Array.isArray(history)) {
+        history = {};
+    }
+
+    _SESSION_HISTORY = history;
 
     return history;
 }
@@ -385,13 +432,26 @@ function get_session_history() {
 function get_current_session_history() {
     let full_history = get_session_history();
     const profile_id = get_current_profile()["id"];
-    let history = full_history[profile_id];
+    let histories = full_history[profile_id];
+    if (histories === undefined) {
+        histories = {};
+        full_history[profile_id] = histories;
+    }
+
+    let history = histories[STATE.current_chord];
     if (history === undefined) {
         history = [];
-        full_history[profile_id] = history;
+        histories[STATE.current_chord] = history;
     }
 
     return history;
+}
+
+function pop_latest_session_history() {
+    get_current_session_history();
+    const profile_id = get_current_profile()["id"];
+
+    return get_session_history()[profile_id][STATE.current_chord].pop();
 }
 
 function save_session_history() {
@@ -400,10 +460,18 @@ function save_session_history() {
 
     let current_session_history = session_history[profile_id];
     if (current_session_history === undefined) {
-        current_session_history = [];
+        current_session_history = {};
     }
 
-    current_session_history.push(get_current_profile().stats);
+    const chord = STATE.current_chord;
+    let chord_history = current_session_history[chord]
+    if (chord_history === undefined) {
+        chord_history = [];
+        current_session_history[chord] = chord_history;
+    }
+
+    chord_history.push(get_current_profile().stats);
+
     session_history[profile_id] = current_session_history;
     localStorage.setObject(SESSION_HISTORY_KEY, session_history);
 }
@@ -415,23 +483,23 @@ function save_state() {
 function load_state() {
     let state = localStorage.getObject(STATE_KEY);
     if (state === null) {
+        let new_profiles = {};
+        new_profiles[_GUEST_USER_ID] = new_profile("Guest", "fa-user", _GUEST_USER_ID);
         state = {
-            profiles: {
-                _GUEST_USER_ID: new_profile("Guest", "fa-user", _GUEST_USER_ID),
-            },
-            current_chord: document.getElementById("chord-selector").value,
+            profiles: new_profiles,
+            current_chord: get_selected_chord(),
         }
     } else if (state["profiles"] === undefined) {
         // Need to convert old-style state into profile-based state
+        let new_profiles = {};
+        new_profiles[_LEGACY_USER_ID] = new_profile("Legacy User", "fa-user", _LEGACY_USER_ID);
+        new_profiles[_GUEST_USER_ID] = new_profile("Guest", "fa-user", _GUEST_USER_ID);
         updated_state = {
-            profiles: {
-                _LEGACY_USER_ID: new_profile("Legacy User", "fa-user", _LEGACY_USER_ID),
-                _GUEST_USER_ID: new_profile("Guest", "fa-user", _GUEST_USER_ID),
-            },
+            profiles: new_profiles,
             current_chord: state["current_chord"],
         }
 
-        updated_state["profiles"][0]["stats"] = state["stats"];
+        updated_state["profiles"][_LEGACY_USER_ID]["stats"] = state["stats"];
         state = updated_state;
     }
 
@@ -612,7 +680,7 @@ document.addEventListener("DOMContentLoaded", function() {
     set_current_profile(get_current_profile());
     let stats = get_current_profile().stats;
     if (stats !== undefined && stats.updated_time !== undefined) {
-        if (get_current_timestamp() - stats.updated_time > SESSION_TIMEOUT_TIME_SECONDS) {
+        if (!is_recent(stats.updated_time)) {
             reset_stats();
         }
     }
