@@ -526,7 +526,7 @@ function new_profile_from_values(values) {
 }
 
 function new_profile(name, icon, id) {
-    if (id === undefined) {
+    if (id === undefined || id === null) {
         id = _GUEST_USER_ID + 1;
         while (id in STATE["profiles"]) {
             id++;
@@ -713,10 +713,11 @@ function get_profile_settings() {
         profile_icon = checked_icon_elem.value;
     }
 
+    let id = JSON.parse(profile_container.dataset.id);
     return {
         name: profile_name,
         icon: profile_icon,
-        id: parseInt(profile_container.dataset.id),
+        id: id,
     }
 }
 
@@ -783,7 +784,6 @@ function submit_profile_changes() {
 
     if (profile_values.id === get_current_profile().id) {
         // Do this to update the icon
-        console.log("hi");
         set_current_profile(get_current_profile());
     }
     close_profile_adder();
@@ -791,7 +791,7 @@ function submit_profile_changes() {
 
 function delete_profile() {
     const profile_container = document.getElementById("profile-info-container");
-    const profile_id = parseInt(profile_container.dataset.id);
+    const profile_id = JSON.parse(profile_container.dataset.id);
     if(confirm("Are you sure you want to delete the profile " + STATE.profiles[profile_id].name + "?")) {
         delete STATE.profiles[profile_id];
     }
