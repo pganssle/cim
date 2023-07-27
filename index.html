@@ -89,7 +89,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                                 <span id="profile-text" class="pulldown-target"></span>
                               </a>
                               <div class="pulldown infobox" id="profile-container">
-                                  <div class="pulldown-item" onclick="add_profile()">
+                                  <div class="pulldown-item" onclick="open_profile_adder()">
                                       <i class="profile-icon fa fa-solid fa-user-plus"></i><span class="profile-name">Add Profile</span>
                                   </div>
                               </div>
@@ -140,6 +140,30 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         <a id="mode-toggle" class="colorscheme-toggle" onclick="toggle_theme_mode()">
             <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
         </a>
+    </div>
+    <div class="add-profile-container" id="add-profile-container">
+        <span class="close-button" id="close-add-profile-container-button" onclick="close_profile_adder()">&times;</span>
+        <div class="entry-row">
+            <label for="profile_name">Profile Name:</label>
+            <input type="text" id="new_profile_name">
+        </div>
+        <div class="entry-row">
+            <label for="new_profile_icon_selector">Icon:</label>
+
+            <input type="radio" name="new_profile_icon_selector"
+                                value="fa-user" id="npis-user">
+            <label for="npis-user"><i class="fa fa-solid fa-user"></i></label>
+            <input type="radio" name="new_profile_icon_selector"
+                                value="fa-truck" id="npis-truck">
+            <label for="npis-truck"><i class="fa fa-solid fa-truck"></i></label>
+            <input type="radio" name="new_profile_icon_selector"
+                                value="fa-bolt" id="npis-bolt">
+            <label for="npis-bolt"><i class="fa fa-solid fa-bolt"></i></label>
+            <input type="radio" name="new_profile_icon_selector"
+                                value="fa-paw" id="npis-paw">
+            <label for="npis-paw"><i class="fa fa-solid fa-paw"></i></label>
+        </div>
+        <button id="add-user-button" onclick="add_profile()">Add Profile</button>
     </div>
     </body>
 </html>
