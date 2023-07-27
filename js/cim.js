@@ -42,6 +42,8 @@ let _EMOJI_LOCK = false;
 let _TRAINER_PRELOADED = false;
 let _SESSION_HISTORY = null;
 
+const _DEFAULT_CHORD = CHORDS[1][0];
+
 const _TARGET_NUMBER = 25;
 
 const _INFOBOX_TRIGGER_IDS = [
@@ -379,6 +381,7 @@ function change_selector(to) {
     if (STATE.current_chord !== chord_selector.value) {
         reset_stats(false);
         STATE.current_chord = chord_selector.value;
+        STATE.profiles[STATE.current_profile].current_chord = chord_selector.value;
 
         retrieve_saved_stats();
     }
@@ -527,6 +530,7 @@ function new_profile(name, icon, id) {
         name: name,
         icon: icon,
         stats: new_stats(),
+        current_chord: _DEFAULT_CHORD
     }
 }
 
@@ -690,7 +694,10 @@ function set_current_profile(profile) {
     reset_stats(false);
     STATE["current_profile"] = profile["id"];
 
-    retrieve_saved_stats();
+    if (profile["current_chord"] === undefined) {
+        profile["current_chord"] = _DEFAULT_CHORD;
+    }
+    change_selector(profile["current_chord"]);
 
     save_state();
 }
