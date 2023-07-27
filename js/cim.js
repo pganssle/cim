@@ -541,9 +541,7 @@ function toggle_visibility(ibox_elem) {
 }
 
 function clear_profile_pulldown() {
-    for (var elem of document.getElementsByClassName("pulldown-profile")) {
-        elem.remove();
-    }
+    Array.from(document.getElementsByClassName("pulldown-profile")).forEach((elem) => elem.remove());
 }
 
 function _make_profile_click_handler(elem, profile) {
@@ -566,7 +564,6 @@ function add_profile_pulldown_element(profile) {
     if (_PROFILE_CONTAINER === null) {
         _PROFILE_CONTAINER = document.getElementById("profile-container");
     }
-
 
     let pulldownContainer = _PROFILE_CONTAINER;
 
@@ -620,9 +617,51 @@ function select_new_profile(elem) {
     set_current_profile(STATE["profiles"][id]);
 }
 
-function add_profile() {
-    //TODO: Implement
+function open_profile_adder() {
     console.log("Creating new profile");
+
+    let profile_container = document.getElementById("add-profile-container");
+    profile_container.classList.add("visible");
+    toggle_profile_visibility();
+}
+
+function close_profile_adder() {
+    console.log("Closing profile adder");
+    let profile_container = document.getElementById("add-profile-container");
+    profile_container.classList.remove("visible");
+}
+
+function add_profile() {
+    let profile_container = document.getElementById("add-profile-container");
+    const profile_name_element = document.getElementById("new_profile_name");
+
+    let new_icon = null;
+    for (const elem of profile_container.querySelectorAll("input[name='new_profile_icon_selector']")) {
+        if (elem.checked) {
+            new_icon = elem.value;
+            break;
+        }
+    }
+
+    const new_profile_name = profile_name_element.value;
+
+    let name_taken = false;
+    for (const profile of Object.values(STATE["profiles"])) {
+        if (profile["name"].toLowerCase() === new_profile_name.toLowerCase()) {
+            name_taken = true;
+        }
+    }
+    if (new_icon === null || new_profile_name === "") {
+        alert("Must specify a profile name and icon.")
+    } else if (name_taken) {
+        alert("A profile with the name " + new_profile_name + " already  exists.");
+    } else {
+        const profile = new_profile(new_profile_name, new_icon);
+        STATE["profiles"][profile["id"]] = profile;
+        save_state();
+        populate_profile_pulldown();
+        close_profile_adder();
+    }
 }
 
 function profile_settings(profile) {

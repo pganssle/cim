@@ -318,6 +318,45 @@ body.colorscheme-dark .infobox {
     opacity: 1;
 }
 
+/* Modals */
+// Profile adder
+
+.add-profile-container {
+    display: none;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 30vw;
+    padding: 10px;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: visibility 0s, opacity 0.3s;
+    z-index: 100;
+}
+
+body.colorscheme-dark .add-profile-container {
+    background: $bg-color-dark;
+}
+
+body.colorscheme-light .add-profile-container {
+    background: $bg-color;
+}
+
+.add-profile-container.visible {
+    display: block;
+    opacity: 1;
+}
+
+.add-profile-container .close-button {
+    position: absolute;
+    top: 5%;
+    right: 5%;
+    font-size: 2em;
+}
+
 /* Flags */
 $red: red;
 $yellow: yellow;
