@@ -347,6 +347,26 @@ function populate_audio() {
     _AUDIO_PLAYED = false;
 }
 
+
+function retrieve_saved_stats() {
+    // We don't want the statistics from a different selected chord level
+    // or profile to carry over when we change chords or profiles, so when
+    // making one of these changes, call `reset_stats(false)`, then update
+    // the STATE object to the new state, then call this function to restore
+    // any recent incomplete sessions.
+    let current_history = get_current_session_history();
+    if (current_history !== undefined && current_history.length > 0) {
+        const last_session = current_history[current_history.length - 1];
+        if (!last_session.done) {
+            get_current_profile().stats = current_history.pop();
+            if (!is_recent(last_session.updated_time)) {
+                reset_stats(true);
+            }
+        }
+    }
+    update_stats_display();
+}
+
 function change_selector(to) {
     let chord_selector = document.getElementById("chord-selector");
 
@@ -357,26 +377,10 @@ function change_selector(to) {
     }
 
     if (STATE.current_chord !== chord_selector.value) {
-        const stats = get_current_profile().stats;
         reset_stats(false);
         STATE.current_chord = chord_selector.value;
 
-        // We don't want the statistics from a different selected chord level
-        // to carry over when we change chords, so we need to reset the stats;
-        // we also don't want to reset the statistics if someone accidentally
-        // selects a different chord and then tries to jump back, so we'll
-        // search the recent history for active sessions in other chords.
-        let current_history = get_current_session_history();
-        if (current_history !== undefined && current_history.length > 0) {
-            let last_session = current_history[current_history.length - 1];
-            if (!last_session.done) {
-                get_current_profile().stats = current_history.pop();
-                if (!is_recent(last_session.updated_time)) {
-                    reset_stats(true);
-                }
-            }
-        }
-        update_stats_display();
+        retrieve_saved_stats();
     }
 
     _COLORS = null;
@@ -682,7 +686,12 @@ function set_current_profile(profile) {
     let profileNameSpanElem = document.getElementById("profile-text");
     profileNameSpanElem.textContent = profile["name"];
 
+    // Reset the stats and retrieve any existing sessions
+    reset_stats(false);
     STATE["current_profile"] = profile["id"];
+
+    retrieve_saved_stats();
+
     save_state();
 }
 
