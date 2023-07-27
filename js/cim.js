@@ -589,12 +589,14 @@ function add_profile_pulldown_element(profile) {
     iconElem.classList.add(profile["icon"]);
     divElem.appendChild(iconElem);
 
-    let settingsIconElem = document.createElement("i");
-    settingsIconElem.classList.add("profile-settings-icon");
-    settingsIconElem.classList.add("fa");
-    settingsIconElem.classList.add("fa-solid");
-    settingsIconElem.classList.add("fa-gear");
-    divElem.appendChild(settingsIconElem);
+    if (profile.id !== _GUEST_USER_ID) {
+        let settingsIconElem = document.createElement("i");
+        settingsIconElem.classList.add("profile-settings-icon");
+        settingsIconElem.classList.add("fa");
+        settingsIconElem.classList.add("fa-solid");
+        settingsIconElem.classList.add("fa-gear");
+        divElem.appendChild(settingsIconElem);
+    }
 
     let spanElem = document.createElement("span");
     spanElem.classList.add("profile-name");
@@ -611,8 +613,14 @@ function populate_profile_pulldown() {
     clear_profile_pulldown();
 
     for (const profile of Object.values(STATE["profiles"])) {
+        // We want to add the Guest user at the very end
+        if (profile.id === _GUEST_USER_ID) {
+            continue;
+        }
         add_profile_pulldown_element(profile);
     }
+
+    add_profile_pulldown_element(STATE.profiles[_GUEST_USER_ID]);
 }
 
 function get_current_profile() {
