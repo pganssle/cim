@@ -321,7 +321,7 @@ body.colorscheme-dark .infobox {
 /* Modals */
 // Profile adder
 
-.add-profile-container {
+.profile-info-container {
     display: none;
     position: absolute;
     left: 50%;
@@ -337,24 +337,44 @@ body.colorscheme-dark .infobox {
     z-index: 100;
 }
 
-body.colorscheme-dark .add-profile-container {
+body.colorscheme-dark .profile-info-container {
     background: $bg-color-dark;
 }
 
-body.colorscheme-light .add-profile-container {
+body.colorscheme-light .profile-info-container {
     background: $bg-color;
 }
 
-.add-profile-container.visible {
+.profile-info-container.visible {
     display: block;
     opacity: 1;
 }
 
-.add-profile-container .close-button {
+.profile-info-container .close-button {
     position: absolute;
     top: 5%;
     right: 5%;
     font-size: 2em;
+}
+
+.profile-info-container button {
+    display: none;
+}
+
+.profile-info-container button.settings-button.visible {
+    display: block;
+}
+
+.profile-info-container button.add-button.visible {
+    display: block;
+}
+
+.profile-info-container div.button-container {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+    align-items: baseline;
+    width: 100%;
 }
 
 /* Flags */

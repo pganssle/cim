@@ -141,29 +141,35 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
             <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
         </a>
     </div>
-    <div class="add-profile-container" id="add-profile-container">
+
+    <!-- "Add profile" / "Profile settings" dialog -->
+    <div class="profile-info-container" id="profile-info-container">
         <span class="close-button" id="close-add-profile-container-button" onclick="close_profile_adder()">&times;</span>
         <div class="entry-row">
             <label for="profile_name">Profile Name:</label>
-            <input type="text" id="new_profile_name">
+            <input type="text" id="profile_name_setting" class="entry">
         </div>
         <div class="entry-row">
-            <label for="new_profile_icon_selector">Icon:</label>
+            <label for="profile_icon_selector">Icon:</label>
 
-            <input type="radio" name="new_profile_icon_selector"
+            <input type="radio" name="profile_icon_selector"
                                 value="fa-user" id="npis-user">
             <label for="npis-user"><i class="fa fa-solid fa-user"></i></label>
-            <input type="radio" name="new_profile_icon_selector"
+            <input type="radio" name="profile_icon_selector"
                                 value="fa-truck" id="npis-truck">
             <label for="npis-truck"><i class="fa fa-solid fa-truck"></i></label>
-            <input type="radio" name="new_profile_icon_selector"
+            <input type="radio" name="profile_icon_selector"
                                 value="fa-bolt" id="npis-bolt">
             <label for="npis-bolt"><i class="fa fa-solid fa-bolt"></i></label>
-            <input type="radio" name="new_profile_icon_selector"
+            <input type="radio" name="profile_icon_selector"
                                 value="fa-paw" id="npis-paw">
             <label for="npis-paw"><i class="fa fa-solid fa-paw"></i></label>
         </div>
-        <button id="add-user-button" onclick="add_profile()">Add Profile</button>
+        <div class="button-container">
+            <button class="button settings-button" id="delete-profile-button" onclick="delete_profile()">Delete Profile</button>
+            <button class="button settings-button" id="submit-changes-button" onclick="submit_profile_changes()">Save Changes</button>
+            <button class="button add-button" id="add-user-button" onclick="add_profile()">Add Profile</button>
+        </div>
     </div>
     </body>
 </html>
