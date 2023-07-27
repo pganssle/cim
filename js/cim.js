@@ -517,6 +517,14 @@ function load_state() {
     STATE = state;
 }
 
+function new_profile_from_values(values) {
+    return new_profile(
+        name=values.name,
+        icon=values.icon,
+        id=values.id,
+    );
+}
+
 function new_profile(name, icon, id) {
     if (id === undefined) {
         id = _GUEST_USER_ID + 1;
@@ -636,53 +644,161 @@ function select_new_profile(elem) {
 function open_profile_adder() {
     console.log("Creating new profile");
 
-    let profile_container = document.getElementById("add-profile-container");
+    clear_profile_dialog();
+    let profile_container = document.getElementById("profile-info-container");
     profile_container.classList.add("visible");
+
+    for(var elem of profile_container.querySelectorAll("button.add-button")) {
+        elem.classList.add("visible");
+    }
+
     toggle_profile_visibility();
 }
 
 function close_profile_adder() {
     console.log("Closing profile adder");
-    let profile_container = document.getElementById("add-profile-container");
+    let profile_container = document.getElementById("profile-info-container");
     profile_container.classList.remove("visible");
+    clear_profile_dialog();
 }
 
 function add_profile() {
-    let profile_container = document.getElementById("add-profile-container");
-    const profile_name_element = document.getElementById("new_profile_name");
+    let new_profile_values = get_profile_settings();
+    let name_taken = is_profile_name_taken(new_profile_values.name);
 
-    let new_icon = null;
-    for (const elem of profile_container.querySelectorAll("input[name='new_profile_icon_selector']")) {
-        if (elem.checked) {
-            new_icon = elem.value;
-            break;
-        }
-    }
-
-    const new_profile_name = profile_name_element.value;
-
-    let name_taken = false;
-    for (const profile of Object.values(STATE["profiles"])) {
-        if (profile["name"].toLowerCase() === new_profile_name.toLowerCase()) {
-            name_taken = true;
-        }
-    }
-    if (new_icon === null || new_profile_name === "") {
+    if (new_profile_values.icon === null || new_profile_values.name === "") {
         alert("Must specify a profile name and icon.")
     } else if (name_taken) {
-        alert("A profile with the name " + new_profile_name + " already  exists.");
+        alert("A profile with the name " + new_profile_values.name + " already  exists.");
     } else {
-        const profile = new_profile(new_profile_name, new_icon);
-        STATE["profiles"][profile["id"]] = profile;
+        const profile = new_profile_from_values(new_profile_values);
+        STATE.profiles[profile.id] = profile;
         save_state();
         populate_profile_pulldown();
         close_profile_adder();
     }
 }
 
+function get_checked_icon_selector_setting_elem() {
+    const profile_name_element = document.getElementById("profile-info-container");
+    for (const elem of profile_name_element.querySelectorAll("input[name='profile_icon_selector']")) {
+        if (elem.checked) {
+            return elem;
+        }
+    }
+
+    return null;
+}
+
+function is_profile_name_taken(profile_name) {
+    let name_taken = false;
+    for (const profile of Object.values(STATE.profiles)) {
+        if (profile.name.toLowerCase() === profile_name.toLowerCase()) {
+            name_taken = true;
+        }
+    }
+
+    return name_taken;
+}
+
+function get_profile_settings() {
+    let profile_container = document.getElementById("profile-info-container");
+
+    const profile_name_element = document.getElementById("profile_name_setting");
+    const profile_name = profile_name_element.value;
+
+    let profile_icon = null;
+    let checked_icon_elem = get_checked_icon_selector_setting_elem();
+    if (checked_icon_elem !== null) {
+        profile_icon = checked_icon_elem.value;
+    }
+
+    return {
+        name: profile_name,
+        icon: profile_icon,
+        id: parseInt(profile_container.dataset.id),
+    }
+}
+
+function clear_profile_dialog() {
+    let profile_dialog = document.getElementById("profile-info-container");
+
+    // Uncheck the radio button
+    let checked_icon_elem = get_checked_icon_selector_setting_elem();
+    if (checked_icon_elem !== null) {
+        checked_icon_elem.checked = false;
+    }
+
+    // Clear all text fields
+    for (let elem of profile_dialog.querySelectorAll("input[type='text']")) {
+        elem.value = "";
+    }
+
+    for (let elem of profile_dialog.querySelectorAll("button.button")) {
+        elem.classList.remove("visible");
+    }
+
+    profile_dialog.dataset.id = null;
+}
+
 function profile_settings(profile) {
-    // TODO: Implement
     console.log("Modifying settings for " + profile["name"]);
+    clear_profile_dialog();
+    let profile_dialog = document.getElementById("profile-info-container");
+    profile_dialog.classList.add("visible");
+    for(let elem of profile_dialog.querySelectorAll("button.settings-button")) {
+        elem.classList.add("visible");
+    }
+
+    let profile_name_elem = document.getElementById("profile_name_setting");
+    profile_name_elem.value = profile["name"];
+
+    for (var elem of profile_dialog.querySelectorAll("input[name='profile_icon_selector']")) {
+        if (elem.value === profile["icon"]) {
+            elem.checked = true;
+            break;
+        }
+    }
+    profile_dialog.dataset.id = profile["id"];
+}
+
+function submit_profile_changes() {
+    const profile_values = get_profile_settings();
+    let current_profile = STATE.profiles[profile_values.id];
+    if (current_profile.name !== profile_values.name && !is_profile_name_taken(profile_values.name)) {
+        alert("The name " + profile_values.name + " is taken, please choose another one.");
+        return;
+    }
+
+    if (profile_values.icon === null) {
+        alert("Must specify an icon!");
+        return;
+    }
+
+    current_profile.name = profile_values.name;
+    current_profile.icon = profile_values.icon;
+
+    save_state();
+    populate_profile_pulldown();
+
+    if (profile_values.id === get_current_profile().id) {
+        // Do this to update the icon
+        console.log("hi");
+        set_current_profile(get_current_profile());
+    }
+    close_profile_adder();
+}
+
+function delete_profile() {
+    const profile_container = document.getElementById("profile-info-container");
+    const profile_id = parseInt(profile_container.dataset.id);
+    if(confirm("Are you sure you want to delete the profile " + STATE.profiles[profile_id].name + "?")) {
+        delete STATE.profiles[profile_id];
+    }
+
+    save_state();
+    populate_profile_pulldown();
+    close_profile_adder();
 }
 
 function set_current_profile(profile) {
