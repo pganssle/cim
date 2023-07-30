@@ -377,6 +377,15 @@ body.colorscheme-light .profile-info-container {
     width: 100%;
 }
 
+a.download-button {
+    display: none;
+}
+
+a.download-button.visible {
+    display: block;
+}
+
+
 /* Flags */
 $red: red;
 $yellow: yellow;

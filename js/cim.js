@@ -41,6 +41,8 @@ let _AUDIO_PLAYED = false;
 let _EMOJI_LOCK = false;
 let _TRAINER_PRELOADED = false;
 let _SESSION_HISTORY = null;
+let _DOWNLOAD_ENABLED_CLICKS = 0;
+let _DOWNLOAD_ENABLED_LAST_CLICK = null;
 
 const _DEFAULT_CHORD = CHORDS[1][0];
 
@@ -852,6 +854,46 @@ function toggle_infobox_visibility() {
 function toggle_theme_mode() {
     document.body.classList.toggle("colorscheme-dark");
     document.body.classList.toggle("colorscheme-light");
+}
+
+function enable_download() {
+    if (_DOWNLOAD_ENABLED_CLICKS === -1) {
+        return;
+    }
+    let time_since_last_click = 0;
+    if (_DOWNLOAD_ENABLED_LAST_CLICK !== null) {
+        time_since_last_click = get_current_timestamp() - _DOWNLOAD_ENABLED_LAST_CLICK;
+    }
+
+    if (time_since_last_click > 1.5) {
+        _DOWNLOAD_ENABLED_CLICKS = 0;
+    }
+
+    if (_DOWNLOAD_ENABLED_CLICKS < 5) {
+        _DOWNLOAD_ENABLED_CLICKS++;
+        _DOWNLOAD_ENABLED_LAST_CLICK = get_current_timestamp();
+        return;
+    }
+
+
+    _DOWNLOAD_ENABLED_CLICKS = -1;
+
+    let elem = document.getElementById("download-link");
+    elem.classList.add("visible");
+}
+
+function download_state() {
+    const state_json = JSON.stringify({
+        state: STATE,
+        history: get_session_history()
+    }, null, 2);
+    const data = new Blob([state_json]);
+
+    let download_elem = document.createElement("a");
+    download_elem.href = URL.createObjectURL(data);
+    download_elem.download = "cim_state_" + Math.round(get_current_timestamp()) + ".json"
+    download_elem.click();
+    download_elem.remove();
 }
 
 document.addEventListener("DOMContentLoaded", function() {

@@ -39,7 +39,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
     <div class="container">
         <div class="header-container">
             <div class="header">
-                <h1>Chord Identification Method Trainer</h1>
+                <h1 onclick="enable_download()">Chord Identification Method Trainer</h1>
                     <div class="expansion-container">
                         <div class="infobox-container">
                             <a href="#"
@@ -137,8 +137,13 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
             </div>
     </div>
     <div class="mode-toggle-container">
-        <a id="mode-toggle" class="colorscheme-toggle" onclick="toggle_theme_mode()">
+        <a id="mode-toggle" class="colorscheme-toggle"
+                            onclick="toggle_theme_mode()"
+            >
             <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
+        </a>
+        <a id="download-link" class="download-button colorscheme-toggle" onclick="download_state()">
+            <i class="fa fa-download fa-fw" aria-hidden="true"></i>
         </a>
     </div>
 
