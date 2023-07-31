@@ -24,9 +24,8 @@ div.header {
 div.header h1 {
     flex-grow: 3;
     font-size: 3rem;
-    @media only screen and (max-width: 768px) {
+    @media only screen and (max-width: 1080px) {
         font-size: 1.25rem;
-
     }
 }
 
