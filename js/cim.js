@@ -46,7 +46,7 @@ function is_recent(timestamp) {
 
 function new_stats() {
     return {
-        current_chord: get_selected_chord(),
+        current_chord: STATE.current_chord,
         start_time: get_current_timestamp(),
         updated_time: get_current_timestamp(),
         identifications: 0,
@@ -450,10 +450,6 @@ function change_selector(to) {
     }
 }
 
-function get_selected_chord() {
-    return document.getElementById("chord-selector").value;
-}
-
 function reset_local_storage() {
     // Not exposed at the moment, useful for debugging.
     localStorage.removeItem(STATE_KEY);
@@ -546,7 +542,7 @@ function load_state() {
         new_profiles[_GUEST_USER_ID] = new_profile("Guest", "fa-user", _GUEST_USER_ID);
         state = {
             profiles: new_profiles,
-            current_chord: get_selected_chord(),
+            current_chord: STATE.current_chord,
         }
     } else if (state["profiles"] === undefined) {
         // Need to convert old-style state into profile-based state
@@ -903,7 +899,8 @@ function delete_profile() {
     close_profile_adder();
 }
 
-function set_current_profile(profile) {
+function populate_profile_ui_elements() {
+    const profile = get_current_profile();
     let profileIconElem = document.getElementById("profile-icon");
     if (profileIconElem.dataset.userIcon !== undefined) {
         profileIconElem.classList.remove(profileIconElem.dataset.userIcon);
@@ -915,15 +912,24 @@ function set_current_profile(profile) {
 
     let profileNameSpanElem = document.getElementById("profile-text");
     profileNameSpanElem.textContent = profile["name"];
+}
+
+function set_current_profile(profile) {
+    if (profile.id === get_current_profile().id) {
+        return;
+    }
 
     // Reset the stats and retrieve any existing sessions
     reset_stats(false);
-    STATE["current_profile"] = profile["id"];
+    STATE.current_profile = profile.id;
 
-    if (profile["current_chord"] === undefined) {
-        profile["current_chord"] = _DEFAULT_CHORD;
+    if (profile.current_chord === undefined) {
+        profile.current_chord = _DEFAULT_CHORD;
     }
-    change_selector(profile["current_chord"]);
+
+    populate_profile_ui_elements();
+
+    change_selector(profile.current_chord);
 
     save_state();
 }
@@ -1026,15 +1032,18 @@ function clean_session_history() {
 
 document.addEventListener("DOMContentLoaded", function() {
     load_state();
-    change_selector(STATE.current_chord);
-    set_current_profile(get_current_profile());
-    let stats = get_current_profile().stats;
+
+    const profile = get_current_profile().stats;
+
+    let stats = profile.stats;
     if (stats !== undefined && stats.updated_time !== undefined) {
         if (!is_recent(stats.updated_time)) {
             reset_stats();
         }
     }
 
+    populate_profile_ui_elements();
+    change_selector(profile.current_chord);
     populate_infobox_triggers();
     populate_profile_pulldown();
     update_stats_display();
