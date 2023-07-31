@@ -13,6 +13,31 @@ function get_current_timestamp() {
     return Date.now() / 1000;
 }
 
+function _pad_number(value, padding) {
+    return String(value).padStart(padding, '0');
+}
+function format_date(d) {
+    return d.getFullYear() + "-" +
+        _pad_number(d.getMonth(), 2) + "-" +
+        _pad_number(d.getDay(), 2);
+}
+
+function format_datetime(dt, offset=false) {
+    let out = format_date(dt) + " " + _pad_number(dt.getHours(), 2) + ":" +
+    _pad_number(dt.getMinutes(), 2);
+    if (offset) {
+        let tz_offset = dt.getTimezoneOffset(); // In minutes
+        let sign = (tz_offset < 0) ? "-" : "+";
+        tz_offset = Math.abs(tz_offset);
+        let tz_hours = _pad_number(Math.floor(tz_offset / 60), 2);
+        let tz_minutes = _pad_number(tz_offset % 60, 2);
+
+        out += sign + tz_hours + ":" + tz_minutes;
+    }
+
+    return out;
+}
+
 function is_recent(timestamp) {
     return (get_current_timestamp() - timestamp) <= SESSION_TIMEOUT_TIME_SECONDS;
 }
@@ -52,6 +77,7 @@ const _INFOBOX_TRIGGER_IDS = [
     "trainer-infobox-trigger",
     "i-infobox-trigger",
     "profile-infobox-trigger",
+    "stats-history-trigger",
 ];
 
 let AUDIO_FILES = null;
@@ -200,7 +226,7 @@ function update_stats(correct_color, chosen_color) {
     save_state();
 }
 
-function set_cat_emoji(level) {
+function get_cat_emoji(level) {
     const emoji_levels = {
         0: '😿',
         1: '😾',
@@ -211,7 +237,13 @@ function set_cat_emoji(level) {
         6: '😻',
     };
 
-    document.getElementById("reaction-emoji").innerHTML = emoji_levels[level];
+    return emoji_levels[level];
+}
+
+function set_cat_emoji(level) {
+    const emoji = get_cat_emoji(level);
+
+    document.getElementById("reaction-emoji").innerHTML = emoji;
 }
 
 
@@ -220,13 +252,22 @@ function calculate_neutral_level(percentage) {
     return level;
 }
 
-function calculate_percentage() {
-    let stats = get_current_profile().stats;
-    if (stats.identifications == 0) {
+function calculate_percentage(correct, identifications) {
+    if ((correct === undefined) != (identifications === undefined)) {
+        throw "Must specify both correct and identifications or neither.";
+    }
+    if (correct === undefined) {
+        let stats = get_current_profile().stats;
+
+        correct = stats.correct;
+        identifications = stats.identifications;
+    }
+
+    if (identifications == 0) {
         return 75;
     }
 
-    return 100 * stats.correct / stats.identifications;
+    return 100 * (correct / identifications);
 }
 
 
@@ -558,6 +599,56 @@ function toggle_visibility(ibox_elem) {
     }
 }
 
+function clear_stats_history_modal() {
+    let modal = document.getElementById("stats-history-container");
+    while (modal.firstChild) {
+        modal.removeChild(modal.lastChild);
+    }
+}
+
+function populate_stats_history_modal() {
+    clear_stats_history_modal();
+    let array = Object.values(get_session_history()[STATE.current_profile]).flat();
+    array.sort((a, b) => b.updated_time - a.updated_time);
+
+    let stats_container = document.getElementById("stats-history-container");
+
+    for (const session of array) {
+        const correct = session.correct;
+        const identifications = session.identifications;
+        const percentage = calculate_percentage(correct, identifications);
+        const emoji = get_cat_emoji(calculate_neutral_level(percentage));
+
+        if (identifications === 0) {
+            continue;
+        }
+
+        const date = new Date(session.start_time * 1000);
+
+        let div = document.createElement("div");
+        div.classList.add("stats-history-item");
+
+        let color = document.createElement("div");
+        color.classList.add(session["current_chord"]);
+        color.classList.add("stats-color");
+        div.appendChild(color);
+
+        let date_elem = document.createElement("div");
+        date_elem.classList.add("stats-date");
+        date_elem.innerText = format_datetime(date, offset=false);
+        div.appendChild(date_elem);
+
+        let stats = document.createElement("div");
+        stats.classList.add("session-stats");
+        stats.innerText = correct + " / " + identifications + " (" +
+            percentage.toFixed(1) +
+            "%) " + emoji;
+        div.appendChild(stats);
+
+        stats_container.appendChild(div);
+    }
+}
+
 function clear_profile_pulldown() {
     Array.from(document.getElementsByClassName("pulldown-profile")).forEach((elem) => elem.remove());
 }
@@ -849,6 +940,11 @@ function toggle_trainer_visibility() {
 
 function toggle_infobox_visibility() {
     toggle_visibility(document.getElementById("i-infobox"));
+}
+
+function toggle_stats_history_visibility() {
+    populate_stats_history_modal();
+    toggle_visibility(document.getElementById("stats-history-container"));
 }
 
 function toggle_theme_mode() {

@@ -48,6 +48,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                                onclick="toggle_trainer_visibility()">
                             <i class="fa fa-solid fa-music"></i>
                           </a>
+                          <!-- Music player -->
                           <div class="infobox" id="trainer-infobox">
                               <h2>Music Trainer: Play the chords manually</h2>
                               <div class="trainer-container">
@@ -77,6 +78,16 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                             <p>Introduce the chords to the children one at a time, spacing out new chord introductions by at least 2 weeks each time. Do not introduce a new chord until the child can identify all presented chords with 100% accuracy.</p>
                             <p><b>Note</b>: This application is an early alpha. I'm still in the first training phase so I've put off work on the later parts of the method until my son catches up. Let me know if you need a feature to make this work, of if it seems that I've misunderstood the method as described in the paper. Please feel free to make pull requests or report issues on <a href="https://github.com/pganssle/cim">the GitHub repository</a>.</p>
                           </div>
+                        </div>
+                        <!-- Statistics -->
+                        <div class="infobox-container">
+                            <a href="#"
+                               id="stats-history-trigger"
+                               class="infobox-trigger"
+                               onclick="toggle_stats_history_visibility()">
+                            <i class="fa fa-solid fa-line-chart"></i>
+                          </a>
+                          <div class="infobox stats-history-container" id="stats-history-container"></div>
                         </div>
                         <!-- Profiles -->
                         <div class="infobox-container">

@@ -385,6 +385,73 @@ a.download-button.visible {
     display: block;
 }
 
+// Stats container
+div.stats-history-container {
+    width: fit-content;
+    max-height: 40vw;
+    max-width: 90vw;
+    overflow-y: auto;
+    flex-flow: column nowrap;
+    align-content: flex-start;
+    overflow-x: none;
+
+}
+
+div.stats-history-container.visible {
+    display: inline-flex;
+}
+
+div.stats-history-container > div.stats-history-item {
+    display: inline-flex;
+    width: fit-content;
+    white-space: nowrap;
+    flex-flow: row nowrap;
+    max-height: 4rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+body.colorscheme-dark div.stats-history-container > div.stats-history-item > div.stats-color {
+    border: 1px solid white;
+}
+
+body.colorscheme-light div.stats-history-container > div.stats-history-item > div.stats-color {
+    border: 1px solid black;
+}
+
+div.stats-history-item > div.stats-color {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    flex: 0 0 10%;
+    width: 10%;
+}
+
+div.stats-history-item > div.stats-date {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    flex: 0 0 20%;
+}
+
+div.stats-history-item > div.session-stats {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    font-weight: bold;
+    min-width: 20vw;
+}
+
+.stats-container .close-button {
+    position: absolute;
+    top: 0;
+    right: 0.5rem;
+    font-size: 2em;
+}
+
 
 /* Flags */
 $red: red;
