@@ -992,8 +992,32 @@ function download_state() {
     download_elem.remove();
 }
 
+function clean_session_history() {
+    console.log("Cleaning session history");
+    let full_history = get_session_history();
+    // Remove any sessions that have 0 identifications, and for any
+    // remaining sessions, make sure that the chord recorded is the right one
+    // (this only applies to sessions recorded before a certain bug was fixed).
+    for (let profile_history of Object.values(full_history)) {
+        for (const chord of Object.keys(profile_history)) {
+            profile_history[chord] = profile_history[chord].filter(
+                (o) => o.identifications && (o.done || !is_recent(o.updated_time)))
+                .map(function (o) {
+                    if (o.current_chord != chord) {
+                        o.current_chord = chord;
+                    }
+
+                    return o;
+                });
+        }
+    }
+
+    save_session_history();
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     load_state();
+    change_selector(STATE.current_chord);
     set_current_profile(get_current_profile());
     let stats = get_current_profile().stats;
     if (stats !== undefined && stats.updated_time !== undefined) {
@@ -1004,8 +1028,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     populate_infobox_triggers();
     populate_profile_pulldown();
-    change_selector(STATE.current_chord);
     update_stats_display();
+    clean_session_history();
 });
 
 document.addEventListener("click", function(event) {
