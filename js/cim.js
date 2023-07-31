@@ -433,7 +433,10 @@ function change_selector(to) {
     if (STATE.current_chord !== chord_selector.value) {
         reset_stats(false);
         STATE.current_chord = chord_selector.value;
-        STATE.profiles[STATE.current_profile].current_chord = chord_selector.value;
+
+        const current_profile = get_current_profile();
+        current_profile.current_chord = chord_selector.value;
+        current_profile.stats.current_chord = current_profile.current_chord;
 
         retrieve_saved_stats();
     }
@@ -525,7 +528,11 @@ function save_session_history() {
         current_session_history[chord] = chord_history;
     }
 
-    chord_history.push(get_current_profile().stats);
+    const current_stats = get_current_profile().stats;
+    const last_session = chord_history[chord_history.length - 1];
+    if (last_session === undefined || (current_stats.start_time !== last_session.start_time)) {
+        chord_history.push(get_current_profile().stats);
+    }
 
     session_history[profile_id] = current_session_history;
     localStorage.setObject(SESSION_HISTORY_KEY, session_history);
@@ -1016,7 +1023,7 @@ function clean_session_history() {
     for (let profile_history of Object.values(full_history)) {
         for (const chord of Object.keys(profile_history)) {
             profile_history[chord] = profile_history[chord].filter(
-                    (o) => o.identifications && (o.done || !is_recent(o.updated_time)))
+                    (o) => o.identifications || (!o.done && is_recent(o.updated_time)))
                 .map(function(o) {
                     if (o.current_chord != chord) {
                         o.current_chord = chord;
