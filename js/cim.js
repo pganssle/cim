@@ -18,8 +18,8 @@ function _pad_number(value, padding) {
 }
 function format_date(d) {
     return d.getFullYear() + "-" +
-        _pad_number(d.getMonth(), 2) + "-" +
-        _pad_number(d.getDay(), 2);
+        _pad_number(d.getMonth() + 1, 2) + "-" +
+        _pad_number(d.getDate(), 2);
 }
 
 function format_datetime(dt, offset=false) {

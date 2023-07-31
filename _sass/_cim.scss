@@ -388,12 +388,11 @@ a.download-button.visible {
 div.stats-history-container {
     width: fit-content;
     max-height: 40vw;
-    max-width: 90vw;
+    max-width: 95vw;
     overflow-y: auto;
     flex-flow: column nowrap;
     align-content: flex-start;
     overflow-x: none;
-
 }
 
 div.stats-history-container.visible {
@@ -432,6 +431,9 @@ div.stats-history-item > div.stats-date {
     margin-left: 0.5rem;
     margin-right: 0.5rem;
     flex: 0 0 20%;
+    @media only screen and (max-width: 1080px) {
+        font-size: 0.8em;
+    }
 }
 
 div.stats-history-item > div.session-stats {
