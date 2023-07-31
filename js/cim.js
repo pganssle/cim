@@ -1023,7 +1023,18 @@ function clean_session_history() {
                     }
 
                     return o;
-                });
+                })
+                .reduce((accumulator, value) => {
+                    // Remove duplicates
+                    const last_session = accumulator[accumulator.length - 1];
+                    if (last_session === undefined || value.identifications !== last_session.identifications ||
+                        value.start_time !== last_session.start_time) {
+                        accumulator.push(value);
+                    }
+
+                    return accumulator;
+
+                }, []);
         }
     }
 
