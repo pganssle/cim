@@ -1,12 +1,13 @@
 const CHORDS = [
-    ["red", "ceg",],
-    ["yellow", "cfa",],
-    ["blue", "hdg",],
-    ["black", "acf",], ["green", "dgh",],
-    ["orange", "egc",],
-    ["purple", "fac",],
-    ["pink", "ghd",],
-    ["brown", "gce",],
+    ["red", "ceg", ],
+    ["yellow", "cfa", ],
+    ["blue", "hdg", ],
+    ["black", "acf", ],
+    ["green", "dgh", ],
+    ["orange", "egc", ],
+    ["purple", "fac", ],
+    ["pink", "ghd", ],
+    ["brown", "gce", ],
 ];
 
 function get_current_timestamp() {
@@ -16,15 +17,16 @@ function get_current_timestamp() {
 function _pad_number(value, padding) {
     return String(value).padStart(padding, '0');
 }
+
 function format_date(d) {
     return d.getFullYear() + "-" +
         _pad_number(d.getMonth() + 1, 2) + "-" +
         _pad_number(d.getDate(), 2);
 }
 
-function format_datetime(dt, offset=false) {
+function format_datetime(dt, offset = false) {
     let out = format_date(dt) + " " + _pad_number(dt.getHours(), 2) + ":" +
-    _pad_number(dt.getMinutes(), 2);
+        _pad_number(dt.getMinutes(), 2);
     if (offset) {
         let tz_offset = dt.getTimezoneOffset(); // In minutes
         let sign = (tz_offset < 0) ? "-" : "+";
@@ -177,7 +179,9 @@ function audio_file_elem(audio_file) {
         audio_file.elem.classList.add("chord");
         audio_file.elem.controls = true;
         audio_file.elem.src = "static_files/chords/" + audio_file.filename;
-        audio_file.elem.onended = () => { _AUDIO_PLAYED = true; };
+        audio_file.elem.onended = () => {
+            _AUDIO_PLAYED = true;
+        };
         audio_file.elem.onplay = register_playing(audio_file.elem);
     }
 
@@ -302,7 +306,7 @@ function update_stats_display() {
         container_elem.classList.remove("done");
     }
 
-    if(!_EMOJI_LOCK) {
+    if (!_EMOJI_LOCK) {
         reset_cat_emoji();
     }
 }
@@ -336,7 +340,10 @@ function select_flag(elem) {
     }
     _SELECTED_ELEM = elem;
 
-    setTimeout(function() { _EMOJI_LOCK = false; reset_cat_emoji(); }, 1500);
+    setTimeout(function() {
+        _EMOJI_LOCK = false;
+        reset_cat_emoji();
+    }, 1500);
 
     let next_button = document.getElementById("next-chord");
     next_button.classList.remove("deactivated");
@@ -344,8 +351,10 @@ function select_flag(elem) {
 
 function register_playing(elem) {
     return function() {
-        setTimeout(() => { _AUDIO_PLAYED = true; },
-                   elem.duration * 0.8);
+        setTimeout(() => {
+                _AUDIO_PLAYED = true;
+            },
+            elem.duration * 0.8);
     }
 }
 
@@ -562,9 +571,9 @@ function load_state() {
 
 function new_profile_from_values(values) {
     return new_profile(
-        name=values.name,
-        icon=values.icon,
-        id=values.id,
+        name = values.name,
+        icon = values.icon,
+        id = values.id,
     );
 }
 
@@ -635,7 +644,7 @@ function populate_stats_history_modal() {
 
         let date_elem = document.createElement("div");
         date_elem.classList.add("stats-date");
-        date_elem.innerText = format_datetime(date, offset=false);
+        date_elem.innerText = format_datetime(date, offset = false);
         div.appendChild(date_elem);
 
         let stats = document.createElement("div");
@@ -741,7 +750,7 @@ function open_profile_adder() {
     let profile_container = document.getElementById("profile-info-container");
     profile_container.classList.add("visible");
 
-    for(var elem of profile_container.querySelectorAll("button.add-button")) {
+    for (var elem of profile_container.querySelectorAll("button.add-button")) {
         elem.classList.add("visible");
     }
 
@@ -840,7 +849,7 @@ function profile_settings(profile) {
     clear_profile_dialog();
     let profile_dialog = document.getElementById("profile-info-container");
     profile_dialog.classList.add("visible");
-    for(let elem of profile_dialog.querySelectorAll("button.settings-button")) {
+    for (let elem of profile_dialog.querySelectorAll("button.settings-button")) {
         elem.classList.add("visible");
     }
 
@@ -885,7 +894,7 @@ function submit_profile_changes() {
 function delete_profile() {
     const profile_container = document.getElementById("profile-info-container");
     const profile_id = JSON.parse(profile_container.dataset.id);
-    if(confirm("Are you sure you want to delete the profile " + STATE.profiles[profile_id].name + "?")) {
+    if (confirm("Are you sure you want to delete the profile " + STATE.profiles[profile_id].name + "?")) {
         delete STATE.profiles[profile_id];
     }
 
@@ -1001,8 +1010,8 @@ function clean_session_history() {
     for (let profile_history of Object.values(full_history)) {
         for (const chord of Object.keys(profile_history)) {
             profile_history[chord] = profile_history[chord].filter(
-                (o) => o.identifications && (o.done || !is_recent(o.updated_time)))
-                .map(function (o) {
+                    (o) => o.identifications && (o.done || !is_recent(o.updated_time)))
+                .map(function(o) {
                     if (o.current_chord != chord) {
                         o.current_chord = chord;
                     }
@@ -1038,7 +1047,7 @@ document.addEventListener("click", function(event) {
     }
 
     for (const infobox_trigger of _INFOBOX_TRIGGERS) {
-        if (infobox_trigger.contains(event.target) ) {
+        if (infobox_trigger.contains(event.target)) {
             return;
         }
     }
