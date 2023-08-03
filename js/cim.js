@@ -70,6 +70,9 @@ let _TRAINER_PRELOADED = false;
 let _SESSION_HISTORY = null;
 let _DOWNLOAD_ENABLED_CLICKS = 0;
 let _DOWNLOAD_ENABLED_LAST_CLICK = null;
+let _EASTER_EGG_CLICKS = 0;
+let _EASTER_EGG_LAST_CLICK = null;
+let _EASTER_EGG_ENABLED = false;
 
 const _DEFAULT_CHORD = CHORDS[1][0];
 
@@ -97,7 +100,7 @@ let STATE = null;
 function get_selected_colors() {
     // The chord selector does not include "red" as an option, so we need to
     // shift the index up by 1.
-    const chord_idx = document.getElementById("chord-selector").selectedIndex + 1;
+    const chord_idx = document.getElementById("chord-selector").selectedIndex + (_EASTER_EGG_ENABLED ? 0 : 1);
     if (_COLORS === null) {
         _COLORS = CHORDS.slice(0, chord_idx + 1).map(([x, _]) => x);
     }
@@ -998,6 +1001,34 @@ function enable_download() {
 
     let elem = document.getElementById("download-link");
     elem.classList.add("visible");
+}
+
+function trigger_easter_egg() {
+    if (_EASTER_EGG_ENABLED === true) {
+        return;
+    }
+    let time_since_last_click = 0;
+    if (_EASTER_EGG_LAST_CLICK !== null) {
+        time_since_last_click = get_current_timestamp() - _EASTER_EGG_LAST_CLICK;
+    }
+
+    if (time_since_last_click > 1.5) {
+        _EASTER_EGG_LAST_CLICK = 0;
+    }
+
+    if (_EASTER_EGG_LAST_CLICK < 5) {
+        _EASTER_EGG_LAST_CLICK++;
+        _EASTER_EGG_LAST_CLICK = get_current_timestamp();
+        return;
+    }
+
+    _EASTER_EGG_ENABLED = true;
+
+    let chord_elem = document.getElementById("chord-selector");
+    let new_option = document.createElement("option");
+    new_option.value = "red"
+    new_option.text = "Level 0: Red (CEG)"
+    chord_elem.insertBefore(new_option, chord_elem.firstChild);
 }
 
 function download_state() {
