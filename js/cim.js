@@ -46,7 +46,7 @@ function is_recent(timestamp) {
 
 function new_stats() {
     return {
-        current_chord: STATE.current_chord,
+        current_chord: STATE !== null ? STATE.current_chord : _DEFAULT_CHORD,
         start_time: get_current_timestamp(),
         updated_time: get_current_timestamp(),
         identifications: 0,
