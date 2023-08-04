@@ -237,10 +237,13 @@ audio.chord {
 /* Infobox styles */
 .infobox {
   position: absolute;
-  top: 100%;
-  left: 00%;
-  transform: translateX(-100%);
+  top: 5%;
+  left: 50%;
+  transform: translateX(-50%);
   width: 60vw;
+  @media only screen and (max-width: 400) {
+      width: 95vw;
+  }
   padding: 10px;
   border: 1px solid #cccccc;
   border-radius: 5px;
