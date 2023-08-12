@@ -552,7 +552,7 @@ function load_state() {
         new_profiles[_GUEST_USER_ID] = new_profile("Guest", "fa-user", _GUEST_USER_ID);
         state = {
             profiles: new_profiles,
-            current_chord: STATE.current_chord,
+            current_chord: _DEFAULT_CHORD,
         }
     } else if (state["profiles"] === undefined) {
         // Need to convert old-style state into profile-based state
