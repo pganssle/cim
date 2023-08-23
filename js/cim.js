@@ -1052,6 +1052,13 @@ function clean_session_history() {
     // remaining sessions, make sure that the chord recorded is the right one
     // (this only applies to sessions recorded before a certain bug was fixed).
     for (let profile_history of Object.values(full_history)) {
+        // There is a bug that can occur when you use the "red" easter egg where
+        // the session is saved with an empty chord. We will just remove these,
+        // as they are not important.
+        if (profile_history[""] !== undefined) {
+            delete profile_history[""];
+        }
+
         for (const chord of Object.keys(profile_history)) {
             profile_history[chord] = profile_history[chord].filter(
                     (o) => o.identifications || (!o.done && is_recent(o.updated_time)))
