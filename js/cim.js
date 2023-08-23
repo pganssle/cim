@@ -58,6 +58,7 @@ function new_stats() {
 
 let _COLORS = null;
 let _CORRECT_COLOR = null;
+let _CURRENT_COEFFICIENTS = null;
 let _SELECTED_ELEM = null;
 let _CORRECT_ELEM = null;
 let _CURRENT_AUDIO = null;
@@ -191,12 +192,38 @@ function audio_file_elem(audio_file) {
     return audio_file.elem;
 }
 
-function random_elem(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
+function sum(arr) {
+    return arr.reduce((a, b) => a + b, 0);
+}
+
+function cumulative_sum(arr) {
+    let out = new Array();
+    let acc = 0;
+    for (const value of arr) {
+        acc += value;
+        out.push(acc);
+    }
+
+    return out;
+}
+
+function random_elem(arr, weights) {
+    if (weights === undefined) {
+        return arr[Math.floor(Math.random() * arr.length)];
+    } else {
+        const cum_weights = cumulative_sum(weights);
+        const number = Math.random();
+        for (const [index, value] of arr.entries()) {
+            if (number <= cum_weights[index]) {
+                return value;
+            }
+        }
+    }
 }
 
 function select_new_color() {
-    _CORRECT_COLOR = random_elem(get_selected_colors());
+    weights = get_current_coefficients();
+    _CORRECT_COLOR = random_elem(get_selected_colors(), weights);
     if (_SELECTED_ELEM !== null) {
         _SELECTED_ELEM.classList.remove("flag-correct");
         _SELECTED_ELEM.classList.remove("flag-incorrect");
@@ -216,6 +243,10 @@ function update_stats(correct_color, chosen_color) {
     stats.identifications++;
     if (correct) {
         stats.correct++;
+    }
+
+    if (correct_color === undefined) {
+        debugger;
     }
 
     if (stats.confusion_matrix[correct_color] === undefined) {
@@ -468,6 +499,7 @@ function reset_stats(done = true) {
         save_session_history();
     }
     get_current_profile().stats = new_stats();
+    _CURRENT_COEFFICIENTS = null; // Trigger re-calculation of weights.
     save_state();
     update_stats_display();
 }
@@ -1043,6 +1075,119 @@ function download_state() {
     download_elem.download = "cim_state_" + Math.round(get_current_timestamp()) + ".json"
     download_elem.click();
     download_elem.remove();
+}
+
+function get_current_coefficients() {
+    if (_CURRENT_COEFFICIENTS !== null) {
+        return _CURRENT_COEFFICIENTS;
+    }
+    const WEEK_SECONDS = 7 * 24 * 3600;
+    const current_time = get_current_timestamp();
+    const recent_confusion_matrices = get_current_session_history()
+        .filter((x) => (current_time - x.start_time) < WEEK_SECONDS)
+        .map((x) => x.confusion_matrix);
+    const num_chords = CHORDS.map((x) => x[0]).indexOf(STATE.current_chord) + 1;
+
+    const matrix = merge_matrices(recent_confusion_matrices, num_chords);
+
+    return calculate_coefficients(matrix);
+}
+
+function merge_matrices(confusion_matrices, num_chords) {
+    // Initialize to all zeroes
+    let chords = CHORDS.slice(0, num_chords).map((x) => x[0]);
+    let out_matrix = Object.fromEntries(chords.map((x) => [x, Object.fromEntries(chords.map((x) => [x, 0]))]));
+    for (const cm of confusion_matrices) {
+        for (const ok of Object.keys(cm)) {
+            for (const ik of Object.keys(cm[ok])) {
+                out_matrix[ok][ik] = out_matrix[ok][ik] + cm[ok][ik];
+            }
+        }
+    }
+
+    return out_matrix;
+}
+
+function normalize_array_masked(arr, mask) {
+    const norm_to = 1 - sum(arr.filter((_, i) => mask[i]));
+    const norm_factor = sum(arr.filter((_, i) => !mask[i])) / norm_to;
+    return arr.map((val, i) => (mask[i]) ? val : val / norm_factor);
+}
+
+function calculate_coefficients(matrix, wrong_weight = 5.0, mistaken_for_weight = 1.5, threshold = 5) {
+    // For adaptive learning mode, we want to adjust the frequency inversely with
+    // both the frequency that the user got the chord wrong *and* the frequency
+    // that the user mistakenly chose the color in question. So if the user
+    // consistently mistakes blue for red (but never mistakes red for blue),
+    // we want to show blue more frequently *and* red more frequently, but with
+    // different coefficients.
+    //
+    // The non-normalized coefficient for chord i (c_i) is calculated from the
+    // matrix M with weights w_w (weight given to each wrong answer when the
+    // correct answer is chord i) and w_m (weight given to each wrong answer
+    // when chord i was chosen) as follows:
+    //
+    // c_i = f_i * (M_{i,i} + w_w*(Σ_{k≠i}M_{i,k}) + w_m*(Σ_{k≠i}M_{k,i})
+    //
+    // Where the factor f_i is given by:
+    //
+    // f_i = Σ_{k} M_{i,k}.
+    //
+    // If f_i is less than the threshold value, the final, normalized
+    // coefficient is set to 1/len(c), and all other coefficients are
+    // re-normalized accordingly. The minimum value of all coefficients is
+    // set to 1/(10 + len(c), except the most recent chord, which has a
+    // minimum coefficient of 1 / len(c); if the natural coefficient for
+    // a given chord falls below the minimum coefficient, it is set to the
+    // minimum value, and all other coefficients are adjusted accordingly
+    // (except for those with no entries, which will always be fixed at
+    // (1/len(c)).
+    const chords = Object.keys(matrix);
+    const num_chords = chords.length;
+    const default_value = 1 / num_chords;
+    let coefficients = new Array(num_chords).fill(0);
+    let num_chances = new Array(num_chords).fill(0);
+    let min_values = new Array(num_chords).fill(1 / (10 + num_chords));
+    min_values[num_chords - 1] = 1 / num_chords;
+
+    // Populate with un-normalized values
+    for (const [correct_index, correct_chord] of chords.entries()) {
+        for (const [chosen_index, chosen_chord] of chords.entries()) {
+            const value = matrix[correct_chord][chosen_chord];
+            if (value === undefined) {
+                continue;
+            }
+            if (chosen_index != correct_index) {
+                coefficients[correct_index] += value * wrong_weight;
+                coefficients[chosen_index] += value * mistaken_for_weight;
+            } else {
+                coefficients[correct_index] += value;
+            }
+            num_chances[correct_index] += value;
+        }
+    }
+
+    // First establish the mask and fix the masked values
+    let mask = num_chances.map((x) => x < threshold);
+    coefficients = coefficients.map((value, i) => mask[i] ? default_value : value);
+
+    // Iteratively normalize
+    let normalized = false;
+    while (!normalized) {
+        coefficients = normalize_array_masked(coefficients, mask);
+        normalized = true;
+        for (const [index, value] of coefficients.entries()) {
+            const min_coefficient = min_values[index];
+            if (value < min_coefficient) {
+                mask[index] = true;
+                coefficients[index] = min_coefficient;
+                normalized = false;
+                break;
+            }
+        }
+    }
+
+    return coefficients;
 }
 
 function clean_session_history() {
