@@ -1077,13 +1077,24 @@ function download_state() {
     download_elem.remove();
 }
 
+const WEEK_SECONDS = 7 * 24 * 3600;
+
 function get_current_coefficients() {
     if (_CURRENT_COEFFICIENTS !== null) {
         return _CURRENT_COEFFICIENTS;
     }
-    const WEEK_SECONDS = 7 * 24 * 3600;
-    const current_time = get_current_timestamp();
-    const recent_confusion_matrices = get_current_session_history()
+    let current_time = get_current_timestamp();
+    const unfiltered_session_history = get_current_session_history();
+
+    // Look at the most recent 1 week of identifications for the specified
+    // color, where "most recent" is defined as the week leading up to the
+    // most recent session taken to completion.
+    if (unfiltered_session_history.length > 1) {
+        current_time = Math.max(...unfiltered_session_history.map(
+        (x) => (x.identifications >= _TARGET_NUMBER) ? x.start_time : 0));
+    }
+
+    const recent_confusion_matrices = unfiltered_session_history
         .filter((x) => (current_time - x.start_time) < WEEK_SECONDS)
         .map((x) => x.confusion_matrix);
     const num_chords = CHORDS.map((x) => x[0]).indexOf(STATE.current_chord) + 1;
