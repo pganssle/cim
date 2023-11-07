@@ -77,7 +77,7 @@ let _EASTER_EGG_ENABLED = false;
 
 const _DEFAULT_CHORD = CHORDS[1][0];
 
-const _TARGET_NUMBER = 25;
+const _DEFAULT_TARGET_NUMBER = 25;
 
 const _INFOBOX_TRIGGER_IDS = [
     "trainer-infobox-trigger",
@@ -334,7 +334,7 @@ function update_stats_display() {
         container_elem.classList.remove("perfect");
     }
 
-    if (identifications >= _TARGET_NUMBER) {
+    if (identifications >= get_current_target_number()) {
         container_elem.classList.add("done");
     } else {
         container_elem.classList.remove("done");
@@ -522,6 +522,16 @@ function get_session_history() {
     return history;
 }
 
+function get_current_target_number() {
+    let target_number = get_current_profile().target_number;
+    if (target_number === undefined) {
+        target_number = _DEFAULT_TARGET_NUMBER;
+        get_current_profile().target_number = target_number;
+    }
+
+    return target_number;
+}
+
 function get_current_session_history() {
     let full_history = get_session_history();
     const profile_id = get_current_profile()["id"];
@@ -612,10 +622,11 @@ function new_profile_from_values(values) {
         name = values.name,
         icon = values.icon,
         id = values.id,
+        target_number = parseInt(values.target_number),
     );
 }
 
-function new_profile(name, icon, id) {
+function new_profile(name, icon, id, target_number=_DEFAULT_TARGET_NUMBER) {
     if (id === undefined || id === null) {
         id = _GUEST_USER_ID + 1;
         while (id in STATE["profiles"]) {
@@ -627,6 +638,7 @@ function new_profile(name, icon, id) {
         id: id,
         name: name,
         icon: icon,
+        target_number: target_number,
         stats: new_stats(),
         current_chord: _DEFAULT_CHORD
     }
@@ -792,6 +804,9 @@ function open_profile_adder() {
         elem.classList.add("visible");
     }
 
+    let target_number_elem = document.getElementById("target_number_setting");
+    target_number_elem.value = _DEFAULT_TARGET_NUMBER;
+
     toggle_profile_visibility();
 }
 
@@ -805,11 +820,14 @@ function close_profile_adder() {
 function add_profile() {
     let new_profile_values = get_profile_settings();
     let name_taken = is_profile_name_taken(new_profile_values.name);
+    let target_num_valid = valid_int(new_profile_values.target_number);
 
     if (new_profile_values.icon === null || new_profile_values.name === "") {
         alert("Must specify a profile name and icon.")
     } else if (name_taken) {
         alert("A profile with the name " + new_profile_values.name + " already  exists.");
+    } else if (!target_num_valid) {
+        alert("Target number must be a valid integer, got " + new_profile_values.target_number);
     } else {
         const profile = new_profile_from_values(new_profile_values);
         STATE.profiles[profile.id] = profile;
@@ -841,6 +859,10 @@ function is_profile_name_taken(profile_name) {
     return name_taken;
 }
 
+function valid_int(s) {
+    return parseInt(s) == s;
+}
+
 function get_profile_settings() {
     let profile_container = document.getElementById("profile-info-container");
 
@@ -854,10 +876,15 @@ function get_profile_settings() {
     }
 
     let id = JSON.parse(profile_container.dataset.id);
+
+    const target_number_elem = document.getElementById("target_number_setting");
+    let target_number = target_number_elem.value;
+
     return {
         name: profile_name,
         icon: profile_icon,
         id: id,
+        target_number: target_number,
     }
 }
 
@@ -900,6 +927,9 @@ function profile_settings(profile) {
             break;
         }
     }
+    let target_number_elem = document.getElementById("target_number_setting");
+    target_number_elem.value = profile.target_number;
+
     profile_dialog.dataset.id = profile["id"];
 }
 
@@ -916,8 +946,14 @@ function submit_profile_changes() {
         return;
     }
 
+    if (!valid_int(current_profile.target_number)) {
+        alert("Must specify a valid target number, got: " + current_profile.target_number);
+        return;
+    }
+
     current_profile.name = profile_values.name;
     current_profile.icon = profile_values.icon;
+    current_profile.target_number = parseInt(profile_values.target_number);
 
     save_state();
     populate_profile_pulldown();
@@ -1091,7 +1127,7 @@ function get_current_coefficients() {
     // most recent session taken to completion.
     if (unfiltered_session_history.length > 1) {
         current_time = Math.max(...unfiltered_session_history.map(
-        (x) => (x.identifications >= _TARGET_NUMBER) ? x.start_time : 0));
+        (x) => (x.identifications >= get_current_target_number()) ? x.start_time : 0));
     }
 
     const recent_confusion_matrices = unfiltered_session_history
