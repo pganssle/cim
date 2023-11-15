@@ -1277,7 +1277,7 @@ function clean_session_history() {
 document.addEventListener("DOMContentLoaded", function() {
     load_state();
 
-    const profile = get_current_profile().stats;
+    const profile = get_current_profile();
 
     let stats = profile.stats;
     if (stats !== undefined && stats.updated_time !== undefined) {
