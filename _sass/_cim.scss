@@ -465,8 +465,13 @@ $black: black;
 $green: green;
 $orange: #FF8200;
 $purple: purple;
-$pink: pink;
+$pink: #FC0FC0; // Shocking Pink
 $brown: #81613C;
+$lightgreen: #7FFF00; // Chartreuse
+$tan: #F0E68C; // Actually khaki
+$lightpurple: #DCD0FF; // Lilac
+$gray: gray;
+$skyblue: #87CEFA; // "Light sky blue"
 
 div.red {
     background-color: $red;
@@ -495,4 +500,21 @@ div.pink {
 div.brown {
     background-color: $brown;
 }
+div.lightgreen {
+    background-color: $lightgreen;
+}
+div.tan {
+    background-color: $tan;
+}
 
+div.skyblue {
+    background-color: $skyblue;
+}
+
+div.gray {
+    background-color: $gray;
+}
+
+div.lightpurple {
+    background-color: $lightpurple;
+}
