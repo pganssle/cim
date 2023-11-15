@@ -209,9 +209,6 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                 <select name="chords" id="chord-selector" onchange="change_selector()">
                 {% for color in page.colors %}
                     {%- capture idx -%}{{ forloop.index0 }}{%- endcapture -%}
-                    {%- if idx == "0" -%}
-                        {%- continue -%}
-                    {%- endif -%}
                     {%- assign _notes = "" | split: "" -%}
                     {%- for _note in color.notes -%}
                         {%- assign _note_array = _note | split: "" -%}
@@ -228,7 +225,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
 
                     {%- assign _notes_display = _notes | join: " " | replace: "#", "♯" | replace: "b", "♭" -%}
 
-                    <option value="{{color.name}}">Level {{idx}}: {{color.display}} ({{_notes_display}}))</option>
+                    <option value="{{color.name}}"{%-if idx =="0" -%} hidden{%-endif-%}>Level {{idx}}: {{color.display}} ({{_notes_display}}))</option>
                 {% endfor %}
                 </select>
             </div>

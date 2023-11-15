@@ -143,9 +143,7 @@ function use_legacy(color) {
 }
 
 function get_selected_colors() {
-    // The chord selector does not include "red" as an option, so we need to
-    // shift the index up by 1.
-    const chord_idx = document.getElementById("chord-selector").selectedIndex + (_EASTER_EGG_ENABLED ? 0 : 1);
+    const chord_idx = get_color_index(STATE.current_chord);
     if (_COLORS === null) {
         _COLORS = Object.keys(CHORDS_TONE).slice(0, chord_idx + 1);
     }
@@ -1220,10 +1218,11 @@ function trigger_easter_egg() {
     _EASTER_EGG_ENABLED = true;
 
     let chord_elem = document.getElementById("chord-selector");
-    let new_option = document.createElement("option");
-    new_option.value = "red"
-    new_option.text = "Level 0: Red (CEG)"
-    chord_elem.insertBefore(new_option, chord_elem.firstChild);
+    for (var opt_elem of chord_elem.options) {
+        if (opt_elem.value === "red") {
+            opt_elem.removeAttribute("hidden");
+        }
+    }
 }
 
 function download_state() {
