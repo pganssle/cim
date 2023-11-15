@@ -245,10 +245,6 @@ function update_stats(correct_color, chosen_color) {
         stats.correct++;
     }
 
-    if (correct_color === undefined) {
-        debugger;
-    }
-
     if (stats.confusion_matrix[correct_color] === undefined) {
         stats.confusion_matrix[correct_color] = {};
     }
