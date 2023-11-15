@@ -1,4 +1,68 @@
 ---
+colors:
+    - name: "red"
+      display: "Red"
+      chord: "C"
+      notes: ["C4", "E4", "G4"]
+    - name: "yellow"
+      display: "Yellow"
+      chord: "F/C"
+      notes: ["C4", "F4", "A4"]
+    - name: "blue"
+      display: "Blue"
+      chord: "G/B"
+      notes: ["B3", "D4", "G4"]
+    - name: "black"
+      display: "Black"
+      chord: "F/A"
+      notes: ["A3", "C4", "F4"]
+    - name: "green"
+      display: "Green"
+      chord: "G/D"
+      notes: ["D4", "G4", "B4"]
+    - name: "orange"
+      display: "Orange"
+      chord: "C/E"
+      notes: ["E4", "G4", "C5"]
+    - name: "purple"
+      display: "Purple"
+      chord: "F"
+      notes: ["F4", "A4", "C5"]
+    - name: "pink"
+      display: "Pink"
+      chord: "G"
+      notes: ["G4", "B4", "D5"]
+    - name: "brown"
+      display: "Brown"
+      chord: "C/G"
+      notes: ["G4", "C5", "E5"]
+    - name: "gray"
+      display: "Gray"
+      chord: "A"
+      notes: ["A4", "C#4", "E4"]
+    - name: "tan"
+      display: "Tan"
+      chord: "D"
+      notes: ["D4", "F#4", "A4"]
+    - name: "lightgreen"
+      display: "Light Green"
+      chord: "E"
+      notes: ["E4", "G#4", "B4"]
+    - name: "lightpurple"
+      display: "Light Purple"
+      chord: "Bb"
+      notes: ["Bb3", "D4", "F4"]
+    - name: "skyblue"
+      display: "Sky Blue"
+      chord: "Eb"
+      notes: ["Eb4", "G4", "Bb4"]
+
+instruments:
+    - name: piano_1
+      display: Piano
+    - name: piano_old
+      display: Piano (old)
+      legacy: true
 ---
 <!doctype html>
 <html>
@@ -17,6 +81,13 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         <link rel="stylesheet" href="{{ "assets/css/style.css" }}">
     </head>
     <script>
+        const CHORDS_TONE = {
+        {%- for color in page.colors -%}
+            "{{ color.name }}": [{%-for chord in color.chord-%}"{{chord}}",{%-endfor-%}],
+
+        {%- endfor -%}
+        };
+
         const UNSORTED_AUDIO_FILES = [
         {%- for file in site.static_files -%}
             {%- if file.extname == ".mp3" and file.path contains "/static_files/chords" -%}
@@ -24,7 +95,32 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
             {%- endif -%}
         {%- endfor -%}
         ];
+        const INSTRUMENT_INFO = {
+        {%- for instrument in page.instruments -%}
+            {%- assign base_url = 'static_files/samples/' | append: instrument.name -%}
+            {%- assign instrument_files = site.static_files |
+                        where_exp: "file",
+                                   "file.extname == '.mp3' and file.path contains base_url" -%}
+
+            "{{instrument.name}}": {
+                "display_name": "{{instrument.display}}",
+                "base_url": "{{base_url}}/",
+                {%- if instrument.legacy -%}
+                "legacy": true,
+                "fallback": "{{ instrument.fallback }}",
+                {%- else -%}
+                "legacy": false,
+                "sample_files": {
+                    {%- for file in instrument_files -%}
+                        "{{ file.name | split: 'v' | first }}" : "{{ file.name | replace: '#', '%23' }}",
+                    {%- endfor -%}
+                    },
+                {%- endif -%}
+            },
+        {%- endfor -%}
+        };
     </script>
+    <script type="module" src="js/vendor/Tone.js"></script>
     <script src="js/cim.js"></script>
     <script>
         // Disable zoom on iOS 10+ (normally I would be against this, but it's
@@ -119,6 +215,11 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                     <option value="purple">Level 6: Purple (FAC)</option>
                     <option value="pink">Level 7: Pink (GHD)</option>
                     <option value="brown">Level 8: Brown (GCE)</option>
+            <div style="display: flex; justify-content: space-around; margin-top: 2rem">
+                <select name="instruments" id="instrument-selector" onchange="change_instrument()">
+                    {%- for instrument in page.instruments -%}
+                        <option value="{{instrument.name}}">{{instrument.display}}</option>
+                    {%- endfor -%}
                 </select>
             </div>
     </div>

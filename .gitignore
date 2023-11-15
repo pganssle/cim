@@ -5,3 +5,7 @@ vendor/
 .jekyll_cache
 
 _site/
+
+# Include the vendored Tone.js file
+!js/vendor/
+
