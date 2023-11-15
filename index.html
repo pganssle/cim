@@ -207,14 +207,31 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
             </div>
             <div style="display: flex; justify-content: space-around; margin-top: 2rem">
                 <select name="chords" id="chord-selector" onchange="change_selector()">
-                    <option value="yellow">Level 1: Yellow (CFA)</option>
-                    <option value="blue">Level 2: Blue (HDG)</option>
-                    <option value="black">Level 3: Black (ACF)</option>
-                    <option value="green">Level 4: Green (DGH)</option>
-                    <option value="orange">Level 5: Orange (EGC)</option>
-                    <option value="purple">Level 6: Purple (FAC)</option>
-                    <option value="pink">Level 7: Pink (GHD)</option>
-                    <option value="brown">Level 8: Brown (GCE)</option>
+                {% for color in page.colors %}
+                    {%- capture idx -%}{{ forloop.index0 }}{%- endcapture -%}
+                    {%- if idx == "0" -%}
+                        {%- continue -%}
+                    {%- endif -%}
+                    {%- assign _notes = "" | split: "" -%}
+                    {%- for _note in color.notes -%}
+                        {%- assign _note_array = _note | split: "" -%}
+                        {%- assign _display_note = "" | split: "" -%}
+                        {%- for char in _note_array -%}
+                            {%- if "0123456789" contains char -%}
+                                {%- continue -%}
+                            {%- endif -%}
+                            {%- assign _display_note = _display_note | push: char -%}
+                        {%- endfor -%}
+                        {%- assign _display_note = _display_note | join: "" -%}
+                        {%- assign _notes = _notes | push: _display_note -%}
+                    {%- endfor -%}
+
+                    {%- assign _notes_display = _notes | join: " " | replace: "#", "♯" | replace: "b", "♭" -%}
+
+                    <option value="{{color.name}}">Level {{idx}}: {{color.display}} ({{_notes_display}}))</option>
+                {% endfor %}
+                </select>
+            </div>
             <div style="display: flex; justify-content: space-around; margin-top: 2rem">
                 <select name="instruments" id="instrument-selector" onchange="change_instrument()">
                     {%- for instrument in page.instruments -%}
@@ -250,15 +267,9 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
     <div class="infobox" id="trainer-infobox">
       <h2>Music Trainer: Play the chords manually</h2>
       <div class="trainer-container">
-          <div class="flag trainer red" onclick="play_chord('red');"></div>
-          <div class="flag trainer yellow" onclick="play_chord('yellow');"></div>
-          <div class="flag trainer blue" onclick="play_chord('blue');"></div>
-          <div class="flag trainer black" onclick="play_chord('black');"></div>
-          <div class="flag trainer green" onclick="play_chord('green');"></div>
-          <div class="flag trainer orange" onclick="play_chord('orange');"></div>
-          <div class="flag trainer purple" onclick="play_chord('purple');"></div>
-          <div class="flag trainer pink" onclick="play_chord('pink');"></div>
-          <div class="flag trainer brown" onclick="play_chord('brown');"></div>
+      {%- for color in page.colors -%}
+          <div class="flag trainer {{color.name}}" onclick="play_chord('{{color.name}}');"></div>
+      {%- endfor -%}
       </div>
     </div>
 
