@@ -10,6 +10,39 @@ const CHORDS = [
     ["brown", "gce", ],
 ];
 
+const FIRST_BLACK_INDEX = 9;
+
+let TONE_SAMPLERS = {};
+
+function start_tone() {
+    if (!_TONE_STARTED) {
+        Tone.start();
+        Tone.loaded().then(() => _TONE_STARTED = true);
+    }
+}
+
+function get_sampler(instrument) {
+    if (TONE_SAMPLERS[instrument] === undefined) {
+        const instrument_info = INSTRUMENT_INFO[instrument];
+        if (instrument_info.legacy) {
+            TONE_SAMPLERS[instrument] = get_sampler(instrument_info.fallback);
+        } else {
+            TONE_SAMPLERS[instrument] = new Tone.Sampler({
+                urls: instrument_info.sample_files,
+                release: 1,
+                baseUrl: instrument_info.base_url,
+            }).toDestination();
+        }
+    }
+
+    start_tone();
+    return TONE_SAMPLERS[instrument];
+}
+
+function get_current_sampler() {
+    return get_sampler(STATE.current_instrument);
+}
+
 function get_current_timestamp() {
     return Date.now() / 1000;
 }
@@ -68,6 +101,7 @@ let _INFOBOX_TRIGGERS = [];
 let _AUDIO_PLAYED = false;
 let _EMOJI_LOCK = false;
 let _TRAINER_PRELOADED = false;
+let _TONE_STARTED = false;
 let _SESSION_HISTORY = null;
 let _DOWNLOAD_ENABLED_CLICKS = 0;
 let _DOWNLOAD_ENABLED_LAST_CLICK = null;
@@ -76,6 +110,7 @@ let _EASTER_EGG_LAST_CLICK = null;
 let _EASTER_EGG_ENABLED = false;
 
 const _DEFAULT_CHORD = CHORDS[1][0];
+const _DEFAULT_INSTRUMENT = Object.keys(INSTRUMENT_INFO)[0];
 
 const _DEFAULT_TARGET_NUMBER = 25;
 
@@ -98,12 +133,21 @@ const SESSION_TIMEOUT_TIME_SECONDS = 60 * 30;
 
 let STATE = null;
 
+function use_legacy(color) {
+    if (INSTRUMENT_INFO[STATE.current_instrument].legacy) {
+        if (color === undefined || Object.keys(CHORDS_TONE).findIndex((x) -> x === color) < FIRST_BLACK_INDEX) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function get_selected_colors() {
     // The chord selector does not include "red" as an option, so we need to
     // shift the index up by 1.
     const chord_idx = document.getElementById("chord-selector").selectedIndex + (_EASTER_EGG_ENABLED ? 0 : 1);
     if (_COLORS === null) {
-        _COLORS = CHORDS.slice(0, chord_idx + 1).map(([x, _]) => x);
+        _COLORS = Object.keys(CHORDS_TONE).slice(0, chord_idx + 1);
     }
 
     return _COLORS;
@@ -186,11 +230,23 @@ function audio_file_elem(audio_file) {
         audio_file.elem.onended = () => {
             _AUDIO_PLAYED = true;
         };
-        audio_file.elem.onplay = register_playing(audio_file.elem);
     }
 
     return audio_file.elem;
 }
+
+function normal_random(mean=0, stdev=1) {
+    const u = 1 - Math.random(); // Converting [0,1) to (0,1]
+    const v = Math.random();
+    const z = Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
+    // Transform to the desired mean and standard deviation:
+    return z * stdev + mean;
+}
+
+function clip(n, low, high) {
+    return Math.min(Math.max(n, low), high);
+}
+
 
 function sum(arr) {
     return arr.reduce((a, b) => a + b, 0);
@@ -220,6 +276,11 @@ function random_elem(arr, weights) {
         }
     }
 }
+
+function random_duration(mean=0.85, stdev=0.85, min=0.5, max=1.5) {
+    return clip(normal_random(mean, stdev), 0.5, 1.5);
+}
+
 
 function select_new_color() {
     weights = get_current_coefficients();
@@ -379,26 +440,53 @@ function select_flag(elem) {
     next_button.classList.remove("deactivated");
 }
 
-function register_playing(elem) {
-    return function() {
-        setTimeout(() => {
-                _AUDIO_PLAYED = true;
-            },
-            elem.duration * 0.8);
+function set_played_after(delay) {
+    setTimeout(() => {
+        _AUDIO_PLAYED = true;
+    },
+    delay
+    );
+}
+
+// Standard Normal variate using Box-Muller transform.
+function play_chord_tone(chord_name, duration) {
+    const chord = CHORDS_TONE[chord_name];
+
+    if (duration === null) {
+        duration = random_duration();
     }
+    Tone.loaded().then(() => {
+        get_sampler(STATE.current_instrument).triggerAttackRelease(chord, duration);
+    });
 }
 
 function play_audio() {
     if (document.getElementById("play-button").classList.contains("deactivated")) {
         return;
     }
-    _CURRENT_AUDIO.play();
+
+    const [chord, duration] = _CURRENT_AUDIO;
+
+    set_played_after(duration * 0.8);
+    if (typeof chord === "string") {
+        play_chord_tone(chord, duration);
+    } else {
+        chord.play();
+    }
 }
 
-function play_chord(color) {
+function play_chord_files(color) {
     const audio_files = get_audio_files();
     const audio_file = random_elem(audio_files["mp3"].get(color));
     audio_file_elem(audio_file).play();
+}
+
+function play_chord(color, duration=null) {
+    if (use_legacy(color)) {
+        play_chord_files(color);
+    } else {
+        play_chord_tone(color, duration);
+    }
 }
 
 function next_audio() {
@@ -407,24 +495,34 @@ function next_audio() {
         return;
     }
     populate_audio();
-    _CURRENT_AUDIO.play();
+    play_audio();
 
     next_button.classList.add("deactivated");
 }
 
 function preload_audio(color) {
-    for (const audio_file of get_audio_files()["mp3"]) {
-        audio_file_elem(audio_file);
+    get_current_sampler();
+    if (use_legacy(color)) {
+        for (const audio_file of get_audio_files()["mp3"]) {
+            audio_file_elem(audio_file);
+        }
     }
 }
 
 function populate_audio() {
-    const audio_files = get_audio_files();
-
     // Choose a color at random
     select_new_color();
-    let new_audio_file = random_elem(audio_files.mp3.get(_CORRECT_COLOR));
-    _CURRENT_AUDIO = audio_file_elem(new_audio_file);
+
+    if (!use_legacy()) {
+        _CURRENT_AUDIO = [_CORRECT_COLOR, random_duration()];
+
+    } else {
+        const audio_files = get_audio_files();
+
+        let new_audio_file = random_elem(audio_files.mp3.get(_CORRECT_COLOR));
+        const af_elem = audio_file_elem(new_audio_file);
+        _CURRENT_AUDIO = [af_elem, af_elem.duration];
+    }
 
     let play_button = document.getElementById("play-button");
     play_button.classList.remove("deactivated");
@@ -449,6 +547,32 @@ function retrieve_saved_stats() {
         }
     }
     update_stats_display();
+}
+
+function change_instrument(to) {
+    let instrument_selector = document.getElementById("instrument-selector");
+
+    if (to !== undefined) {
+        instrument_selector.value = to;
+    }
+
+    console.log("Changing current instrument from " + STATE.current_instrument + " to " + instrument_selector.value);
+    if (STATE.current_instrument !== instrument_selector.value) {
+        STATE.current_instrument = instrument_selector.value;
+
+        const current_profile = get_current_profile();
+        current_profile.current_instrument = instrument_selector.value;
+    }
+
+    populate_audio();
+    save_state();
+
+    if (use_legacy()) {
+        // Pre-download chord MP3s
+        for (const color of _COLORS) {
+            preload_audio(color);
+        }
+    }
 }
 
 function change_selector(to) {
@@ -636,7 +760,8 @@ function new_profile(name, icon, id, target_number=_DEFAULT_TARGET_NUMBER) {
         icon: icon,
         target_number: target_number,
         stats: new_stats(),
-        current_chord: _DEFAULT_CHORD
+        current_chord: _DEFAULT_CHORD,
+        current_instrument: _DEFAULT_INSTRUMENT,
     }
 }
 
@@ -1001,8 +1126,14 @@ function set_current_profile(profile) {
         profile.current_chord = _DEFAULT_CHORD;
     }
 
+    if (profile.current_instrument === undefined) {
+        profile.current_instrument = _DEFAULT_INSTRUMENT;
+    }
+
     populate_profile_ui_elements();
 
+    // Instrument must come first
+    change_instrument(profile.current_instrument);
     change_selector(profile.current_chord);
 
     save_state();
@@ -1287,6 +1418,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     populate_profile_ui_elements();
+    change_instrument(profile.current_instrument);
     change_selector(profile.current_chord);
     populate_infobox_triggers();
     populate_profile_pulldown();
