@@ -466,11 +466,7 @@ function play_audio() {
     const [chord, duration] = _CURRENT_AUDIO;
 
     set_played_after(duration * 0.8);
-    if (typeof chord === "string") {
-        play_chord_tone(chord, duration);
-    } else {
-        chord.play();
-    }
+    play_chord(chord, duration);
 }
 
 function play_chord_files(color) {
@@ -511,7 +507,7 @@ function populate_audio() {
     // Choose a color at random
     select_new_color();
 
-    if (!use_legacy()) {
+    if (!use_legacy(_CORRECT_COLOR)) {
         _CURRENT_AUDIO = [_CORRECT_COLOR, random_duration()];
 
     } else {
@@ -1253,13 +1249,13 @@ function get_current_coefficients() {
     // most recent session taken to completion.
     if (unfiltered_session_history.length > 1) {
         current_time = Math.max(...unfiltered_session_history.map(
-        (x) => (x.identifications >= get_current_target_number()) ? x.start_time : 0));
+        (x) => (x.identifications >= Math.min(get_current_target_number(), 25)) ? x.start_time : 0));
     }
 
     const recent_confusion_matrices = unfiltered_session_history
         .filter((x) => (current_time - x.start_time) < WEEK_SECONDS)
         .map((x) => x.confusion_matrix);
-    const num_chords = CHORDS.map((x) => x[0]).indexOf(STATE.current_chord) + 1;
+    const num_chords = Object.keys(CHORDS_TONE).indexOf(STATE.current_chord) + 1;
 
     const matrix = merge_matrices(recent_confusion_matrices, num_chords);
 
@@ -1268,7 +1264,7 @@ function get_current_coefficients() {
 
 function merge_matrices(confusion_matrices, num_chords) {
     // Initialize to all zeroes
-    let chords = CHORDS.slice(0, num_chords).map((x) => x[0]);
+    let chords = Object.keys(CHORDS_TONE).slice(0, num_chords);
     let out_matrix = Object.fromEntries(chords.map((x) => [x, Object.fromEntries(chords.map((x) => [x, 0]))]));
     for (const cm of confusion_matrices) {
         for (const ok of Object.keys(cm)) {
