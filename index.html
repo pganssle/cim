@@ -59,10 +59,13 @@ colors:
 
 instruments:
     - name: piano_1
-      display: Piano
+      display: "🎹 Piano"
     - name: piano_old
-      display: Piano (old)
+      display: "🎹🧓 Piano (old)"
+      fallback: "piano_1"
       legacy: true
+
+first_black_index: 9
 ---
 <!doctype html>
 <html>
@@ -83,7 +86,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
     <script>
         const CHORDS_TONE = {
         {%- for color in page.colors -%}
-            "{{ color.name }}": [{%-for chord in color.chord-%}"{{chord}}",{%-endfor-%}],
+            "{{ color.name }}": [{%-for chord in color.notes-%}"{{chord}}",{%-endfor-%}],
 
         {%- endfor -%}
         };
@@ -207,8 +210,15 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
             </div>
             <div style="display: flex; justify-content: space-around; margin-top: 2rem">
                 <select name="chords" id="chord-selector" onchange="change_selector()">
+                <optgroup label="White chords">
+                {%- assign level = 0 -%}
                 {% for color in page.colors %}
-                    {%- capture idx -%}{{ forloop.index0 }}{%- endcapture -%}
+                    {%- assign idx = forloop.index0 | int -%}
+                    {%- if idx == page.first_black_index -%}
+                    {%- assign level = 1 -%}
+                </optgroup>
+                <optgroup label="Black chords">
+                    {%- endif -%}
                     {%- assign _notes = "" | split: "" -%}
                     {%- for _note in color.notes -%}
                         {%- assign _note_array = _note | split: "" -%}
@@ -225,8 +235,10 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
 
                     {%- assign _notes_display = _notes | join: " " | replace: "#", "♯" | replace: "b", "♭" -%}
 
-                    <option value="{{color.name}}"{%-if idx =="0" -%} hidden{%-endif-%}>Level {{idx}}: {{color.display}} ({{_notes_display}}))</option>
+                        <option value="{{color.name}}"{%-if idx < 1 -%} hidden{%-endif-%}>Level {{level}}: {{color.display}} ({{_notes_display}})</option>
+                    {%- assign level = level | plus: 1 -%}
                 {% endfor %}
+                </optgroup>
                 </select>
             </div>
             <div style="display: flex; justify-content: space-around; margin-top: 2rem">
