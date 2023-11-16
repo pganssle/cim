@@ -208,8 +208,8 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                     <i class="fa fa-refresh" aria-hidden="true"></i>
                 </a>
             </div>
-            <div style="display: flex; justify-content: space-around; margin-top: 2rem">
-                <select name="chords" id="chord-selector" onchange="change_selector()">
+            <div class="selectors">
+                <select class="selector" name="chords" id="chord-selector" onchange="change_selector()">
                 <optgroup label="White chords">
                 {%- assign level = 0 -%}
                 {% for color in page.colors %}
@@ -240,9 +240,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                 {% endfor %}
                 </optgroup>
                 </select>
-            </div>
-            <div style="display: flex; justify-content: space-around; margin-top: 2rem">
-                <select name="instruments" id="instrument-selector" onchange="change_instrument()">
+                <select class="selector" name="instruments" id="instrument-selector" onchange="change_instrument()">
                     {%- for instrument in page.instruments -%}
                         <option value="{{instrument.name}}">{{instrument.display}}</option>
                     {%- endfor -%}
