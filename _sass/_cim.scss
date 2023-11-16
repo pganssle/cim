@@ -133,6 +133,17 @@ div.stats i.fa {
     font-size: 2rem;
 }
 
+div.selectors {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+select.selector {
+    margin-left: 2em;
+    margin-right: 2em;
+}
+
 body.colorscheme-light div.stats.done.perfect span#stats-divider,
 body.colorscheme-light div.stats.done.perfect span#stats-correct,
 body.colorscheme-light div.stats.done span#stats-total {
