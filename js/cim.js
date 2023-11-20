@@ -148,23 +148,25 @@ function get_selected_colors() {
 // TODO: Filter out non-audio files.
 
 function get_audio_files() {
-    function af_obj(filename) {
-        [base, ext] = filename.split(".");
-        [chord, color, _] = filename.split("_");
-
-        return {
-            filename: filename,
-            color: color,
-            chord: chord,
-            ext: ext,
-            elem: null,
-        };
-    }
     if (AUDIO_FILES === null) {
         AUDIO_FILES = {
             "mp3": new Map(),
             "opus": new Map(),
         };
+
+        function af_obj(filename) {
+            [base, ext] = filename.split(".");
+            [chord, color, _] = filename.split("_");
+
+            return {
+                filename: filename,
+                color: color,
+                chord: chord,
+                ext: ext,
+                elem: null,
+            };
+        }
+
         for (const file of UNSORTED_AUDIO_FILES) {
             let audio_file_obj = af_obj(file);
             let out_map = AUDIO_FILES[audio_file_obj["ext"]];
