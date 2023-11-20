@@ -13,11 +13,13 @@ function get_sampler(instrument) {
         if (instrument_info.legacy) {
             TONE_SAMPLERS[instrument] = get_sampler(instrument_info.fallback);
         } else {
-            TONE_SAMPLERS[instrument] = new Tone.Sampler({
+            const sampler = new Tone.Sampler({
                 urls: instrument_info.sample_files,
                 release: 1,
                 baseUrl: instrument_info.base_url,
             }).toDestination();
+            TONE_SAMPLERS[instrument] = sampler;
+            Tone.loaded().then(() => sampler.volume.value = 0);
         }
     }
 
