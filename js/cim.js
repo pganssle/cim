@@ -1,17 +1,3 @@
-const CHORDS = [
-    ["red", "ceg", ],
-    ["yellow", "cfa", ],
-    ["blue", "hdg", ],
-    ["black", "acf", ],
-    ["green", "dgh", ],
-    ["orange", "egc", ],
-    ["purple", "fac", ],
-    ["pink", "ghd", ],
-    ["brown", "gce", ],
-];
-
-const FIRST_BLACK_INDEX = 9;
-
 let TONE_SAMPLERS = {};
 
 function start_tone() {
@@ -109,7 +95,7 @@ let _EASTER_EGG_CLICKS = 0;
 let _EASTER_EGG_LAST_CLICK = null;
 let _EASTER_EGG_ENABLED = false;
 
-const _DEFAULT_CHORD = CHORDS[1][0];
+const _DEFAULT_CHORD = Object.keys(CHORDS_TONE)[1];
 const _DEFAULT_INSTRUMENT = Object.keys(INSTRUMENT_INFO)[0];
 
 const _DEFAULT_TARGET_NUMBER = 25;
@@ -133,9 +119,17 @@ const SESSION_TIMEOUT_TIME_SECONDS = 60 * 30;
 
 let STATE = null;
 
+function get_color_index(color) {
+    return Object.keys(CHORDS_TONE).findIndex((x) => x === color);
+}
+
 function use_legacy(color) {
     if (INSTRUMENT_INFO[STATE.current_instrument].legacy) {
-        if (color === undefined || Object.keys(CHORDS_TONE).findIndex((x) -> x === color) < FIRST_BLACK_INDEX) {
+        if (color === undefined) {
+            return true;
+        }
+
+        if (get_audio_files().mp3.has(color)) {
             return true;
         }
     }
@@ -1146,7 +1140,7 @@ function toggle_profile_visibility() {
 function toggle_trainer_visibility() {
     toggle_visibility(document.getElementById("trainer-infobox"));
     if (!_TRAINER_PRELOADED) {
-        for (const [color, _] of CHORDS) {
+        for (const color of Object.keys(CHORDS_TONE)) {
             preload_audio(color);
         }
     }
