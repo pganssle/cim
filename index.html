@@ -135,56 +135,62 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
 
     </head>
     <body class="colorscheme-dark">
-    <div class="container">
-        <div class="header-container">
-            <div class="header">
-                <h1 onclick="enable_download()">Chord Identification Method Trainer</h1>
-                    <div class="expansion-container">
-                        <div class="infobox-container">
-                            <a href="#"
-                               id="trainer-infobox-trigger"
-                               class="infobox-trigger"
-                               onclick="toggle_trainer_visibility()">
-                            <i class="fa fa-solid fa-music"></i>
-                          </a>
-                        </div>
-                        <div class="infobox-container">
-                            <a href="#" class="infobox-trigger"
-                               id="i-infobox-trigger"
-                               onclick="toggle_infobox_visibility()">
-                            <i class="fa fa-solid fa-info-circle"></i>
-                          </a>
-                        </div>
-                        <div class="infobox-container">
-                            <a href="#"
-                               id="stats-history-trigger"
-                               class="infobox-trigger"
-                               onclick="toggle_stats_history_visibility()">
-                            <i class="fa fa-solid fa-line-chart"></i>
-                          </a>
-                        </div>
-                        <!-- Profiles -->
-                        <div class="infobox-container">
-                            <div class="trigger-container" id="user-container">
-                                <a href="#"
-                                   id="profile-infobox-trigger"
-                                   class="infobox-trigger"
-                                   onclick="toggle_profile_visibility()">
-                                <i class="fa fa-solid" id="profile-icon"></i>
-                                <span id="profile-text" class="pulldown-target"></span>
-                              </a>
-                              <div class="pulldown infobox" id="profile-container">
-                                  <div class="pulldown-item" onclick="open_profile_adder()">
-                                      <i class="profile-icon fa fa-solid fa-user-plus"></i><span class="profile-name">Add Profile</span>
-                                  </div>
-                              </div>
-                            </div>
-                        </div>
+    <div class="cim-container">
+        <div class="menu-container" id="menu-container">
+            <div class="menu-spacer"></div>
+            <div class="expansion-container">
+                <div class="infobox-container">
+                    <a href="#"
+                       id="trainer-infobox-trigger"
+                       class="infobox-trigger"
+                       onclick="toggle_trainer_visibility()">
+                    <i class="fa fa-solid fa-music"></i>
+                  </a>
+                </div>
+                <div class="infobox-container">
+                    <a href="#" class="infobox-trigger"
+                       id="i-infobox-trigger"
+                       onclick="toggle_infobox_visibility()">
+                    <i class="fa fa-solid fa-info-circle"></i>
+                  </a>
+                </div>
+                <div class="infobox-container">
+                    <a href="#"
+                       id="stats-history-trigger"
+                       class="infobox-trigger"
+                       onclick="toggle_stats_history_visibility()">
+                    <i class="fa fa-solid fa-line-chart"></i>
+                  </a>
+                </div>
+                <!-- Profiles -->
+                <div class="infobox-container">
+                    <div class="trigger-container" id="user-container">
+                        <a href="#"
+                           id="profile-infobox-trigger"
+                           class="infobox-trigger"
+                           onclick="toggle_profile_visibility()">
+                        <i class="fa fa-solid" id="profile-icon"></i>
+                        <span id="profile-text" class="pulldown-target"></span>
+                      </a>
+                      <div class="pulldown infobox" id="profile-container">
+                          <div class="pulldown-item" onclick="open_profile_adder()">
+                              <i class="profile-icon fa fa-solid fa-user-plus"></i><span class="profile-name">Add Profile</span>
+                          </div>
+                      </div>
                     </div>
                 </div>
             </div>
+            <div class="hamburger">
+                <a href="#"
+                   id="hamburger-link"
+                   onclick="toggle_expansion_bar()"
+                   >
+                    <i class="fa fa-bars"></i>
+                </a>
+            </div>
         </div>
-        <div class="cim-container">
+        <div class="control-wrapper">
+            <img src="{{ "assets/images/cim_logo.png" }}" class="logo" onclick="enable_download()"/>
             <div class="control-container">
                 <div class="controls">
                     <a id="play-button" class="deactivated" onclick="play_audio()">
@@ -195,141 +201,145 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                     </a>
                 </div>
             </div>
-            <div class="flag-container" id="flag-holder">
+        </div>
+        <div class="flag-container" id="flag-holder">
+        </div>
+        <div class="stats controls" id="stats-container">
+            <div class="emoji-container">
+                <span id="reaction-emoji"></span>
             </div>
-            <div class="stats controls" id="stats-container">
-                <div class="emoji-container">
-                    <span id="reaction-emoji"></span>
-                </div>
-                <div class="stats-display">
-                    <span id="stats-correct">0</span><span id="stats-divider"> / </span><span id="stats-total">0</span><br/><span id="stats-percent"></span> <span class="done-container"></span>
-                </div>
-                <a id="reset-button" onclick="reset_stats()">
-                    <i class="fa fa-refresh" aria-hidden="true"></i>
-                </a>
+            <div class="stats-display">
+                <span id="stats-correct">0</span><span id="stats-divider"> / </span><span id="stats-total">0</span><br/><span id="stats-percent"></span> <span class="done-container"></span>
             </div>
-            <div class="selectors">
-                <select class="selector" name="chords" id="chord-selector" onchange="change_selector()">
-                <optgroup label="White chords">
-                {%- assign level = 0 -%}
-                {% for color in page.colors %}
-                    {%- assign idx = forloop.index0 | int -%}
-                    {%- if idx == page.first_black_index -%}
-                    {%- assign level = 1 -%}
-                </optgroup>
-                <optgroup label="Black chords">
-                    {%- endif -%}
-                    {%- assign _notes = "" | split: "" -%}
-                    {%- for _note in color.notes -%}
-                        {%- assign _note_array = _note | split: "" -%}
-                        {%- assign _display_note = "" | split: "" -%}
-                        {%- for char in _note_array -%}
-                            {%- if "0123456789" contains char -%}
-                                {%- continue -%}
-                            {%- endif -%}
-                            {%- assign _display_note = _display_note | push: char -%}
-                        {%- endfor -%}
-                        {%- assign _display_note = _display_note | join: "" -%}
-                        {%- assign _notes = _notes | push: _display_note -%}
+            <a id="reset-button" onclick="reset_stats()">
+                <i class="fa fa-refresh" aria-hidden="true"></i>
+            </a>
+        </div>
+        <div class="selectors">
+            <select class="selector" name="chords" id="chord-selector" onchange="change_selector()">
+            <optgroup label="White chords">
+            {%- assign level = 0 -%}
+            {% for color in page.colors %}
+                {%- assign idx = forloop.index0 | int -%}
+                {%- if idx == page.first_black_index -%}
+                {%- assign level = 1 -%}
+            </optgroup>
+            <optgroup label="Black chords">
+                {%- endif -%}
+                {%- assign _notes = "" | split: "" -%}
+                {%- for _note in color.notes -%}
+                    {%- assign _note_array = _note | split: "" -%}
+                    {%- assign _display_note = "" | split: "" -%}
+                    {%- for char in _note_array -%}
+                        {%- if "0123456789" contains char -%}
+                            {%- continue -%}
+                        {%- endif -%}
+                        {%- assign _display_note = _display_note | push: char -%}
                     {%- endfor -%}
+                    {%- assign _display_note = _display_note | join: "" -%}
+                    {%- assign _notes = _notes | push: _display_note -%}
+                {%- endfor -%}
 
-                    {%- assign _notes_display = _notes | join: " " | replace: "#", "♯" | replace: "b", "♭" -%}
+                {%- assign _notes_display = _notes | join: " " | replace: "#", "♯" | replace: "b", "♭" -%}
 
-                        <option value="{{color.name}}"{%-if idx < 1 -%} hidden{%-endif-%}>Level {{level}}: {{color.display}} ({{_notes_display}})</option>
-                    {%- assign level = level | plus: 1 -%}
-                {% endfor %}
-                </optgroup>
-                </select>
-                <select class="selector" name="instruments" id="instrument-selector" onchange="change_instrument()">
-                    {%- for instrument in page.instruments -%}
-                        <option value="{{instrument.name}}">{{instrument.display}}</option>
-                    {%- endfor -%}
-                </select>
-            </div>
-    </div>
-    <div class="mode-toggle-container">
-        <a id="mode-toggle" class="colorscheme-toggle"
-                            onclick="toggle_theme_mode()"
-            >
-            <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
-        </a>
-        <a id="download-link" class="download-button colorscheme-toggle" onclick="download_state()">
-            <i class="fa fa-download fa-fw" aria-hidden="true"></i>
-        </a>
-    </div>
-    <!------------------------------------------------------>
-    <!----------------------  Modals  ---------------------->
-    <!------------------------------------------------------>
-
-    <!-- Infobox -->
-    <div class="infobox" id="i-infobox">
-        <p>This is an implementation of <a href="http://pom.sagepub.com/content/42/1/86">Eguchi's Chord Identification method</a> (paper access can be found via <a href="https://en.wikipedia.org/wiki/Sci-Hub">Sci-Hub</a>). See also <a href="https://ichionkai.co.jp/english3.html">Ichionkai Music School</a>.</p>
-        <p><a href="https://youtu.be/kNfkm6PQC20">Here is a short video explaining how we use it</a>.</p>
-        <p>This is a method for teaching absolute pitch to children aged 2-6. Children should practice ~5x per day for 2-3 minutes (about 20-25 identifications). Chords are always identified with colors, and progress in the sequence <span onclick="trigger_easter_egg()">red</span> (CEG), yellow (CFA), blue (HDG), black (ACF), green (DGH), orange (EGC), purple (FAC), pink (GHD), brown (GCE).</p>
-        <p>Introduce the chords to the children one at a time, spacing out new chord introductions by at least 2 weeks each time. Do not introduce a new chord until the child can identify all presented chords with 100% accuracy.</p>
-        <p><b>Note</b>: This application is an early alpha. I'm still in the first training phase so I've put off work on the later parts of the method until my son catches up. Let me know if you need a feature to make this work, of if it seems that I've misunderstood the method as described in the paper. Please feel free to make pull requests or report issues on <a href="https://github.com/pganssle/cim">the GitHub repository</a>.</p>
-    </div>
-
-    <!-- Music player -->
-    <div class="infobox" id="trainer-infobox">
-      <h2>Music Trainer: Play the chords manually</h2>
-      <div class="trainer-container">
-      {%- for color in page.colors -%}
-          <div class="flag trainer {{color.name}}" onclick="play_chord('{{color.name}}');"></div>
-      {%- endfor -%}
-      </div>
-    </div>
-
-    <!-- Statistics -->
-    <div class="infobox stats-history-container" id="stats-history-container"></div>
-
-    <!-- "Add profile" / "Profile settings" dialog -->
-    <div class="profile-info-container" id="profile-info-container">
-        <span class="close-button" id="close-add-profile-container-button" onclick="close_profile_adder()">&times;</span>
-        <div class="entry-row">
-            <label for="profile_name">Profile Name:</label>
-            <input type="text" id="profile_name_setting" class="entry">
+                    <option value="{{color.name}}"{%-if idx < 1 -%} hidden{%-endif-%}>Level {{level}}: {{color.display}} ({{_notes_display}})</option>
+                {%- assign level = level | plus: 1 -%}
+            {% endfor %}
+            </optgroup>
+            </select>
+            <select class="selector" name="instruments" id="instrument-selector" onchange="change_instrument()">
+                {%- for instrument in page.instruments -%}
+                    <option value="{{instrument.name}}">{{instrument.display}}</option>
+                {%- endfor -%}
+            </select>
         </div>
-        <div class="entry-row">
-            <label for="profile_icon_selector">Icon:</label>
+</div>
+<div class="mode-toggle-container">
+    <a id="mode-toggle" class="colorscheme-toggle"
+                        onclick="toggle_theme_mode()"
+        >
+        <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
+    </a>
+    <a id="download-link" class="download-button colorscheme-toggle" onclick="download_state()">
+        <i class="fa fa-download fa-fw" aria-hidden="true"></i>
+    </a>
+</div>
+<!------------------------------------------------------>
+<!----------------------  Modals  ---------------------->
+<!------------------------------------------------------>
 
-            <input type="radio" name="profile_icon_selector"
-                                value="fa-user" id="npis-user">
-            <label for="npis-user"><i class="fa fa-solid fa-user"></i></label>
-            <input type="radio" name="profile_icon_selector"
-                                value="fa-truck" id="npis-truck">
-            <label for="npis-truck"><i class="fa fa-solid fa-truck"></i></label>
-            <input type="radio" name="profile_icon_selector"
-                                value="fa-bolt" id="npis-bolt">
-            <label for="npis-bolt"><i class="fa fa-solid fa-bolt"></i></label>
-            <input type="radio" name="profile_icon_selector"
-                                value="fa-paw" id="npis-paw">
-            <label for="npis-paw"><i class="fa fa-solid fa-paw"></i></label>
-            <input type="radio" name="profile_icon_selector"
-                                value="fa-soccer-ball-o" id="npis-soccer-ball">
-            <label for="npis-paw"><i class="fa fa-solid fa-soccer-ball-o"></i></label>
-            <input type="radio" name="profile_icon_selector"
-                                value="fa-smile-o" id="npis-smile-o">
-            <label for="npis-smile-o"><i class="fa fa-solid fa-smile-o"></i></label>
-            <input type="radio" name="profile_icon_selector"
-                                value="fa-umbrella" id="npis-umbrella">
-            <label for="npis-umbrella"><i class="fa fa-solid fa-umbrella"></i></label>
-            <input type="radio" name="profile_icon_selector"
-                                value="fa-trophy" id="npis-trophy">
-            <label for="npis-trophy"><i class="fa fa-solid fa-trophy"></i></label>
-            <input type="radio" name="profile_icon_selector"
-                                value="fa-taxi" id="npis-taxi">
-            <label for="npis-taxi"><i class="fa fa-solid fa-taxi"></i></label>
-        </div>
-        <div class="entry-row">
-            <label for="target_number_setting">Target Number:</label>
-            <input type="number" id="target_number_setting" class="entry">
-        </div>
-        <div class="button-container">
-            <button class="button settings-button" id="delete-profile-button" onclick="delete_profile()">Delete Profile</button>
-            <button class="button settings-button" id="submit-changes-button" onclick="submit_profile_changes()">Save Changes</button>
-            <button class="button add-button" id="add-user-button" onclick="add_profile()">Add Profile</button>
-        </div>
+<!-- Infobox -->
+<div class="infobox" id="i-infobox">
+    <p>This is an implementation of <a href="http://pom.sagepub.com/content/42/1/86">Eguchi's Chord Identification method</a> (paper access can be found via <a href="https://en.wikipedia.org/wiki/Sci-Hub">Sci-Hub</a>). See also <a href="https://ichionkai.co.jp/english3.html">Ichionkai Music School</a>.</p>
+    <p><a href="https://youtu.be/kNfkm6PQC20">Here is a short video explaining how we use it</a>.</p>
+    <p>This is a method for teaching absolute pitch to children aged 2-6. Children should practice ~5x per day for 2-3 minutes (about 20-25 identifications). Chords are always identified with colors, and progress in the sequence <span onclick="trigger_easter_egg()">red</span> (CEG), yellow (CFA), blue (HDG), black (ACF), green (DGH), orange (EGC), purple (FAC), pink (GHD), brown (GCE).</p>
+    <p>Introduce the chords to the children one at a time, spacing out new chord introductions by at least 2 weeks each time. Do not introduce a new chord until the child can identify all presented chords with 100% accuracy.</p>
+    <p><b>Note</b>: This application is an early alpha. I'm still in the first training phase so I've put off work on the later parts of the method until my son catches up. Let me know if you need a feature to make this work, of if it seems that I've misunderstood the method as described in the paper. Please feel free to make pull requests or report issues on <a href="https://github.com/pganssle/cim">the GitHub repository</a>.</p>
+</div>
+
+<!-- Music player -->
+<div class="infobox" id="trainer-infobox">
+  <div class="box-title">
+      Music Trainer: Play the chords manually
+  </div>
+  <div class="trainer-container">
+  {%- for color in page.colors -%}
+  <div class="flag-wrapper trainer">
+      <div class="flag trainer {{color.name}}" onclick="play_chord('{{color.name}}');"></div>
+  </div>
+  {%- endfor -%}
+  </div>
+</div>
+
+<!-- Statistics -->
+<div class="infobox stats-history-container" id="stats-history-container"></div>
+
+<!-- "Add profile" / "Profile settings" dialog -->
+<div class="profile-info-container" id="profile-info-container">
+    <span class="close-button" id="close-add-profile-container-button" onclick="close_profile_adder()">&times;</span>
+    <div class="entry-row">
+        <label for="profile_name">Profile Name:</label>
+        <input type="text" id="profile_name_setting" class="entry">
+    </div>
+    <div class="entry-row">
+        <label for="profile_icon_selector">Icon:</label>
+
+        <input type="radio" name="profile_icon_selector"
+                            value="fa-user" id="npis-user">
+        <label for="npis-user"><i class="fa fa-solid fa-user"></i></label>
+        <input type="radio" name="profile_icon_selector"
+                            value="fa-truck" id="npis-truck">
+        <label for="npis-truck"><i class="fa fa-solid fa-truck"></i></label>
+        <input type="radio" name="profile_icon_selector"
+                            value="fa-bolt" id="npis-bolt">
+        <label for="npis-bolt"><i class="fa fa-solid fa-bolt"></i></label>
+        <input type="radio" name="profile_icon_selector"
+                            value="fa-paw" id="npis-paw">
+        <label for="npis-paw"><i class="fa fa-solid fa-paw"></i></label>
+        <input type="radio" name="profile_icon_selector"
+                            value="fa-soccer-ball-o" id="npis-soccer-ball">
+        <label for="npis-paw"><i class="fa fa-solid fa-soccer-ball-o"></i></label>
+        <input type="radio" name="profile_icon_selector"
+                            value="fa-smile-o" id="npis-smile-o">
+        <label for="npis-smile-o"><i class="fa fa-solid fa-smile-o"></i></label>
+        <input type="radio" name="profile_icon_selector"
+                            value="fa-umbrella" id="npis-umbrella">
+        <label for="npis-umbrella"><i class="fa fa-solid fa-umbrella"></i></label>
+        <input type="radio" name="profile_icon_selector"
+                            value="fa-trophy" id="npis-trophy">
+        <label for="npis-trophy"><i class="fa fa-solid fa-trophy"></i></label>
+        <input type="radio" name="profile_icon_selector"
+                            value="fa-taxi" id="npis-taxi">
+        <label for="npis-taxi"><i class="fa fa-solid fa-taxi"></i></label>
+    </div>
+    <div class="entry-row">
+        <label for="target_number_setting">Target Number:</label>
+        <input type="number" id="target_number_setting" class="entry">
+    </div>
+    <div class="button-container">
+        <button class="button settings-button" id="delete-profile-button" onclick="delete_profile()">Delete Profile</button>
+        <button class="button settings-button" id="submit-changes-button" onclick="submit_profile_changes()">Save Changes</button>
+        <button class="button add-button" id="add-user-button" onclick="add_profile()">Add Profile</button>
     </div>
     </body>
 </html>

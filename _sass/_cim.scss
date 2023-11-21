@@ -1,46 +1,81 @@
 @import "variables";
 
+body {
+    margin: 0;
+}
+
+img.logo {
+    max-height: 5rem;
+    opacity: 0.5;
+}
 div.container {
     display: flex;
     flex-direction: column;
 }
 
-div.header-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-}
-
-div.header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    width: 80%;
-}
-
-div.header h1 {
-    flex-grow: 3;
-    font-size: 3rem;
-    @media only screen and (max-width: 1080px) {
-        font-size: 1.25rem;
-    }
-}
-
-
-div.expansion-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    flex-grow: 1;
-}
-
 div.cim-container {
+    height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: space-around;
+}
+
+div.menu-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+div.hamburger {
+    display: none;
+    font-size: 3rem;
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin-right: 1rem;
+    margin-top: 0.5rem;
+
+    @media only screen and (max-width: 768px) {
+        display: block;
+    }
+}
+
+div.expansion-container {
+    display: flex;
+    position: absolute;
+    top: 0;
+    right: 0;
+    flex-direction: row;
+    justify-content: space-around;
+    width: min(350px, 28vw);
+    margin-right: 3rem;
+    margin-top: 1rem;
+
+    @media only screen and (max-width: 768px) {
+        max-width: 400px;
+        display: none;
+    }
+}
+
+div.menu-spacer {
+    display: none;
+}
+
+div.menu-container.visible > div.menu-spacer {
+    flex-grow: 0;
+    max-width: 0;
+    display: block;
+}
+
+div.menu-container.visible > div.expansion-container {
+    display: flex;
+    position: static;
+    flex-grow: 1;
+}
+
+div.menu-container.visible > div.hamburger {
+    position: static;
+    flex-grow: 0;
 }
 
 div.cim {
@@ -51,37 +86,50 @@ div.cim {
     width: 100%
 }
 
+div.control-wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 0;
+    padding: 0.5rem;
+    padding-top: 1rem;
+}
+
+div.control-wrapper > div.hamburger {
+    flex-grow: 0;
+    font-size: 3rem;
+    margin-left: 0.5rem;
+}
+
 div.control-container {
     display: flex;
+    flex-grow: 1;
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: space-around;
     align-items: center;
 }
 
-div.flag-container {
-    display:flex;
-    flex-direction: row;
-    justify-content: space-around;
-    flex-wrap: wrap;
-}
-
-div.trainer-container {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    align-items: center;
+div.flag-spacer {
+    display: none;
+    flex-grow: 1;
     width: 100%;
 }
 
-div.flag.trainer {
-    height: 10vh;
-    width: 45%;
-
-    @media only screen and (max-width: 768px) {
-        max-width: 80%;
+div.flag-container.few > div.flag-spacer {
+    @media only screen and (min-width: 768px) {
+        display: block;
     }
+}
+
+div.flag-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    flex-grow: 2;
 }
 
 div.controls {
@@ -96,7 +144,6 @@ div.controls a i {
     font-size: 5rem;
     margin-right: 0.25em;
     margin-left: 0.25em;
-    margin-right: 0.25em;
 }
 
 body.colorscheme-dark div.controls i.fa {
@@ -117,7 +164,8 @@ div.stats {
     flex-wrap: nowrap;
     justify-content: center;
     align-items: center;
-    margin-top: 3rem;
+    margin-top: 1.5rem;
+    flex-grow: 0;
 }
 
 div.stats div {
@@ -137,6 +185,8 @@ div.selectors {
     display: flex;
     justify-content: center;
     margin-top: 2rem;
+    margin-bottom: 1rem;
+    max-height: 5vh;
 }
 
 select.selector {
@@ -166,17 +216,39 @@ div.stats-display span#stats-percent {
     font-size: 1.5rem;
 }
 
-div.flag-wrapper{
+div.flag-wrapper {
     margin-top: 0.5em;
     margin-left: 0.5em;
     margin-right: 0.5em;
-    height: 5em;
-    width: 30%;
+    align-self: stretch;
+    width: calc(33% - 1.2em);
+    max-height: 30vh;
 
     @media only screen and (max-width: 768px) {
-        margin-left: 2%;
-        margin-right: 2%;
-        width: 40%;
+        margin-left: 0.25em;
+        margin-right: 0.25em;
+        width: calc(50% - 0.51em);
+    }
+}
+
+div.flag-wrapper.trainer {
+    margin: 0.25rem;
+    align-self: stretch;
+    width: calc(33% - 1.2em);
+}
+
+div.flag-container.few > div.flag-wrapper {
+    @media only screen and (max-width: 768px) {
+        width: calc(100% - 0.51em);
+    }
+}
+
+
+div.flag-container.many > div.flag-wrapper {
+    width: calc(25% - 1.2em);
+
+    @media only screen and (max-width: 768px) {
+        width: calc(33% - 1.1em);
     }
 }
 
@@ -233,9 +305,6 @@ body.colorscheme-light div.flag {
     border: 1px solid black;
 }
 
-audio.chord {
-}
-
 /* Container styles */
 .infobox-container {
   display: inline-block;
@@ -243,6 +312,14 @@ audio.chord {
   font-size: 1.5rem;
   margin-left: 0.5rem;
   margin-right: 0.5rem;
+
+  @media only screen and (min-width: 900px) {
+      font-size: 2rem;
+  }
+}
+
+.infobox-trigger {
+    white-space: nowrap;
 }
 
 /* Infobox styles */
@@ -251,7 +328,7 @@ audio.chord {
   top: 5%;
   left: 50%;
   transform: translateX(-50%);
-  width: 60vw;
+  width: 75vw;
   @media only screen and (max-width: 400) {
       width: 95vw;
   }
@@ -264,6 +341,35 @@ audio.chord {
   transition: visibility 0s, opacity 0.3s;
   z-index: 100;
 }
+
+div.infobox#trainer-infobox {
+    height: 90vh;
+    display: none;
+    flex-direction: column;
+}
+
+div.infobox.visible#trainer-infobox {
+    display: flex;
+}
+
+div.infobox#trainer-infobox > div.box-title {
+    flex-grow: 0;
+    width: 100%;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+}
+
+div.trainer-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center;
+    flex-grow: 1;
+    width: 100%;
+}
+
 
 div.infobox.pulldown {
   width: auto;
