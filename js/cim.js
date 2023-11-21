@@ -207,13 +207,33 @@ function populate_flags() {
     const colors = get_selected_colors();
     const base_elem = document.getElementById("flag-holder");
 
+    function add_spacer() {
+        let spacer = document.createElement("div");
+        spacer.classList.add("flag-spacer");
+        base_elem.appendChild(spacer);
+    }
+
     while (base_elem.firstChild) {
         base_elem.removeChild(base_elem.lastChild);
     }
 
+    add_spacer();
     for (const color of colors) {
         const flag = make_flag(color);
         base_elem.appendChild(flag);
+    }
+    add_spacer();
+
+    if (colors.length > 9) {
+        base_elem.classList.add("many");
+    } else {
+        base_elem.classList.remove("many");
+    }
+
+    if (colors.length < 4) {
+        base_elem.classList.add("few");
+    } else {
+        base_elem.classList.remove("few");
     }
 }
 
@@ -755,6 +775,11 @@ function new_profile(name, icon, id, target_number=_DEFAULT_TARGET_NUMBER) {
         current_chord: _DEFAULT_CHORD,
         current_instrument: _DEFAULT_INSTRUMENT,
     }
+}
+
+function toggle_expansion_bar() {
+    let menu = document.getElementById("menu-container");
+    menu.classList.toggle("visible");
 }
 
 function toggle_visibility(ibox_elem) {
