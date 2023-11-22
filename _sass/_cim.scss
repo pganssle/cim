@@ -13,8 +13,15 @@ div.container {
     flex-direction: column;
 }
 
+body {
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    top: 0;
+}
+
 div.cim-container {
-    height: 100vh;
+    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: space-around;
@@ -186,7 +193,8 @@ div.selectors {
     justify-content: center;
     margin-top: 2rem;
     margin-bottom: 1rem;
-    max-height: 5vh;
+    max-height: 5vh; // Fallback
+    max-height: 5dvh;
 }
 
 select.selector {
@@ -222,7 +230,8 @@ div.flag-wrapper {
     margin-right: 0.5em;
     align-self: stretch;
     width: calc(33% - 1.2em);
-    max-height: 30vh;
+    max-height: 30vh; // Fallback
+    max-height: 30dvh;
 
     @media only screen and (max-width: 768px) {
         margin-left: 0.25em;
@@ -328,9 +337,11 @@ body.colorscheme-light div.flag {
   top: 5%;
   left: 50%;
   transform: translateX(-50%);
-  width: 75vw;
+  width: 75vw; // Fallback
+  width: 75dvw;
   @media only screen and (max-width: 400) {
-      width: 95vw;
+      width: 95vw; // Fallback
+      width: 95dvw;
   }
   padding: 10px;
   border: 1px solid #cccccc;
@@ -343,7 +354,8 @@ body.colorscheme-light div.flag {
 }
 
 div.infobox#trainer-infobox {
-    height: 90vh;
+    height: 90vh; // Fallback
+    height: 90dvh;
     display: none;
     flex-direction: column;
 }
@@ -446,7 +458,8 @@ body.colorscheme-dark .infobox {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    width: 30vw;
+    width: 30vw; // Fallback
+    width: 30dvw;
     padding: 10px;
     border: 1px solid #cccccc;
     border-radius: 5px;
@@ -507,8 +520,10 @@ a.download-button.visible {
 // Stats container
 div.stats-history-container {
     width: fit-content;
-    max-height: 40vw;
-    max-width: 95vw;
+    max-height: 40vh; // Fallback
+    max-height: 40dvh;
+    max-width: 95vw; // Fallback
+    max-width: 95dvw;
     overflow-y: auto;
     flex-flow: column nowrap;
     align-content: flex-start;
