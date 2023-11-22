@@ -238,6 +238,14 @@ div.flag-wrapper {
         margin-right: 0.25em;
         width: calc(50% - 0.51em);
     }
+
+    display: none;
+    opacity: 0;
+}
+
+div.flag-wrapper.visible {
+    display: block;
+    opacity: 1;
 }
 
 div.flag-wrapper.trainer {

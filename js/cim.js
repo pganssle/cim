@@ -183,46 +183,17 @@ function get_audio_files() {
     return AUDIO_FILES;
 }
 
-function make_flag(flag_color) {
-    const wrapper_id = flag_color + "-flag";
-    let wrapper_div = document.getElementById(wrapper_id);
-    if (wrapper_div === null) {
-        wrapper_div = document.createElement("div");
-        wrapper_div.classList.add("flag-wrapper");
-        wrapper_div.id = wrapper_id;
-
-        let inner_div = document.createElement("div");
-        inner_div.classList.add("flag");
-        inner_div.classList.add("fa");
-        inner_div.classList.add(flag_color);
-
-        inner_div.onclick = () => select_flag(inner_div);
-        wrapper_div.appendChild(inner_div);
-    }
-
-    return wrapper_div;
-}
-
 function populate_flags() {
     const colors = get_selected_colors();
     const base_elem = document.getElementById("flag-holder");
 
-    function add_spacer() {
-        let spacer = document.createElement("div");
-        spacer.classList.add("flag-spacer");
-        base_elem.appendChild(spacer);
+    for (let wrapper_elem of base_elem.querySelectorAll(".flag-wrapper")) {
+        if (colors.includes(wrapper_elem.dataset.color)) {
+            wrapper_elem.classList.add("visible");
+        } else {
+            wrapper_elem.classList.remove("visible");
+        }
     }
-
-    while (base_elem.firstChild) {
-        base_elem.removeChild(base_elem.lastChild);
-    }
-
-    add_spacer();
-    for (const color of colors) {
-        const flag = make_flag(color);
-        base_elem.appendChild(flag);
-    }
-    add_spacer();
 
     if (colors.length > 9) {
         base_elem.classList.add("many");
@@ -429,8 +400,8 @@ function select_flag(elem) {
     if (_AUDIO_PLAYED === false) {
         return;
     }
-    const id = elem.parentElement.id;
-    const chosen_color = id.split("-")[0];
+    const chosen_color = elem.parentElement.dataset.color;
+    const flag_holder = document.getElementById("flag-holder");
 
     _EMOJI_LOCK = true;
     update_stats(_CORRECT_COLOR, chosen_color);
@@ -441,7 +412,7 @@ function select_flag(elem) {
         set_cat_emoji(6);
     } else {
         elem.classList.add("flag-incorrect");
-        _CORRECT_ELEM = document.getElementById(_CORRECT_COLOR + "-flag").firstChild;
+        _CORRECT_ELEM = flag_holder.querySelector("div[data-color=" + _CORRECT_COLOR + "]>div.flag");
         _CORRECT_ELEM.classList.add("flag-correct");
         set_cat_emoji(5)
     }

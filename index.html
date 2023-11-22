@@ -204,6 +204,14 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
             </div>
         </div>
         <div class="flag-container" id="flag-holder">
+            <div class="flag-spacer"></div>
+            {%- for color in page.colors -%}
+            <div class="flag-wrapper" id="{{ color.name }}-flag" data-color="{{ color.name}}">
+                <div class="flag fa {{ color.name }}" onclick="select_flag(this);">
+                </div>
+            </div>
+            {%- endfor -%}
+            <div class="flag-spacer"></div>
         </div>
         <div class="stats controls" id="stats-container">
             <div class="emoji-container">
@@ -285,7 +293,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
   </div>
   <div class="trainer-container">
   {%- for color in page.colors -%}
-  <div class="flag-wrapper trainer">
+  <div class="flag-wrapper trainer visible">
       <div class="flag trainer {{color.name}}" onclick="play_chord('{{color.name}}');"></div>
   </div>
   {%- endfor -%}
