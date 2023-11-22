@@ -481,8 +481,12 @@ function play_audio() {
         return;
     }
 
-    const [chord, duration] = _CURRENT_AUDIO;
+    let [chord, duration] = _CURRENT_AUDIO;
 
+    if (isNaN(duration)) {
+        // If the duration is not known, default to a relatively low value.
+        duration = 0.8;
+    }
     set_played_after(duration * 0.8);
     play_chord(chord, duration);
 }
@@ -494,7 +498,9 @@ function play_chord_files(color) {
 }
 
 function play_chord(color, duration=null) {
-    if (use_legacy(color)) {
+    if (color.play !== undefined) {
+        color.play();
+    } else if (use_legacy(color)) {
         play_chord_files(color);
     } else {
         play_chord_tone(color, duration);
