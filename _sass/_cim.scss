@@ -8,6 +8,7 @@ img.logo {
     max-height: 5rem;
     opacity: 0.5;
 }
+
 div.container {
     display: flex;
     flex-direction: column;
@@ -93,31 +94,7 @@ div.cim {
     width: 100%
 }
 
-div.control-wrapper {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    flex-grow: 0;
-    padding: 0.5rem;
-    padding-top: 1rem;
-}
-
-div.control-wrapper > div.hamburger {
-    flex-grow: 0;
-    font-size: 3rem;
-    margin-left: 0.5rem;
-}
-
-div.control-container {
-    display: flex;
-    flex-grow: 1;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    align-items: center;
-}
+/* Flags */
 
 div.flag-spacer {
     display: none;
@@ -138,7 +115,6 @@ div.flag-container {
     flex-wrap: wrap;
     flex-grow: 2;
 }
-
 
 div.chord-notes-container {
     color: #000;
@@ -176,7 +152,7 @@ div.flag-container.chord-notes div.chord-notes-container {
     flex-direction: row;
 }
 
-
+// This makes the notes appear diagonal, from bottom left to top right
 div.note:nth-child(1) {
     align-self: flex-end;
 }
@@ -188,6 +164,36 @@ div.note:nth-child(2) {
 div.note:nth-child(3) {
     align-self: flex-start;
 }
+
+
+/* Controls */
+
+div.control-wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 0;
+    padding: 0.5rem;
+    padding-top: 1rem;
+}
+
+div.control-wrapper > div.hamburger {
+    flex-grow: 0;
+    font-size: 3rem;
+    margin-left: 0.5rem;
+}
+
+div.control-container {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center;
+}
+
 
 div.controls {
     display: flex;
