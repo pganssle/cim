@@ -139,6 +139,39 @@ div.flag-container {
     flex-grow: 2;
 }
 
+
+div.chord-notes-container {
+    color: #000;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: min(100%, 10em);
+    height: 100%;
+}
+
+div.chord-notes-container {
+    display: none;
+}
+
+div.chord-notes-container > div.note {
+    border-radius: 50%;
+    border: 3px solid #222;
+    background-color: #ddd;
+    text-align: center;
+    width: 1.5em;
+    height: 1.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+
+div.flag-container.chord-notes div.chord-notes-container {
+    display: flex;
+    flex-direction: row;
+}
+
 div.controls {
     display: flex;
     flex-direction: row;
@@ -272,6 +305,10 @@ div.flag-container.many > div.flag-wrapper {
 div.flag {
     height: 100%;
     width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    position: relative;
 }
 
 div.flag-correct {
@@ -279,39 +316,34 @@ div.flag-correct {
     border: 5px green solid !important;
 }
 
-div.flag-correct::before {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translateY(-50%) translateX(-50%);
-    content: "\f00c";
-    color: green;
-    font-weight: bold;
-    font-size: 5rem;
-    -webkit-text-stroke-width: 2px;
-    -webkit-text-stroke-color: black;
-}
-
 div.flag-incorrect {
     border: 5px red solid !important;
     position: relative;
-    color: red;
 }
 
-div.flag-incorrect::before {
+i.answer-icon {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translateY(-50%) translateX(-50%);
-    content: "\f00d";
-    color: red;
-    -webkit-text-stroke-width: 2px;
-    -webkit-text-stroke-color: black;
     font-weight: bold;
-    font-size: 5rem;
-    top: 50%;
-    left: 50%;
+    font-size: 3.5em;
+    display: none;
+    opacity: 0.75;
     transform: translateY(-50%) translateX(-50%);
+    text-shadow: rgb(0, 0, 0) 1px 0px 0px, rgb(0, 0, 0) 0.540302px 0.841471px 0px, rgb(0, 0, 0) -0.416147px 0.909297px 0px, rgb(0, 0, 0) -0.989993px 0.14112px 0px, rgb(0, 0, 0) -0.653644px -0.756803px 0px, rgb(0, 0, 0) 0.283662px -0.958924px 0px, rgb(0, 0, 0) 0.96017px -0.279416px 0px;
+}
+
+
+i.answer-icon.correct {
+    color: green;
+}
+i.answer-icon.incorrect {
+    color: red;
+}
+
+div.flag-correct i.answer-icon.correct,
+div.flag-incorrect i.answer-icon.incorrect {
+    display: block;
 }
 
 body.colorscheme-dark div.flag {

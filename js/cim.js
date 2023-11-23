@@ -206,6 +206,12 @@ function populate_flags() {
     } else {
         base_elem.classList.remove("few");
     }
+
+    if (colors.length > FIRST_BLACK_INDEX) {
+        base_elem.classList.add("chord-notes");
+    } else {
+        base_elem.classList.remove("chord-notes");
+    }
 }
 
 function audio_file_elem(audio_file) {
