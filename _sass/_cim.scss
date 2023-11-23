@@ -147,7 +147,11 @@ div.chord-notes-container {
     justify-content: space-around;
     align-items: center;
     width: min(100%, 10em);
-    height: 100%;
+    height: min(10rem, 100%);
+
+    @media only screen and (min-width: 768px) {
+        height: min(10rem, calc(100% - 1em));
+    }
 }
 
 div.chord-notes-container {
@@ -170,6 +174,19 @@ div.chord-notes-container > div.note {
 div.flag-container.chord-notes div.chord-notes-container {
     display: flex;
     flex-direction: row;
+}
+
+
+div.note:nth-child(1) {
+    align-self: flex-end;
+}
+
+div.note:nth-child(2) {
+    align-self: center;
+}
+
+div.note:nth-child(3) {
+    align-self: flex-start;
 }
 
 div.controls {
