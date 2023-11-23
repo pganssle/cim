@@ -67,6 +67,29 @@ instruments:
 
 first_black_index: 9
 ---
+
+{% comment %} Construct an array of "display notes {% endcomment %}
+{%- assign display_notes = "" | split: "" -%}
+{%- for color in page.colors -%}
+    {%- assign _notes = "" | split: "" -%}
+    {%- for _note in color.notes -%}
+        {%- assign _note_array = _note | split: "" -%}
+        {%- assign _display_note = "" | split: "" -%}
+        {%- for char in _note_array -%}
+            {%- if "0123456789" contains char -%}
+                {%- continue -%}
+            {%- endif -%}
+            {%- assign _display_note = _display_note | push: char -%}
+        {%- endfor -%}
+        {%- assign _display_note = _display_note | join: "" -%}
+        {%- assign _notes = _notes | push: _display_note -%}
+    {%- endfor -%}
+    {%- assign _display_note = "" | split: "" -%}
+    {%- assign _display_note = _display_note | push: color.name -%}
+    {%- assign _display_note = _display_note | push: _notes -%}
+    {%- assign display_notes = display_notes | push: _display_note -%}
+{%- endfor -%}
+
 <!doctype html>
 <html>
     <head>
@@ -85,6 +108,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         <link rel="shortcut icon" type="image/png" href="{{ "assets/images/favicon.png" }}">
     </head>
     <script>
+        const FIRST_BLACK_INDEX = {{ page.first_black_index }};
         const CHORDS_TONE = {
         {%- for color in page.colors -%}
             "{{ color.name }}": [{%-for chord in color.notes-%}"{{chord}}",{%-endfor-%}],
@@ -207,7 +231,19 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
             <div class="flag-spacer"></div>
             {%- for color in page.colors -%}
             <div class="flag-wrapper" id="{{ color.name }}-flag" data-color="{{ color.name}}">
-                <div class="flag fa {{ color.name }}" onclick="select_flag(this);">
+                <div class="flag {{ color.name }}" onclick="select_flag(this);">
+                    <i class="answer-icon correct fa fa-check"></i>
+                    <i class="answer-icon incorrect fa fa-times"></i>
+                    <div class="chord-notes-container chord-{{color.chord | replace: "/", "-"}}">
+                        {%- assign _notes = display_notes
+                        | where_exp: "display", "display.first == color.name"
+                        | first | last -%}
+                        {%- for note in _notes -%}
+                        <div class="note note-{{note | replace: "#", "-sharp" | replace: "b", "-flat"}}">
+                            {{ note | replace: "#", "♯" | replace: "b", "♭" }}
+                        </div>
+                        {%- endfor -%}
+                    </div>
                 </div>
             </div>
             {%- endfor -%}
@@ -235,21 +271,10 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
             </optgroup>
             <optgroup label="Black chords">
                 {%- endif -%}
-                {%- assign _notes = "" | split: "" -%}
-                {%- for _note in color.notes -%}
-                    {%- assign _note_array = _note | split: "" -%}
-                    {%- assign _display_note = "" | split: "" -%}
-                    {%- for char in _note_array -%}
-                        {%- if "0123456789" contains char -%}
-                            {%- continue -%}
-                        {%- endif -%}
-                        {%- assign _display_note = _display_note | push: char -%}
-                    {%- endfor -%}
-                    {%- assign _display_note = _display_note | join: "" -%}
-                    {%- assign _notes = _notes | push: _display_note -%}
-                {%- endfor -%}
-
-                {%- assign _notes_display = _notes | join: " " | replace: "#", "♯" | replace: "b", "♭" -%}
+                {%- assign _notes_display = display_notes
+                | where_exp: "display", "display.first == color.name"
+                | first | last | join: " "  |
+                replace: "#", "♯" | replace: "b", "♭" -%}
 
                     <option value="{{color.name}}"{%-if idx < 1 -%} hidden{%-endif-%}>Level {{level}}: {{color.display}} ({{_notes_display}})</option>
                 {%- assign level = level | plus: 1 -%}
