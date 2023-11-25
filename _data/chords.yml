@@ -1,0 +1,56 @@
+- name: "red"
+  display: "Red"
+  chord: "C"
+  notes: ["C4", "E4", "G4"]
+- name: "yellow"
+  display: "Yellow"
+  chord: "F/C"
+  notes: ["C4", "F4", "A4"]
+- name: "blue"
+  display: "Blue"
+  chord: "G/B"
+  notes: ["B3", "D4", "G4"]
+- name: "black"
+  display: "Black"
+  chord: "F/A"
+  notes: ["A3", "C4", "F4"]
+- name: "green"
+  display: "Green"
+  chord: "G/D"
+  notes: ["D4", "G4", "B4"]
+- name: "orange"
+  display: "Orange"
+  chord: "C/E"
+  notes: ["E4", "G4", "C5"]
+- name: "purple"
+  display: "Purple"
+  chord: "F"
+  notes: ["F4", "A4", "C5"]
+- name: "pink"
+  display: "Pink"
+  chord: "G"
+  notes: ["G4", "B4", "D5"]
+- name: "brown"
+  display: "Brown"
+  chord: "C/G"
+  notes: ["G4", "C5", "E5"]
+- name: "gray"
+  display: "Gray"
+  chord: "A"
+  notes: ["A4", "C#4", "E4"]
+- name: "tan"
+  display: "Tan"
+  chord: "D"
+  notes: ["D4", "F#4", "A4"]
+- name: "lightgreen"
+  display: "Light Green"
+  chord: "E"
+  notes: ["E4", "G#4", "B4"]
+- name: "lightpurple"
+  display: "Light Purple"
+  chord: "Bb"
+  notes: ["Bb3", "D4", "F4"]
+- name: "skyblue"
+  display: "Sky Blue"
+  chord: "Eb"
+  notes: ["Eb4", "G4", "Bb4"]
