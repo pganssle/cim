@@ -1,0 +1,6 @@
+- name: piano_1
+  display: "🎹 Piano"
+- name: piano_old
+  display: "🎹🧓 Piano (old)"
+  fallback: "piano_1"
+  legacy: true

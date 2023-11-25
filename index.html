@@ -1,76 +1,10 @@
 ---
-colors:
-    - name: "red"
-      display: "Red"
-      chord: "C"
-      notes: ["C4", "E4", "G4"]
-    - name: "yellow"
-      display: "Yellow"
-      chord: "F/C"
-      notes: ["C4", "F4", "A4"]
-    - name: "blue"
-      display: "Blue"
-      chord: "G/B"
-      notes: ["B3", "D4", "G4"]
-    - name: "black"
-      display: "Black"
-      chord: "F/A"
-      notes: ["A3", "C4", "F4"]
-    - name: "green"
-      display: "Green"
-      chord: "G/D"
-      notes: ["D4", "G4", "B4"]
-    - name: "orange"
-      display: "Orange"
-      chord: "C/E"
-      notes: ["E4", "G4", "C5"]
-    - name: "purple"
-      display: "Purple"
-      chord: "F"
-      notes: ["F4", "A4", "C5"]
-    - name: "pink"
-      display: "Pink"
-      chord: "G"
-      notes: ["G4", "B4", "D5"]
-    - name: "brown"
-      display: "Brown"
-      chord: "C/G"
-      notes: ["G4", "C5", "E5"]
-    - name: "gray"
-      display: "Gray"
-      chord: "A"
-      notes: ["A4", "C#4", "E4"]
-    - name: "tan"
-      display: "Tan"
-      chord: "D"
-      notes: ["D4", "F#4", "A4"]
-    - name: "lightgreen"
-      display: "Light Green"
-      chord: "E"
-      notes: ["E4", "G#4", "B4"]
-    - name: "lightpurple"
-      display: "Light Purple"
-      chord: "Bb"
-      notes: ["Bb3", "D4", "F4"]
-    - name: "skyblue"
-      display: "Sky Blue"
-      chord: "Eb"
-      notes: ["Eb4", "G4", "Bb4"]
-
-instruments:
-    - name: piano_1
-      display: "🎹 Piano"
-    - name: piano_old
-      display: "🎹🧓 Piano (old)"
-      fallback: "piano_1"
-      legacy: true
-
-first_black_index: 9
 ---
+{% assign first_black_index = 9 %}
 
 {% comment %} Construct an array of "display notes {% endcomment %}
 {%- assign display_notes = "" | split: "" -%}
-{%- for color in page.colors -%}
+{%- for color in site.data.chords -%}
     {%- assign _notes = "" | split: "" -%}
     {%- for _note in color.notes -%}
         {%- assign _note_array = _note | split: "" -%}
@@ -115,9 +49,9 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         </style>
     </head>
     <script>
-        const FIRST_BLACK_INDEX = {{ page.first_black_index }};
+        const FIRST_BLACK_INDEX = {{ first_black_index }};
         const CHORDS_TONE = {
-        {%- for color in page.colors -%}
+        {%- for color in site.data.chords -%}
             "{{ color.name }}": [{%-for chord in color.notes-%}"{{chord}}",{%-endfor-%}],
 
         {%- endfor -%}
@@ -131,7 +65,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         {%- endfor -%}
         ];
         const INSTRUMENT_INFO = {
-        {%- for instrument in page.instruments -%}
+        {%- for instrument in site.data.instruments -%}
             {%- assign base_url = 'static_files/samples/' | append: instrument.name -%}
             {%- assign instrument_files = site.static_files |
                         where_exp: "file",
@@ -236,7 +170,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         </div>
         <div class="flag-container" id="flag-holder">
             <div class="flag-spacer"></div>
-            {%- for color in page.colors -%}
+            {%- for color in site.data.chords -%}
             <div class="flag-wrapper" id="{{ color.name }}-flag" data-color="{{ color.name}}">
                 <div class="flag {{ color.name }}" onclick="select_flag(this);">
                     <i class="answer-icon correct fa fa-check"></i>
@@ -280,9 +214,9 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
             <select class="selector" name="chords" id="chord-selector" onchange="change_selector()">
             <optgroup label="White chords">
             {%- assign level = 0 -%}
-            {% for color in page.colors %}
+            {% for color in site.data.chords %}
                 {%- assign idx = forloop.index0 | int -%}
-                {%- if idx == page.first_black_index -%}
+                {%- if idx == first_black_index -%}
                 {%- assign level = 1 -%}
             </optgroup>
             <optgroup label="Black chords">
@@ -298,7 +232,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
             </optgroup>
             </select>
             <select class="selector" name="instruments" id="instrument-selector" onchange="change_instrument()">
-                {%- for instrument in page.instruments -%}
+                {%- for instrument in site.data.instruments -%}
                     <option value="{{instrument.name}}">{{instrument.display}}</option>
                 {%- endfor -%}
             </select>
@@ -333,7 +267,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
       Music Trainer: Play the chords manually
   </div>
   <div class="trainer-container">
-  {%- for color in page.colors -%}
+  {%- for color in site.data.chords -%}
   <div class="flag-wrapper trainer visible">
       <div class="flag trainer {{color.name}}" onclick="play_chord('{{color.name}}');"></div>
   </div>
