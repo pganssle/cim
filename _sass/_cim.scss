@@ -119,7 +119,7 @@ div.flag-container {
 div.chord-notes-container {
     color: #000;
     font-weight: bold;
-    display: flex;
+    display: none;
     justify-content: space-around;
     align-items: center;
     width: min(100%, 10em);
@@ -130,41 +130,59 @@ div.chord-notes-container {
     }
 }
 
-div.chord-notes-container {
-    display: none;
-}
-
-div.chord-notes-container > div.note {
-    border-radius: 50%;
-    border: 3px solid #222;
-    background-color: #ddd;
-    text-align: center;
-    width: 1.5em;
-    height: 1.5em;
+div.chord-notes-container > div.note-wrapper {
+    width: 2em;
+    height: 2em;
     display: flex;
     align-items: center;
     justify-content: center;
     user-select: none;
+    position: relative;
+
+    // This makes the notes appear diagonal, from bottom left to top right
+    &:nth-child(1) {
+        align-self: flex-end;
+    }
+
+    &:nth-child(2) {
+        align-self: center;
+    }
+
+    &:nth-child(3) {
+        align-self: flex-start;
+    }
+
+    div.note {
+        width: 100%;
+        height: 100%;
+        background-color: #333;
+        opacity: 0.95;
+    }
+
+    div.note-text {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        right: 0;
+        display: none;
+        color: $fg-color-dark;
+        justify-content: space-around;
+        align-items: center;
+        z-index: 10;
+        font-size: 1.2em;
+    }
 }
+
+div.chord-notes-container.use-letters > div.note-wrapper div.note-text {
+    display: flex;
+}
+
 
 div.flag-container.chord-notes div.chord-notes-container {
     display: flex;
     flex-direction: row;
 }
-
-// This makes the notes appear diagonal, from bottom left to top right
-div.note:nth-child(1) {
-    align-self: flex-end;
-}
-
-div.note:nth-child(2) {
-    align-self: center;
-}
-
-div.note:nth-child(3) {
-    align-self: flex-start;
-}
-
 
 /* Controls */
 
