@@ -78,6 +78,7 @@ function new_stats() {
 }
 
 let _COLORS = null;
+let _CHORDS_ON = false;
 let _CORRECT_COLOR = null;
 let _CURRENT_COEFFICIENTS = null;
 let _SELECTED_ELEM = null;
@@ -99,8 +100,10 @@ let _EASTER_EGG_ENABLED = false;
 
 const _DEFAULT_CHORD = Object.keys(CHORDS_TONE)[1];
 const _DEFAULT_INSTRUMENT = Object.keys(INSTRUMENT_INFO)[0];
-
 const _DEFAULT_TARGET_NUMBER = 25;
+const _DEFAULT_SHOW_CHORD_MODE = "black_only";
+const _DEFAULT_REVEAL_CHORD_MODE = "always";
+const _DEFAULT_CHORD_DISPLAY_MODE = "shapes_and_letters";
 
 const _INFOBOX_TRIGGER_IDS = [
     "trainer-infobox-trigger",
@@ -207,11 +210,12 @@ function populate_flags() {
         base_elem.classList.remove("few");
     }
 
-    if (colors.length > FIRST_BLACK_INDEX) {
+    if (_CHORDS_ON && get_current_profile().reveal_chord_mode === "always") {
         base_elem.classList.add("chord-notes");
     } else {
         base_elem.classList.remove("chord-notes");
     }
+
 }
 
 function audio_file_elem(audio_file) {
@@ -429,6 +433,10 @@ function select_flag(elem) {
         reset_cat_emoji();
     }, 1500);
 
+    if (_CHORDS_ON && get_current_profile().reveal_chord_mode === "after_guess") {
+        document.getElementById("flag-holder").classList.add("chord-notes");
+    }
+
     let next_button = document.getElementById("next-chord");
     next_button.classList.remove("deactivated");
 }
@@ -488,6 +496,9 @@ function next_audio() {
     let next_button = document.getElementById("next-chord");
     if (next_button.classList.contains("deactivated")) {
         return;
+    }
+    if (_CHORDS_ON && get_current_profile().reveal_chord_mode === "after_guess") {
+        document.getElementById("flag-holder").classList.remove("chord-notes");
     }
     populate_audio();
     play_audio();
@@ -579,11 +590,11 @@ function change_selector(to) {
         chord_selector.value = to;
     }
 
+    const current_profile = get_current_profile();
     if (STATE.current_chord !== chord_selector.value) {
         reset_stats(false);
         STATE.current_chord = chord_selector.value;
 
-        const current_profile = get_current_profile();
         current_profile.current_chord = chord_selector.value;
         current_profile.stats.current_chord = current_profile.current_chord;
 
@@ -591,6 +602,10 @@ function change_selector(to) {
     }
 
     _COLORS = null;
+    const is_black_chord = get_selected_colors().length > FIRST_BLACK_INDEX;
+    _CHORDS_ON = (current_profile.show_chord_mode === "always"
+        || (is_black_chord && current_profile.show_chord_mode === "black_only"));
+
     populate_flags();
     populate_audio();
 
@@ -702,6 +717,24 @@ function save_state() {
     localStorage.setObject(STATE_KEY, STATE);
 }
 
+function initialize_profile_defaults(profile) {
+    function initialize(val, default_value) {
+        if (profile[val] === undefined) {
+            profile[val] = default_value;
+        }
+    }
+
+    profile_defaults = {
+        show_chord_mode: _DEFAULT_SHOW_CHORD_MODE,
+        reveal_chord_mode: _DEFAULT_REVEAL_CHORD_MODE,
+        chord_display_mode: _DEFAULT_CHORD_DISPLAY_MODE,
+    }
+
+    for (const [val, default_val] of Object.entries(profile_defaults)) {
+        initialize(val, default_val);
+    }
+}
+
 function load_state() {
     let state = localStorage.getObject(STATE_KEY);
     if (state === null) {
@@ -729,6 +762,10 @@ function load_state() {
         state["current_profile"] = _GUEST_USER_ID;
     }
 
+    for (let profile of Object.values(state.profiles)) {
+        initialize_profile_defaults(profile);
+    }
+
     STATE = state;
 }
 
@@ -738,10 +775,13 @@ function new_profile_from_values(values) {
         icon = values.icon,
         id = values.id,
         target_number = parseInt(values.target_number),
+        show_chord_mode = values.show_chord_mode,
+        reveal_chord_mode = values.reveal_chord_mode,
+        chord_display_mode = values.chord_display_mode,
     );
 }
 
-function new_profile(name, icon, id, target_number=_DEFAULT_TARGET_NUMBER) {
+function new_profile(name, icon, id, target_number=_DEFAULT_TARGET_NUMBER, show_chord_mode=_DEFAULT_SHOW_CHORD_MODE, reveal_chord_mode=_DEFAULT_REVEAL_CHORD_MODE, chord_display_mode=_DEFAULT_CHORD_DISPLAY_MODE) {
     if (id === undefined || id === null) {
         id = _GUEST_USER_ID + 1;
         while (id in STATE["profiles"]) {
@@ -754,6 +794,9 @@ function new_profile(name, icon, id, target_number=_DEFAULT_TARGET_NUMBER) {
         name: name,
         icon: icon,
         target_number: target_number,
+        show_chord_mode: show_chord_mode,
+        reveal_chord_mode: reveal_chord_mode,
+        chord_display_mode: chord_display_mode,
         stats: new_stats(),
         current_chord: _DEFAULT_CHORD,
         current_instrument: _DEFAULT_INSTRUMENT,
@@ -998,6 +1041,15 @@ function get_profile_settings() {
 
     let id = JSON.parse(profile_container.dataset.id);
 
+    const show_chord_elem = document.getElementById("show-chord-name-mode-selector");
+    const show_chord_mode = show_chord_elem.value;
+
+    const reveal_chord_mode_elem = document.getElementById("chord-reveal-mode-selector");
+    const reveal_chord_mode = reveal_chord_mode_elem.value;
+
+    const chord_display_mode_elem = document.getElementById("chord-name-display-mode-selector");
+    const chord_display_mode = chord_display_mode_elem.value;
+
     const target_number_elem = document.getElementById("target_number_setting");
     let target_number = target_number_elem.value;
 
@@ -1006,6 +1058,9 @@ function get_profile_settings() {
         icon: profile_icon,
         id: id,
         target_number: target_number,
+        show_chord_mode: show_chord_mode,
+        reveal_chord_mode: reveal_chord_mode,
+        chord_display_mode: chord_display_mode,
     }
 }
 
@@ -1026,6 +1081,13 @@ function clear_profile_dialog() {
     for (let elem of profile_dialog.querySelectorAll("button.button")) {
         elem.classList.remove("visible");
     }
+
+    let show_chord_name_mode = profile_dialog.querySelector("select#show-chord-name-mode-selector");
+    show_chord_name_mode.value = _DEFAULT_SHOW_CHORD_MODE;
+
+    let chord_display_mode_elem = profile_dialog.querySelector("select#chord-name-display-mode-selector");
+    chord_display_mode_elem.value = _DEFAULT_CHORD_DISPLAY_MODE;
+
 
     profile_dialog.dataset.id = null;
 }
@@ -1051,6 +1113,15 @@ function profile_settings(profile) {
     let target_number_elem = document.getElementById("target_number_setting");
     target_number_elem.value = profile.target_number;
 
+    let show_chord_mode_elem = document.getElementById("show-chord-name-mode-selector");
+    show_chord_mode_elem.value = profile.show_chord_mode;
+
+    let reveal_chord_mode_elem = document.getElementById("chord-reveal-mode-selector");
+    reveal_chord_mode_elem.value = profile.reveal_chord_mode;
+
+    let chord_display_mode_elem = document.getElementById("chord-name-display-mode-selector");
+    chord_display_mode_elem.value = profile.chord_display_mode;
+
     profile_dialog.dataset.id = profile["id"];
 }
 
@@ -1075,6 +1146,9 @@ function submit_profile_changes() {
     current_profile.name = profile_values.name;
     current_profile.icon = profile_values.icon;
     current_profile.target_number = parseInt(profile_values.target_number);
+    current_profile.show_chord_mode = profile_values.show_chord_mode;
+    current_profile.reveal_chord_mode = profile_values.reveal_chord_mode;
+    current_profile.chord_display_mode = profile_values.chord_display_mode;
 
     save_state();
     populate_profile_pulldown();
@@ -1113,14 +1187,35 @@ function populate_profile_ui_elements() {
     profileNameSpanElem.textContent = profile["name"];
 }
 
-function set_current_profile(profile) {
-    if (profile.id === get_current_profile().id) {
-        return;
+function set_chord_display_mode(chord_mode) {
+    use_shapes = true;
+    use_letters = true;
+    if (chord_mode == "shapes_only") {
+        use_letters = false;
+    } else if (chord_mode == "letters_only") {
+        use_shapes = false;
     }
 
-    // Reset the stats and retrieve any existing sessions
-    reset_stats(false);
-    STATE.current_profile = profile.id;
+    const holder_elem = document.getElementById("flag-holder");
+    if (use_shapes) {
+        holder_elem.classList.add("use-shapes");
+    } else {
+        holder_elem.classList.remove("use-shapes");
+    }
+
+    if (use_letters) {
+        holder_elem.classList.add("use-letters");
+    } else {
+        holder_elem.classList.remove("use-letters");
+    }
+}
+
+function set_current_profile(profile) {
+    if (profile.id !== get_current_profile().id) {
+        // Reset the stats and retrieve any existing sessions
+        reset_stats(false);
+        STATE.current_profile = profile.id;
+    }
 
     if (profile.current_chord === undefined) {
         profile.current_chord = _DEFAULT_CHORD;
@@ -1131,6 +1226,7 @@ function set_current_profile(profile) {
     }
 
     populate_profile_ui_elements();
+    set_chord_display_mode(profile.chord_display_mode);
 
     // Instrument must come first
     change_instrument(profile.current_instrument);
@@ -1419,6 +1515,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     populate_profile_ui_elements();
+    set_chord_display_mode(profile.chord_display_mode);
     change_instrument(profile.current_instrument);
     change_selector(profile.current_chord);
     populate_infobox_triggers();

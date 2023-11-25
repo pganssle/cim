@@ -17,9 +17,14 @@ $star: url(#star-clip-path);
 $clover: url(#clover-clip-path);
 $clover_r: url(#clover-rotated-clip-path);
 
+div.chord-notes-container > div.note-wrapper > div.note {
+    clip-path: $circle;
+    @media only screen and (max-width: 768px) {
+        clip-path: circle(45%);
+    }
+}
 
-
-div.chord-notes-container.use-shapes {
+div.flag-container.use-shapes div.chord-notes-container {
     div.note-wrapper.note-A3 {
         div.note {
             clip-path: $triangle_u;
