@@ -1,5 +1,17 @@
 let TONE_SAMPLERS = {};
 
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("../sw.js").then(
+        (registration) => {
+            console.log("Service worker successfully registered.");
+        },
+        (error) => {
+            console.error(`Service worker registration failed: ${error}`);
+        }
+    );
+
+}
+
 function start_tone() {
     if (!_TONE_STARTED) {
         Tone.start();
