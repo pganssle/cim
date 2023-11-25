@@ -90,6 +90,7 @@ first_black_index: 9
     {%- assign display_notes = display_notes | push: _display_note -%}
 {%- endfor -%}
 
+
 <!doctype html>
 <html>
     <head>
@@ -106,6 +107,12 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                             as="font" type="font/woff2" crossorigin="">
         <link rel="stylesheet" href="{{ "assets/css/style.css" }}">
         <link rel="shortcut icon" type="image/png" href="{{ "assets/images/favicon.png" }}">
+        <style>
+        {% capture sass_file %}
+            {% include _note_shapes.scss %}
+        {% endcapture %}
+        {{ sass_file | scssify }}
+        </style>
     </head>
     <script>
         const FIRST_BLACK_INDEX = {{ page.first_black_index }};
@@ -234,7 +241,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                 <div class="flag {{ color.name }}" onclick="select_flag(this);">
                     <i class="answer-icon correct fa fa-check"></i>
                     <i class="answer-icon incorrect fa fa-times"></i>
-                    <div class="chord-notes-container chord-{{color.chord | replace: "/", "-"}}">
+                    <div class="chord-notes-container use-letters use-shapes chord-{{color.chord | replace: "/", "-"}}">
                         {%- assign _notes = display_notes
                         | where_exp: "display", "display.first == color.name"
                         | first | last -%}
@@ -245,8 +252,11 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                                                 | replace: "#", "-sharp"
                                                 | replace: "b", "-flat"
                                                 | prepend: "note-" -%}
-                            <div class="note {{note_class}} note-{{absolute_note}}">
-                                <span class="note-text">{{ note | replace: "#", "♯" | replace: "b", "♭" }}</span>
+                            <div class="note-wrapper {{note_class}} note-{{absolute_note}}">
+                                <div class="note"></div>
+                                <div class="note-text">
+                                    <span class="note-text-span">{{ note | replace: "#", "♯" | replace: "b", "♭" }}</span>
+                                </div>
                         </div>
                         {%- endfor -%}
                     </div>
@@ -381,5 +391,9 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         <button class="button settings-button" id="submit-changes-button" onclick="submit_profile_changes()">Save Changes</button>
         <button class="button add-button" id="add-user-button" onclick="add_profile()">Add Profile</button>
     </div>
+</div>
+<div class="shape-container">
+    {% include note_shapes.svg %}
+</div>
     </body>
 </html>
