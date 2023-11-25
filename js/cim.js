@@ -644,6 +644,7 @@ function reset_stats(done = true) {
     _CURRENT_COEFFICIENTS = null; // Trigger re-calculation of weights.
     save_state();
     update_stats_display();
+    populate_audio();
 }
 
 function get_session_history() {
