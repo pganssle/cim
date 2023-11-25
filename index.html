@@ -241,7 +241,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                 <div class="flag {{ color.name }}" onclick="select_flag(this);">
                     <i class="answer-icon correct fa fa-check"></i>
                     <i class="answer-icon incorrect fa fa-times"></i>
-                    <div class="chord-notes-container use-letters use-shapes chord-{{color.chord | replace: "/", "-"}}">
+                    <div class="chord-notes-container chord-{{color.chord | replace: "/", "-"}}">
                         {%- assign _notes = display_notes
                         | where_exp: "display", "display.first == color.name"
                         | first | last -%}
@@ -381,6 +381,26 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         <input type="radio" name="profile_icon_selector"
                             value="fa-taxi" id="npis-taxi">
         <label for="npis-taxi"><i class="fa fa-solid fa-taxi"></i></label>
+    </div>
+    <div class="entry-row">
+        <label for="show_chord_name_mode">Show chord names:</label>
+        <select class="selector" name="show_chord_name_mode" id="show-chord-name-mode-selector">
+            <option value="always">Always</option>
+            <option value="black_only">Black chords only</option>
+            <option value="never">Never</option>
+        </select>
+        <select class="selector" name="chord_reveal_mode" id="chord-reveal-mode-selector">
+            <option value="always">Always on</option>
+            <option value="after_guess">Reveal after guess</option>
+        </select>
+    </div>
+    <div class="entry-row">
+        <label for="chord_name_display_mode">Chord name display:</label>
+        <select class="selector" name="chord_name_display_mode" id="chord-name-display-mode-selector">
+            <option value="shapes_and_letters">Shapes and Letters</option>
+            <option value="shapes_only">Shapes only</option>
+            <option value="letters_only">Letters only</option>
+        </select>
     </div>
     <div class="entry-row">
         <label for="target_number_setting">Target Number:</label>
