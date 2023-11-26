@@ -189,8 +189,8 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
             {%- for color in site.data.chords -%}
             <div class="flag-wrapper" id="{{ color.name }}-flag" data-color="{{ color.name}}">
                 <div class="flag {{ color.name }}" onclick="select_flag(this);">
-                    <i class="answer-icon correct fa fa-check"></i>
-                    <i class="answer-icon incorrect fa fa-times"></i>
+                    <i class="answer-icon correct fa"></i>
+                    <i class="answer-icon incorrect fa"></i>
                     <div class="chord-notes-container chord-{{color.chord | replace: "/", "-"}}">
                         {%- assign _notes = display_notes
                         | where_exp: "display", "display.first == color.name"

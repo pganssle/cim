@@ -380,15 +380,24 @@ i.answer-icon {
     opacity: 0.75;
     z-index: 20;
     transform: translateY(-50%) translateX(-50%);
-    text-shadow: rgb(0, 0, 0) 1px 0px 0px, rgb(0, 0, 0) 0.540302px 0.841471px 0px, rgb(0, 0, 0) -0.416147px 0.909297px 0px, rgb(0, 0, 0) -0.989993px 0.14112px 0px, rgb(0, 0, 0) -0.653644px -0.756803px 0px, rgb(0, 0, 0) 0.283662px -0.958924px 0px, rgb(0, 0, 0) 0.96017px -0.279416px 0px;
 }
 
 
 i.answer-icon.correct {
     color: green;
+    &:before {
+        content: "\f00c";
+        -webkit-text-stroke-width: 2px;
+        -webkit-text-stroke-color: black;
+    }
 }
 i.answer-icon.incorrect {
     color: red;
+    &:before {
+        content: "\f00d";
+        -webkit-text-stroke-width: 2px;
+        -webkit-text-stroke-color: black;
+    }
 }
 
 div.flag-correct i.answer-icon.correct,
