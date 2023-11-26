@@ -5,6 +5,7 @@ $moon: url(#moon-clip-path);
 $moon_i: url(#moon-inverted-clip-path);
 $heart: url(#heart-clip-path);
 $heart_u: url(#heart-upside-down-clip-path);
+$pentagon: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
 $hexagon: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
 $circle: circle(50%);
 $octagon: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
@@ -96,6 +97,16 @@ div.flag-container.use-shapes div.chord-notes-container {
 
         div.note-text > span.note-text-span {
             transform: translateX(20%) translateY(12%);
+        }
+    }
+
+    div.note-wrapper.note-C-sharp4 {
+        div.note {
+            clip-path: $pentagon;
+        }
+
+        div.note-text > span.note-text-span {
+            transform: translateY(10%);
         }
     }
 
