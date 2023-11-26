@@ -289,13 +289,21 @@ body.colorscheme-dark div.stats.done span#stats-total {
 }
 
 div.stats-display {
-    font-size: 3rem;
+    font-size: 2em;
     font-weight: bold;
     text-align: center;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+
+    @media only screen and (max-width: 768px) {
+        font-size: 1.5em;
+    }
 }
 
 div.stats-display span#stats-percent {
-    font-size: 1.5rem;
+    font-size: 0.5em;
 }
 
 div.flag-wrapper {
