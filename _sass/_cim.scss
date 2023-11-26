@@ -311,7 +311,7 @@ div.flag-wrapper {
     margin-left: 0.5em;
     margin-right: 0.5em;
     align-self: stretch;
-    width: calc(33% - 1.2em);
+    width: calc(33% - 1.1em);
     max-height: 30vh; // Fallback
     max-height: 30dvh;
 
@@ -333,7 +333,7 @@ div.flag-wrapper.visible {
 div.flag-wrapper.trainer {
     margin: 0.25rem;
     align-self: stretch;
-    width: calc(33% - 1.2em);
+    width: calc(33% - 0.6em);
 }
 
 div.flag-container.few > div.flag-wrapper {
