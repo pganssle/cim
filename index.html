@@ -93,11 +93,26 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
     <script type="module" src="js/vendor/Tone.js"></script>
     <script src="js/cim.js"></script>
     <script>
+        function is_ios() {
+          return [
+            'iPad Simulator',
+            'iPhone Simulator',
+            'iPod Simulator',
+            'iPad',
+            'iPhone',
+            'iPod'
+          ].includes(navigator.platform)
+          // iPad on iOS 13 detection
+          || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
+        }
+
         // Disable zoom on iOS 10+ (normally I would be against this, but it's
         // causing usability problems)
-        document.addEventListener('gesturestart', function (e) {
-            e.preventDefault();
-        });
+        if (is_ios()) {
+            document.addEventListener('gesturestart', function (e) {
+                e.preventDefault();
+            });
+        }
     </script>
 
     </head>
