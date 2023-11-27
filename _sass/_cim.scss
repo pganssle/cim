@@ -442,8 +442,8 @@ body.colorscheme-light div.flag {
       width: 95vw; // Fallback
       width: 95dvw;
   }
-  height: 90vh;
-  height: 90dvh;
+  max-height: 90vh;
+  max-height: 90dvh;
   padding: 10px;
   overflow-y: auto;
   border: 1px solid #cccccc;
