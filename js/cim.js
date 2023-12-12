@@ -286,8 +286,8 @@ function random_elem(arr, weights) {
     }
 }
 
-function random_duration(mean=0.85, stdev=0.85, min=0.5, max=1.5) {
-    return clip(normal_random(mean, stdev), 0.5, 1.5);
+function random_duration(mean=2, stdev=0.3, min=1.0, max=2.5) {
+    return clip(normal_random(mean, stdev), min, max);
 }
 
 
