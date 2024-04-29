@@ -37,7 +37,7 @@
 - name: "gray"
   display: "Gray"
   chord: "A"
-  notes: ["A4", "C#4", "E4"]
+  notes: ["A3", "C#4", "E4"]
 - name: "tan"
   display: "Tan"
   chord: "D"
