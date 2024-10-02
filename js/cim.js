@@ -451,6 +451,9 @@ function select_flag(elem) {
 
     let next_button = document.getElementById("next-chord");
     next_button.classList.remove("deactivated");
+    
+     // Automatically call next_audio after a short delay
+     setTimeout(next_audio, 2000); // 2000 milliseconds (2 seconds) delay
 }
 
 function set_played_after(delay) {
