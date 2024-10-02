@@ -69,8 +69,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         {%- for instrument in site.data.instruments -%}
             {%- assign base_url = 'static_files/samples/' | append: instrument.name -%}
             {%- assign instrument_files = site.static_files |
-                        where_exp: "file",
-                                   "file.extname == '.mp3' and file.path contains base_url" -%}
+                where_exp: "file", "file.extname == '.mp3' and file.path contains base_url" -%}
 
             "{{instrument.name}}": {
                 "display_name": "{{instrument.display}}",
