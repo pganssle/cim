@@ -712,10 +712,10 @@ $gray: gray;
 $skyblue: #87CEFA; // "Light sky blue"
 
 div.red {
-    background-image: url("/assets/images/red.gif");
+    background-image: url("../images/red.gif");
 }
 div.yellow {
-    background-image: url("/assets/images/yellow.gif");
+    background-image: url("../images/yellow.gif");
 }
 div.blue {
     background-color: $blue;
