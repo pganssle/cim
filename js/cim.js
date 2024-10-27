@@ -121,6 +121,7 @@ const _INFOBOX_TRIGGER_IDS = [
     "trainer-infobox-trigger",
     "i-infobox-trigger",
     "profile-infobox-trigger",
+    "profile-settings-trigger",
     "stats-history-trigger",
 ];
 
@@ -821,8 +822,12 @@ function toggle_expansion_bar() {
     menu.classList.toggle("visible");
 }
 
+function is_visible_infobox(ibox_elem) {
+    return ibox_elem === _CURRENT_INFOBOX;
+}
+
 function toggle_visibility(ibox_elem) {
-    if (ibox_elem === _CURRENT_INFOBOX) {
+    if (is_visible_infobox(ibox_elem)) {
         _CURRENT_INFOBOX = null;
         ibox_elem.classList.remove("visible");
     } else {
@@ -895,11 +900,7 @@ function _make_profile_click_handler(elem, profile) {
             return;
         }
 
-        if (event.target.classList.contains("profile-settings-icon")) {
-            profile_settings(profile);
-        } else {
-            set_current_profile(profile);
-        }
+        set_current_profile(profile);
 
         toggle_profile_visibility();
     });
@@ -925,15 +926,6 @@ function add_profile_pulldown_element(profile) {
     iconElem.classList.add("fa-solid");
     iconElem.classList.add(profile["icon"]);
     divElem.appendChild(iconElem);
-
-    if (profile.id !== _GUEST_USER_ID) {
-        let settingsIconElem = document.createElement("i");
-        settingsIconElem.classList.add("profile-settings-icon");
-        settingsIconElem.classList.add("fa");
-        settingsIconElem.classList.add("fa-solid");
-        settingsIconElem.classList.add("fa-gear");
-        divElem.appendChild(settingsIconElem);
-    }
 
     let spanElem = document.createElement("span");
     spanElem.classList.add("profile-name");
@@ -1105,7 +1097,8 @@ function clear_profile_dialog() {
     profile_dialog.dataset.id = null;
 }
 
-function profile_settings(profile) {
+function populate_profile_settings() {
+    let profile = get_current_profile();
     console.log("Modifying settings for " + profile["name"]);
     clear_profile_dialog();
     let profile_dialog = document.getElementById("profile-info-container");
@@ -1274,6 +1267,18 @@ function toggle_infobox_visibility() {
 function toggle_stats_history_visibility() {
     populate_stats_history_modal();
     toggle_visibility(document.getElementById("stats-history-container"));
+}
+
+function toggle_profile_settings_visibility() {
+    const ibox = document.getElementById("profile-info-container");
+    if (get_current_profile().id === _GUEST_USER_ID && !is_visible_infobox(ibox)) {
+        // Settings is currently a no-op for guests.
+        return;
+    }
+
+    populate_profile_settings();
+
+    toggle_visibility(ibox);
 }
 
 function toggle_theme_mode() {
