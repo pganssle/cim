@@ -1005,6 +1005,7 @@ function add_profile() {
         save_state();
         populate_profile_pulldown();
         close_profile_adder();
+        set_current_profile(profile);
     }
 }
 
