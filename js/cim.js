@@ -973,6 +973,8 @@ function open_profile_adder() {
         elem.classList.add("visible");
     }
 
+    document.getElementById("profile_name_setting").disabled = false;
+
     let target_number_elem = document.getElementById("target_number_setting");
     target_number_elem.value = _DEFAULT_TARGET_NUMBER;
 
@@ -1100,6 +1102,7 @@ function clear_profile_dialog() {
 function populate_profile_settings() {
     let profile = get_current_profile();
     console.log("Modifying settings for " + profile["name"]);
+    const is_guest = (profile.id === _GUEST_USER_ID);
     clear_profile_dialog();
     let profile_dialog = document.getElementById("profile-info-container");
     profile_dialog.classList.add("visible");
@@ -1129,6 +1132,18 @@ function populate_profile_settings() {
     chord_display_mode_elem.value = profile.chord_display_mode;
 
     profile_dialog.dataset.id = profile["id"];
+
+    // It is not allowed to delete the guest user or change its name.
+    let delete_button_elem = document.getElementById("delete-profile-button");
+    if (is_guest) {
+        profile_name_elem.disabled = true;
+        delete_button_elem.disabled = true;
+    } else {
+        profile_name_elem.disabled = false;
+        delete_button_elem.disabled = false;
+    }
+
+
 }
 
 function submit_profile_changes() {
@@ -1169,7 +1184,10 @@ function submit_profile_changes() {
 function delete_profile() {
     const profile_container = document.getElementById("profile-info-container");
     const profile_id = JSON.parse(profile_container.dataset.id);
-    if (confirm("Are you sure you want to delete the profile " + STATE.profiles[profile_id].name + "?")) {
+    if (profile_id == _GUEST_USER_ID) {
+        alert("Deleting the guest user is not allowed.");
+        return;
+    } else if (confirm("Are you sure you want to delete the profile " + STATE.profiles[profile_id].name + "?")) {
         delete STATE.profiles[profile_id];
     }
 
@@ -1271,11 +1289,6 @@ function toggle_stats_history_visibility() {
 
 function toggle_profile_settings_visibility() {
     const ibox = document.getElementById("profile-info-container");
-    if (get_current_profile().id === _GUEST_USER_ID && !is_visible_infobox(ibox)) {
-        // Settings is currently a no-op for guests.
-        return;
-    }
-
     populate_profile_settings();
 
     toggle_visibility(ibox);
