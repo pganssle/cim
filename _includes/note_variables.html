@@ -64,7 +64,7 @@ The array is in order from smallest to largest.
   {% assign note_class = "note-" | append: note_base | replace: "#", "-sharp" | replace: "b", "-flat" %}
   {% assign absolute_class = "note-" | append: note_base | append: number | replace: "#", "-sharp" | replace: "b", "-flat" %}
 
-  {% capture sort_key %}{{ number }}{{ letter }}{% if accidental == "#" %}1{% elsif accidental == "b" %}3{% else %}2{% endif %}{% endcapture %}
+  {% capture sort_key %}{{ number }}{% case letter %}{% when 'A' %}H{% when 'B' %}I{% else %}{{ letter }}{% endcase %}{% if accidental == "#" %}1{% elsif accidental == "b" %}3{% else %}2{% endif %}{% endcapture %}
 
   {% assign note_info = "" | split: "|" %}
   {% assign note_info = note_info | push : sort_key %}
