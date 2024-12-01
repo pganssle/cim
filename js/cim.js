@@ -77,14 +77,23 @@ function is_recent(timestamp) {
     return (get_current_timestamp() - timestamp) <= SESSION_TIMEOUT_TIME_SECONDS;
 }
 
+function new_tally() {
+    return {
+        correct: 0,
+        identifications: 0,
+        confusion_matrix: {},
+    }
+}
+
 function new_stats() {
     return {
         current_chord: STATE !== null ? STATE.current_chord : _DEFAULT_CHORD,
         start_time: get_current_timestamp(),
         updated_time: get_current_timestamp(),
-        identifications: 0,
         correct: 0,
+        identifications: 0,
         confusion_matrix: {},
+        notes: new_tally(),
         done: false,
     }
 }
@@ -345,6 +354,40 @@ function update_stats(correct_color, chosen_color) {
     save_state();
 }
 
+function update_note_stats(color, correct_note, chosen_note) {
+    const correct = correct_note === chosen_note;
+    let stats = get_current_profile().stats;
+    if (stats.notes === undefined) {
+        stats.notes = new_tally();
+    }
+
+    stats.notes.identifications++;
+    if (correct) {
+        stats.notes.correct++;
+    }
+
+    let cm = stats.notes.confusion_matrix;
+    if (cm[color] === undefined) {
+        cm[color] = {};
+    }
+
+    let color_matrix = cm[color];
+    if (color_matrix[correct_note] === undefined) {
+        color_matrix[correct_note] = {};
+    }
+
+    let row = color_matrix[correct_note];
+    if (row[chosen_note] === undefined) {
+        row[chosen_note] = 0;
+    }
+
+    row[chosen_note] = row[chosen_note] + 1;
+
+    stats.updated_time = get_current_timestamp();
+    save_state();
+}
+
+
 function get_cat_emoji(level) {
     const emoji_levels = {
         0: '😿',
@@ -392,28 +435,16 @@ function calculate_percentage(correct, identifications) {
 
 function update_stats_display() {
     let container_elem = document.getElementById("stats-container");
-    let correct_elem = document.getElementById("stats-correct");
-    let total_elem = document.getElementById("stats-total");
-    let perc_elem = document.getElementById("stats-percent");
 
     const stats = get_current_profile().stats;
+    normalize_stats_object(stats);
+
+    // Update chord stats
     const correct = stats.correct;
     const identifications = stats.identifications;
+    const stats_display_elem = document.getElementById("chord-stats-display");
 
-    correct_elem.innerHTML = correct;
-    total_elem.innerHTML = identifications;
-    let percentage = calculate_percentage();
-    if (identifications > 0) {
-        perc_elem.innerHTML = "(" + percentage.toFixed(1) + "%)";
-    } else {
-        perc_elem.innerHTML = "";
-    }
-
-    if (correct == identifications) {
-        container_elem.classList.add("perfect");
-    } else {
-        container_elem.classList.remove("perfect");
-    }
+    update_stats_container(stats_display_elem, correct, identifications);
 
     if (identifications >= get_current_target_number()) {
         container_elem.classList.add("done");
@@ -421,8 +452,44 @@ function update_stats_display() {
         container_elem.classList.remove("done");
     }
 
+    // Update single note stats
+    const notes_correct = stats.notes.correct;
+    const note_identifications = stats.notes.identifications;
+
+    const note_stats_elem = document.getElementById("sn-stats-display");
+    update_stats_container(note_stats_elem, notes_correct, note_identifications);
+    if (note_identifications) {
+        note_stats_elem.classList.add("visible");
+    } else {
+        note_stats_elem.classList.remove("visible");
+    }
+
     if (!_EMOJI_LOCK) {
         reset_cat_emoji();
+    }
+}
+
+function update_stats_container(container_elem, correct, identifications) {
+    let correct_elem = container_elem.querySelector(".stats-correct");
+    let total_elem = container_elem.querySelector(".stats-total");
+    let perc_elem = container_elem.querySelector(".stats-percent");
+
+    correct_elem.innerHTML = correct;
+    total_elem.innerHTML = identifications;
+    let percentage = calculate_percentage(correct, identifications);
+
+    if (identifications > 0) {
+        perc_elem.innerHTML = "(" + percentage.toFixed(1) + "%)";
+    } else {
+        perc_elem.innerHTML = "";
+    }
+}
+
+function normalize_stats_object(stats) {
+    // If we have old stats objects that don't have the `.notes` attribute, we
+    // can add an empty one.
+    if (stats.notes === undefined) {
+        stats.notes = new_tally();
     }
 }
 
@@ -483,8 +550,9 @@ function select_single_note(elem) {
     }
 
     const selectedNote = elem.dataset.note;
+    update_note_stats(_CORRECT_COLOR, _CORRECT_NOTE, selectedNote);
+    update_stats_display();
 
-    // TODO: Update statistics
     // Check if the selected note is correct
     is_correct = (selectedNote === _CORRECT_NOTE);
     if (is_correct) {
@@ -1455,6 +1523,7 @@ function set_current_profile(profile) {
         profile.current_instrument = _DEFAULT_INSTRUMENT;
     }
 
+    normalize_stats_object(profile.stats); // Account for changes in the stats object format
     populate_profile_ui_elements();
     set_chord_display_mode(profile.chord_display_mode);
 
