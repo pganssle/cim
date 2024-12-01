@@ -121,6 +121,8 @@ const _DEFAULT_TARGET_NUMBER = 25;
 const _DEFAULT_SHOW_CHORD_MODE = "black_only";
 const _DEFAULT_REVEAL_CHORD_MODE = "always";
 const _DEFAULT_CHORD_DISPLAY_MODE = "shapes_and_letters";
+const _DEFAULT_SINGLE_NOTE_MODE = "white_only_on_black";
+const _DEFAULT_SINGLE_NOTE_CORRECTNESS_MODE = "only_correct";
 
 const _INFOBOX_TRIGGER_IDS = [
     "trainer-infobox-trigger",
@@ -443,7 +445,8 @@ function select_flag(elem) {
     update_stats(_CORRECT_COLOR, chosen_color);
     update_stats_display();
 
-    if (chosen_color === _CORRECT_COLOR) {
+    const is_correct = (chosen_color === _CORRECT_COLOR);
+    if (is_correct) {
         elem.classList.add("flag-correct");
         set_cat_emoji(6);
     } else {
@@ -463,9 +466,7 @@ function select_flag(elem) {
         document.getElementById("flag-holder").classList.add("chord-notes");
     }
 
-    if (chosen_color === _CORRECT_COLOR &&
-        get_current_profile().single_note_mode !== "off" &&
-        get_selected_colors().indexOf(_CORRECT_COLOR) < FIRST_BLACK_INDEX) {
+    if (should_load_single_note_trainer(is_correct)) {
         populate_single_note_trainer();
     } else {
         let next_button = document.getElementById("next-chord");
@@ -485,7 +486,8 @@ function select_single_note(elem) {
 
     // TODO: Update statistics
     // Check if the selected note is correct
-    if (selectedNote === _CORRECT_NOTE) {
+    is_correct = (selectedNote === _CORRECT_NOTE);
+    if (is_correct) {
         elem.classList.add("note-correct");
     } else {
         elem.classList.add("note-incorrect");
@@ -638,6 +640,29 @@ function populate_single_note_trainer() {
     }, 500);
 }
 
+function should_load_single_note_trainer(is_correct) {
+    // Check settings to determine whether the single note trainer should
+    // be loaded for this level and color.
+    const single_note_mode = get_current_profile().single_note_mode;
+    const single_note_correctness_mode = get_current_profile().single_note_correctness_mode;
+
+    if ((single_note_correctness_mode == "only_correct" && !is_correct) ||
+        (single_note_correctness_mode == "only_incorrect" && is_correct)) {
+        return false;
+    }
+
+    if (single_note_mode === "always") {
+        return true;
+    } else if (single_note_mode === "never") {
+        return false;
+    } else if (is_black_level()) {
+        return (single_note_mode === "all_on_black" ||
+            (single_note_mode === "white_only_on_black" && !is_black_chord()));
+    } else {
+        return false;
+    }
+}
+
 function preload_audio(color) {
     get_current_sampler();
     if (use_legacy(color)) {
@@ -713,6 +738,21 @@ function change_instrument(to) {
     }
 }
 
+function is_black_level(level) {
+    if (level === undefined) {
+        level = get_selected_colors().length;
+    }
+    return level > FIRST_BLACK_INDEX;
+}
+
+function is_black_chord(chord) {
+    if (chord === undefined) {
+        chord = _CORRECT_COLOR;
+    }
+
+    return get_selected_colors().indexOf(chord) >= FIRST_BLACK_INDEX;
+}
+
 function change_selector(to) {
     let chord_selector = document.getElementById("chord-selector");
 
@@ -734,9 +774,8 @@ function change_selector(to) {
     }
 
     _COLORS = null;
-    const is_black_chord = get_selected_colors().length > FIRST_BLACK_INDEX;
     _CHORDS_ON = (current_profile.show_chord_mode === "always"
-        || (is_black_chord && current_profile.show_chord_mode === "black_only"));
+        || (is_black_level() && current_profile.show_chord_mode === "black_only"));
 
     populate_flags();
     populate_audio();
@@ -861,6 +900,8 @@ function initialize_profile_defaults(profile) {
         show_chord_mode: _DEFAULT_SHOW_CHORD_MODE,
         reveal_chord_mode: _DEFAULT_REVEAL_CHORD_MODE,
         chord_display_mode: _DEFAULT_CHORD_DISPLAY_MODE,
+        single_note_mode: _DEFAULT_SINGLE_NOTE_MODE,
+        single_note_correctness_mode: _DEFAULT_SINGLE_NOTE_CORRECTNESS_MODE,
     }
 
     for (const [val, default_val] of Object.entries(profile_defaults)) {
@@ -914,7 +955,7 @@ function new_profile_from_values(values) {
     );
 }
 
-function new_profile(name, icon, id, target_number=_DEFAULT_TARGET_NUMBER, show_chord_mode=_DEFAULT_SHOW_CHORD_MODE, reveal_chord_mode=_DEFAULT_REVEAL_CHORD_MODE, chord_display_mode=_DEFAULT_CHORD_DISPLAY_MODE) {
+function new_profile(name, icon, id, target_number=_DEFAULT_TARGET_NUMBER, show_chord_mode=_DEFAULT_SHOW_CHORD_MODE, reveal_chord_mode=_DEFAULT_REVEAL_CHORD_MODE, chord_display_mode=_DEFAULT_CHORD_DISPLAY_MODE, single_note_mode=_DEFAULT_SINGLE_NOTE_MODE, single_note_correctness_mode=_DEFAULT_SINGLE_NOTE_CORRECTNESS_MODE) {
     if (id === undefined || id === null) {
         id = _GUEST_USER_ID + 1;
         while (id in STATE["profiles"]) {
@@ -930,6 +971,8 @@ function new_profile(name, icon, id, target_number=_DEFAULT_TARGET_NUMBER, show_
         show_chord_mode: show_chord_mode,
         reveal_chord_mode: reveal_chord_mode,
         chord_display_mode: chord_display_mode,
+        single_note_mode: single_note_mode,
+        single_note_correctness_mode: single_note_correctness_mode,
         stats: new_stats(),
         current_chord: _DEFAULT_CHORD,
         current_instrument: _DEFAULT_INSTRUMENT,
@@ -1180,8 +1223,15 @@ function get_profile_settings() {
     const reveal_chord_mode_elem = document.getElementById("chord-reveal-mode-selector");
     const reveal_chord_mode = reveal_chord_mode_elem.value;
 
+
     const chord_display_mode_elem = document.getElementById("chord-name-display-mode-selector");
     const chord_display_mode = chord_display_mode_elem.value;
+
+    const single_note_mode_elem = document.getElementById("single-note-trainer-mode-selector");
+    const single_note_mode = single_note_mode_elem.value;
+
+    const single_note_correctness_mode_elem = document.getElementById("single-note-trainer-correctness-mode-selector");
+    const single_note_correctness_mode = single_note_correctness_mode_elem.value;
 
     const target_number_elem = document.getElementById("target_number_setting");
     let target_number = target_number_elem.value;
@@ -1194,6 +1244,8 @@ function get_profile_settings() {
         show_chord_mode: show_chord_mode,
         reveal_chord_mode: reveal_chord_mode,
         chord_display_mode: chord_display_mode,
+        single_note_mode: single_note_mode,
+        single_note_correctness_mode: single_note_correctness_mode,
     }
 }
 
@@ -1220,6 +1272,12 @@ function clear_profile_dialog() {
 
     let chord_display_mode_elem = profile_dialog.querySelector("select#chord-name-display-mode-selector");
     chord_display_mode_elem.value = _DEFAULT_CHORD_DISPLAY_MODE;
+
+    let single_note_mode_elem = document.getElementById("single-note-trainer-mode-selector");
+    single_note_mode_elem.value = _DEFAULT_SINGLE_NOTE_MODE;
+
+    let single_note_correctness_mode_elem = document.getElementById("single-note-trainer-correctness-mode-selector");
+    single_note_correctness_mode_elem.value = _DEFAULT_SINGLE_NOTE_CORRECTNESS_MODE;
 
 
     profile_dialog.dataset.id = null;
@@ -1255,6 +1313,12 @@ function populate_profile_settings() {
 
     let chord_display_mode_elem = document.getElementById("chord-name-display-mode-selector");
     chord_display_mode_elem.value = profile.chord_display_mode;
+
+    let single_note_mode_elem = document.getElementById("single-note-trainer-mode-selector");
+    single_note_mode_elem.value = profile.single_note_mode;
+
+    let single_note_correctness_mode_elem = document.getElementById("single-note-trainer-correctness-mode-selector");
+    single_note_correctness_mode_elem.value = profile.single_note_correctness_mode;
 
     profile_dialog.dataset.id = profile["id"];
 
@@ -1295,6 +1359,8 @@ function submit_profile_changes() {
     current_profile.show_chord_mode = profile_values.show_chord_mode;
     current_profile.reveal_chord_mode = profile_values.reveal_chord_mode;
     current_profile.chord_display_mode = profile_values.chord_display_mode;
+    current_profile.single_note_mode = profile_values.single_note_mode;
+    current_profile.single_note_correctness_mode = profile_values.single_note_correctness_mode;
 
     save_state();
     populate_profile_pulldown();

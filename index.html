@@ -378,6 +378,20 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         </select>
     </div>
     <div class="entry-row">
+        <label for="single_note_trainer_mode">Single Note Trainer:</label><br/>
+        <select class="selector" name="single_note_trainer_mode" id="single-note-trainer-mode-selector">
+            <option value="white_only_on_black">White chords only on black chord levels</option>
+            <option value="all_on_black">All chords on black chord levels</option>
+            <option value="always">Always</option>
+            <option value="never">Never</option>
+        </select>
+        <select class="selector" name="single_note_trainer_correctness_mode" id="single-note-trainer-correctness-mode-selector">
+            <option value="only_correct">Only when correct</option>
+            <option value="only_incorrect">Only when wrong</option>
+            <option value="always">Always</option>
+        </select>
+    </div>
+    <div class="entry-row">
         <label for="target_number_setting">Target Number:</label>
         <input type="number" id="target_number_setting" class="entry">
     </div>
