@@ -1,0 +1,85 @@
+{% assign first_black_index = 9 %}
+
+{% comment %} Construct an array of "display notes {% endcomment %}
+{%- assign display_notes = "" | split: "" -%}
+{%- for color in site.data.chords -%}
+    {%- assign _notes = "" | split: "" -%}
+    {%- for _note in color.notes -%}
+        {%- assign _note_array = _note | split: "" -%}
+        {%- assign _display_note = "" | split: "" -%}
+        {%- for char in _note_array -%}
+            {%- if "0123456789" contains char -%}
+                {%- continue -%}
+            {%- endif -%}
+            {%- assign _display_note = _display_note | push: char -%}
+        {%- endfor -%}
+        {%- assign _display_note = _display_note | join: "" -%}
+        {%- assign _notes = _notes | push: _display_note -%}
+    {%- endfor -%}
+    {%- assign _display_note = "" | split: "" -%}
+    {%- assign _display_note = _display_note | push: color.name -%}
+    {%- assign _display_note = _display_note | push: _notes -%}
+    {%- assign display_notes = display_notes | push: _display_note -%}
+{%- endfor -%}
+
+{% assign all_notes = "" | split: "" %}
+{% for chord in site.data.chords %}
+  {% for note in chord.notes %}
+    {% assign all_notes = all_notes | push: note %}
+  {% endfor %}
+{% endfor %}
+
+
+{% comment %}
+Add a mapping containing all unique notes in all the chords. Jekyll does not
+support dynamically generating hashes, so this is an array of 3-arrays, which
+have elements:
+
+    0: Display name (e.g. B♭)
+    1: Note class (e.g. note-B-flat)
+    2: Absolute note class (e.g. note-B-flat3)
+    3: Absolute note (e.g. Bb4)
+
+The array is in order from smallest to largest.
+
+{% endcomment %}
+
+{% assign unique_notes = all_notes | uniq %}
+{% assign _note_map = "" | split: "" %}
+
+{% for note in unique_notes %}
+  {% assign note_parts = note | split: "" %}
+  {% assign letter = note_parts[0] %}
+  {% assign remaining = note | slice: 1, note.size %}
+  {% assign number = remaining | replace: "#", "" | replace: "b", "" %}
+  {% assign accidental = "" %}
+  {% if note contains "#" %}
+    {% assign accidental = "#" %}
+  {% elsif note contains "b" %}
+    {% assign accidental = "b" %}
+  {% endif %}
+
+  {% assign note_base = letter | append: accidental %}
+  {% assign display = note_base | replace: "#", "♯" | replace: "b", "♭" %}
+  {% assign note_class = "note-" | append: note_base | replace: "#", "-sharp" | replace: "b", "-flat" %}
+  {% assign absolute_class = "note-" | append: note_base | append: number | replace: "#", "-sharp" | replace: "b", "-flat" %}
+
+  {% capture sort_key %}{{ number }}{{ letter }}{% if accidental == "#" %}1{% elsif accidental == "b" %}3{% else %}2{% endif %}{% endcapture %}
+
+  {% assign note_info = "" | split: "|" %}
+  {% assign note_info = note_info | push : sort_key %}
+  {% assign note_info = note_info | push: display %}
+  {% assign note_info = note_info | push: note_class %}
+  {% assign note_info = note_info | push: absolute_class %}
+  {% assign note_info = note_info | push: note %}
+
+  {% assign _note_map = _note_map | push: note_info %}
+{% endfor %}
+
+{% assign _note_map = _note_map | sort %}
+{% assign all_notes = "" | split: "" %}
+
+{% for _note_info in _note_map %}
+    {% assign note_info = _note_info | shift %}
+    {% assign all_notes = all_notes | push: note_info %}
+{% endfor %}

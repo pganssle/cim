@@ -92,14 +92,19 @@ function new_stats() {
 let _COLORS = null;
 let _CHORDS_ON = false;
 let _CORRECT_COLOR = null;
+let _CORRECT_NOTE = null;
 let _CURRENT_COEFFICIENTS = null;
 let _SELECTED_ELEM = null;
 let _CORRECT_ELEM = null;
+let _CORRECT_NOTE_ELEM = null;
+let _SELECTED_NOTE_ELEM = null;
 let _CURRENT_AUDIO = null;
+let _CURRENT_NOTE_AUDIO = null;
 let _CURRENT_INFOBOX = null;
 let _PROFILE_CONTAINER = null;
 let _INFOBOX_TRIGGERS = [];
 let _AUDIO_PLAYED = false;
+let _NOTE_AUDIO_PLAYED = false;
 let _EMOJI_LOCK = false;
 let _TRAINER_PRELOADED = false;
 let _TONE_STARTED = false;
@@ -458,8 +463,65 @@ function select_flag(elem) {
         document.getElementById("flag-holder").classList.add("chord-notes");
     }
 
+    if (chosen_color === _CORRECT_COLOR &&
+        get_current_profile().single_note_mode !== "off" &&
+        get_selected_colors().indexOf(_CORRECT_COLOR) < FIRST_BLACK_INDEX) {
+        populate_single_note_trainer();
+    } else {
+        let next_button = document.getElementById("next-chord");
+        next_button.classList.remove("deactivated");
+    }
+}
+
+function select_single_note(elem) {
+    if (_SELECTED_NOTE_ELEM !== null) {
+        return; // A note has already been selected
+    }
+    if (!_NOTE_AUDIO_PLAYED) {
+        return; // Note audio hasn't been played yet
+    }
+
+    const selectedNote = elem.dataset.note;
+
+    // TODO: Update statistics
+    // Check if the selected note is correct
+    if (selectedNote === _CORRECT_NOTE) {
+        elem.classList.add("note-correct");
+    } else {
+        elem.classList.add("note-incorrect");
+        if (_CORRECT_NOTE_ELEM) {
+            _CORRECT_NOTE_ELEM.classList.add("note-correct");
+        }
+    }
+
+    _SELECTED_NOTE_ELEM = elem;
+
+    let nextButton = document.getElementById("sn-note-next-button");
+    if (nextButton) {
+        nextButton.classList.remove("deactivated");
+    }
+
+    let doneButton = document.getElementById("sn-note-done-button");
+    if (doneButton) {
+        doneButton.classList.remove("deactivated");
+    }
+}
+
+function single_note_done(next) {
+    document.getElementById("single-note-trainer").classList.remove("visible");
+    document.getElementById("single-note-selector-container").classList.remove(_CORRECT_COLOR);
     let next_button = document.getElementById("next-chord");
     next_button.classList.remove("deactivated");
+    let sn_next_button = document.getElementById("sn-note-next-button");
+    sn_next_button.classList.add("deactivated");
+    let sn_done_button = document.getElementById("sn-note-done-button");
+    sn_done_button.classList.add("deactivated");
+
+    _CORRECT_NOTE_ELEM.classList.remove("note-correct");
+    _SELECTED_NOTE_ELEM.classList.remove("note-incorrect");
+    if (next) {
+        next_audio();
+    }
 }
 
 function set_played_after(delay) {
@@ -470,9 +532,22 @@ function set_played_after(delay) {
     );
 }
 
+function set_note_played_after(delay) {
+    setTimeout(() => {
+        _NOTE_AUDIO_PLAYED = true;
+    },
+    delay
+    );
+}
+
 // Standard Normal variate using Box-Muller transform.
-function play_chord_tone(chord_name, duration) {
-    const chord = CHORDS_TONE[chord_name];
+function play_chord_tone(chord_or_notes, duration) {
+    let chord;
+    if (CHORDS_TONE.hasOwnProperty(chord_or_notes)) {
+        chord = CHORDS_TONE[chord_or_notes];
+    } else {
+        chord = chord_or_notes;
+    }
 
     if (duration === null) {
         duration = random_duration();
@@ -495,6 +570,13 @@ function play_audio() {
     }
     set_played_after(duration * 0.8);
     play_chord(chord, duration);
+}
+
+function play_single_note_audio() {
+    let [note, duration] = _CURRENT_NOTE_AUDIO;
+
+    set_note_played_after(duration * 0.8);
+    play_chord_tone([note], duration);
 }
 
 function play_chord_files(color) {
@@ -525,6 +607,35 @@ function next_audio() {
     play_audio();
 
     next_button.classList.add("deactivated");
+}
+
+function populate_single_note_trainer() {
+    document.getElementById("single-note-trainer").classList.add("visible");
+    const singleNoteContainer = document.getElementById("single-note-selector-container");
+
+    // Select elements with data-note matching any note in the array
+    let chord_notes = CHORDS_TONE[_CORRECT_COLOR];
+    const chord_note_elems = singleNoteContainer.querySelectorAll(chord_notes.map(note => `[data-note="${note}"]`).join(', '));
+    const other_note_elems = singleNoteContainer.querySelectorAll(`[data-note]:not(${chord_notes.map(note => `[data-note="${note}"]`).join(', ')})`);
+
+    chord_note_elems.forEach(elem => elem.classList.add("visible"));
+    other_note_elems.forEach(elem => elem.classList.remove("visible"));
+    singleNoteContainer.classList.add(_CORRECT_COLOR);
+
+    // Randomly select one note as the correct note
+    _CORRECT_NOTE = chord_notes[Math.floor(Math.random() * chord_notes.length)];
+    _CURRENT_NOTE_AUDIO = [_CORRECT_NOTE, random_duration()];
+    _CORRECT_NOTE_ELEM = singleNoteContainer.querySelector(`div[data-note="${_CORRECT_NOTE}"]`);
+
+    // Reset state
+    _NOTE_AUDIO_PLAYED = false;
+    _SELECTED_NOTE_ELEM = null;
+
+    // Play the correct note after 0.5 seconds
+    setTimeout(() => {
+        play_single_note_audio();
+        _NOTE_AUDIO_PLAYED = true;
+    }, 500);
 }
 
 function preload_audio(color) {
@@ -1236,17 +1347,24 @@ function set_chord_display_mode(chord_mode) {
         use_shapes = false;
     }
 
-    const holder_elem = document.getElementById("flag-holder");
-    if (use_shapes) {
-        holder_elem.classList.add("use-shapes");
-    } else {
-        holder_elem.classList.remove("use-shapes");
-    }
+    const note_holders = [
+        document.getElementById("flag-holder"),
+        document.getElementById("single-note-selector-container")
+    ];
 
-    if (use_letters) {
-        holder_elem.classList.add("use-letters");
-    } else {
-        holder_elem.classList.remove("use-letters");
+
+    for (const holder_elem of note_holders) {
+        if (use_shapes) {
+            holder_elem.classList.add("use-shapes");
+        } else {
+            holder_elem.classList.remove("use-shapes");
+        }
+
+        if (use_letters) {
+            holder_elem.classList.add("use-letters");
+        } else {
+            holder_elem.classList.remove("use-letters");
+        }
     }
 }
 
