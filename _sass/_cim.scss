@@ -130,7 +130,7 @@ div.chord-notes-container {
     }
 }
 
-div.chord-notes-container > div.note-wrapper {
+div.note-wrapper {
     width: 2em;
     height: 2em;
     display: flex;
@@ -138,19 +138,6 @@ div.chord-notes-container > div.note-wrapper {
     justify-content: center;
     user-select: none;
     position: relative;
-
-    // This makes the notes appear diagonal, from bottom left to top right
-    &:nth-child(1) {
-        align-self: flex-end;
-    }
-
-    &:nth-child(2) {
-        align-self: center;
-    }
-
-    &:nth-child(3) {
-        align-self: flex-start;
-    }
 
     div.note {
         width: 100%;
@@ -174,7 +161,22 @@ div.chord-notes-container > div.note-wrapper {
     }
 }
 
-div.flag-container.use-letters div.chord-notes-container > div.note-wrapper div.note-text {
+div.chord-notes-container > div.note-wrapper {
+    // This makes the notes appear diagonal, from bottom left to top right
+    &:nth-child(1) {
+        align-self: flex-end;
+    }
+
+    &:nth-child(2) {
+        align-self: center;
+    }
+
+    &:nth-child(3) {
+        align-self: flex-start;
+    }
+}
+
+div.use-letters div.note-wrapper div.note-text {
     display: flex;
 }
 
@@ -182,6 +184,110 @@ div.flag-container.use-letters div.chord-notes-container > div.note-wrapper div.
 div.flag-container.chord-notes div.chord-notes-container {
     display: flex;
     flex-direction: row;
+}
+
+/* Single note quiz */
+// The infobox
+div#single-note-trainer {
+    flex-direction: column;
+
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    padding: 10px;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transition: visibility 0s, opacity 0.3s;
+    z-index: 100;
+
+    // Rearrange the single note selector on small screens.
+    @media only screen and (max-width: 768px) {
+        width: 90dvw;
+    }
+}
+
+// Wrapper around the notes
+div#single-note-selector-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    height: 40dvh;
+    align-items: center;
+
+    div.note-target {
+        display: none;
+        flex-grow: 1;
+        margin: 5px;
+        background-color: rgba(128, 128, 128, 0.5);
+        border: 2px solid black;
+        border-radius: 10px;
+        position: relative; /* Needed for proper placement of icons */
+        padding: 10px; /* Adds inner spacing for better aesthetics */
+        height: 80%;
+        align-items: center;
+        justify-content: center;
+        text-align: center; /* Centers text inside the note wrapper */
+
+        /* Inner border effect using box-shadow */
+        &.note-correct {
+            box-shadow: inset 0 0 0 5px green; /* Inner green border */
+        }
+
+        &.note-incorrect {
+            box-shadow: inset 0 0 0 5px red; /* Inner red border */
+        }
+
+        div.note-wrapper {
+            width: 4em;
+            height: 4em;
+
+            div.note-text {
+                font-weight: bold;
+                font-size: 2.5em;
+            }
+        }
+
+        i.answer-icon {
+            position: absolute; /* Relative to the wrapper */
+            top: 7px;
+            right: 7px;
+            font-size: 2em;
+        }
+    }
+
+
+    div.note-target.visible {
+        display: flex;
+
+        div.note-wrapper {
+            display: flex;
+        }
+    }
+
+    // Rearrange the single note selector on small screens.
+    @media only screen and (max-width: 768px) {
+        flex-direction: column;
+        height: 80dvh;
+        justify-content: space-evenly;
+
+        div.note-target {
+            height: 30%;
+            max-height: 30%;
+            width: -webkit-fill-available;
+            width: -moz-fill-available;
+            width: fill-available;
+            margin: 5px 0;
+        }
+    }
+}
+
+div.flag-correct i.answer-icon.correct,
+div.flag-incorrect i.answer-icon.incorrect,
+div.note-correct i.answer-icon.correct,
+div.note-incorrect i.answer-icon.incorrect {
+    display: block;
 }
 
 /* Controls */
@@ -358,6 +464,13 @@ div.flag {
     justify-content: space-around;
     align-items: center;
     position: relative;
+
+    i.answer-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translateY(-50%) translateX(-50%);
+    }
 }
 
 div.flag-correct {
@@ -371,15 +484,11 @@ div.flag-incorrect {
 }
 
 i.answer-icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
+    display: none;
     font-weight: bold;
     font-size: 3.5em;
-    display: none;
     opacity: 0.75;
     z-index: 20;
-    transform: translateY(-50%) translateX(-50%);
 }
 
 

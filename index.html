@@ -1,29 +1,6 @@
 ---
 ---
-{% assign first_black_index = 9 %}
-
-{% comment %} Construct an array of "display notes {% endcomment %}
-{%- assign display_notes = "" | split: "" -%}
-{%- for color in site.data.chords -%}
-    {%- assign _notes = "" | split: "" -%}
-    {%- for _note in color.notes -%}
-        {%- assign _note_array = _note | split: "" -%}
-        {%- assign _display_note = "" | split: "" -%}
-        {%- for char in _note_array -%}
-            {%- if "0123456789" contains char -%}
-                {%- continue -%}
-            {%- endif -%}
-            {%- assign _display_note = _display_note | push: char -%}
-        {%- endfor -%}
-        {%- assign _display_note = _display_note | join: "" -%}
-        {%- assign _notes = _notes | push: _display_note -%}
-    {%- endfor -%}
-    {%- assign _display_note = "" | split: "" -%}
-    {%- assign _display_note = _display_note | push: color.name -%}
-    {%- assign _display_note = _display_note | push: _notes -%}
-    {%- assign display_notes = display_notes | push: _display_note -%}
-{%- endfor -%}
-
+{% include note_variables.html %}
 
 <!doctype html>
 <html>
@@ -215,7 +192,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                                 <div class="note-text">
                                     <span class="note-text-span">{{ note | replace: "#", "♯" | replace: "b", "♭" }}</span>
                                 </div>
-                        </div>
+                            </div>
                         {%- endfor -%}
                     </div>
                 </div>
@@ -302,6 +279,41 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
   </div>
   {%- endfor -%}
   </div>
+</div>
+
+<!-- Single Note Quiz -->
+<div class="infobox" id="single-note-trainer">
+    <div id="single-note-selector-container">
+        {%- for note in all_notes -%}
+            {%- assign display = note[0] -%}
+            {%- assign note_class = note[1] -%}
+            {%- assign absolute_class = note[2] -%}
+            {%- assign note_base = note[3] -%}
+        <div class="note-target {{note_class}} {{absolute_class}}" data-note="{{note_base}}" onclick="select_single_note(this)">
+            <i class="answer-icon correct fa"></i>
+            <i class="answer-icon incorrect fa"></i>
+            <div class="note-wrapper {{note_class}} {{absolute_class}}">
+                <div class="note"></div>
+                <div class="note-text">
+                    <span class="note-text-span">{{display}}</span>
+                </div>
+            </div>
+        </div>
+        {%- endfor -%}
+    </div>
+    <div class="control-container">
+        <div class="controls">
+            <a id="sn-play-again-button" onclick="play_single_note_audio()">
+                <i class="fa fa-play" aria-hidden="true"></i>
+            </a>
+            <a id="sn-note-next-button" class="deactivated" onclick="single_note_done(true)">
+                <i class="fa fa-arrow-right" aria-hidden="true"></i>
+            </a>
+            <a id="sn-note-done-button" class="deactivated" onclick="single_note_done(false)">
+                <i class="fa fa-times" aria-hidden="true"></i>
+            </a>
+        </div>
+    </div>
 </div>
 
 <!-- Statistics -->
