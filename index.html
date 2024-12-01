@@ -204,12 +204,23 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
             <div class="emoji-container">
                 <span id="reaction-emoji"></span>
             </div>
-            <div class="stats-display">
-                <div class="num-correct">
-                    <span id="stats-correct">0</span><span id="stats-divider"> / </span><span id="stats-total">0</span>
+            <div class="stats-wrapper">
+                <div class="stats-display chord-stats-display" id="chord-stats-display">
+                    <div class="num-correct">
+                        <span class="stats-correct" id="stats-correct">0</span><span class="stats-divider" id="stats-divider"> / </span><span class="stats-total" id="stats-total">0</span>
+                    </div>
+                    <div class="percent">
+                        <span class="stats-percent" id="stats-percent"></span>
+                    </div>
                 </div>
-                <div class="percent">
-                    <span id="stats-percent"></span>
+                <div class="stats-display sn-stats-display" id="sn-stats-display">
+                    <span id="note-emoji">♪</span>
+                    <div class="num-correct">
+                        <span class="stats-correct" id="note-stats-correct">0</span><span class="stats-divider" id="note-stats-divider"> / </span><span class="stats-total" id="note-stats-total">0</span>
+                    </div>
+                    <div class="percent">
+                        <span class="stats-percent" id="note-stats-percent"></span>
+                    </div>
                 </div>
             </div>
             <a id="reset-button" onclick="reset_stats()">

@@ -394,6 +394,16 @@ body.colorscheme-dark div.stats.done span#stats-total {
     color: #00bf00;
 }
 
+div.stats-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+    padding: 0px;
+}
+
 div.stats-display {
     font-size: 2em;
     font-weight: bold;
@@ -404,11 +414,23 @@ div.stats-display {
     justify-content: center;
 
     @media only screen and (max-width: 768px) {
-        font-size: 1.5em;
+        font-size: 1.2em;
+        margin-left: 0.2em;
+        margin-right: 0.2em;
     }
 }
 
-div.stats-display span#stats-percent {
+div.stats-display#sn-stats-display {
+    display: none;
+
+    font-size: 0.9em;
+
+    &.visible {
+        display: flex;
+    }
+}
+
+div.stats-display span.stats-percent {
     font-size: 0.5em;
 }
 
