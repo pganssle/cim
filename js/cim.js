@@ -953,7 +953,15 @@ function populate_profile_pulldown() {
 }
 
 function get_current_profile() {
-    return STATE["profiles"][STATE["current_profile"]];
+    let current_profile = STATE["current_profile"];
+    if (!STATE["profiles"].hasOwnProperty(current_profile)) {
+        // If we're in an illegal state where we are stuck as a deleted
+        // profile, fall back to being the guest profile.
+        current_profile = _GUEST_USER_ID;
+        STATE["current_profile"] = current_profile;
+        set_current_profile(STATE[current_profile]);
+    }
+    return STATE["profiles"][current_profile];
 }
 
 function select_new_profile(elem) {
@@ -965,9 +973,10 @@ function select_new_profile(elem) {
 function open_profile_adder() {
     console.log("Creating new profile");
 
+    toggle_profile_visibility();
+    toggle_profile_settings_visibility(false);
     clear_profile_dialog();
     let profile_container = document.getElementById("profile-info-container");
-    profile_container.classList.add("visible");
 
     for (var elem of profile_container.querySelectorAll("button.add-button")) {
         elem.classList.add("visible");
@@ -977,14 +986,11 @@ function open_profile_adder() {
 
     let target_number_elem = document.getElementById("target_number_setting");
     target_number_elem.value = _DEFAULT_TARGET_NUMBER;
-
-    toggle_profile_visibility();
 }
 
 function close_profile_adder() {
     console.log("Closing profile adder");
-    let profile_container = document.getElementById("profile-info-container");
-    profile_container.classList.remove("visible");
+    toggle_profile_settings_visibility();
     clear_profile_dialog();
 }
 
@@ -1106,7 +1112,6 @@ function populate_profile_settings() {
     const is_guest = (profile.id === _GUEST_USER_ID);
     clear_profile_dialog();
     let profile_dialog = document.getElementById("profile-info-container");
-    profile_dialog.classList.add("visible");
     for (let elem of profile_dialog.querySelectorAll("button.settings-button")) {
         elem.classList.add("visible");
     }
@@ -1189,6 +1194,8 @@ function delete_profile() {
         alert("Deleting the guest user is not allowed.");
         return;
     } else if (confirm("Are you sure you want to delete the profile " + STATE.profiles[profile_id].name + "?")) {
+        // Set the current profile to the guest profile
+        set_current_profile_by_id(_GUEST_USER_ID);
         delete STATE.profiles[profile_id];
     }
 
@@ -1233,6 +1240,12 @@ function set_chord_display_mode(chord_mode) {
     } else {
         holder_elem.classList.remove("use-letters");
     }
+}
+
+
+function set_current_profile_by_id(profile_id) {
+    let profile = STATE["profiles"][profile_id];
+    return set_current_profile(profile);
 }
 
 function set_current_profile(profile) {
@@ -1288,11 +1301,16 @@ function toggle_stats_history_visibility() {
     toggle_visibility(document.getElementById("stats-history-container"));
 }
 
-function toggle_profile_settings_visibility() {
+function toggle_profile_settings_visibility(populate=true) {
     const ibox = document.getElementById("profile-info-container");
-    populate_profile_settings();
-
-    toggle_visibility(ibox);
+    if (ibox.classList.contains("visible")) {
+        ibox.classList.remove("visible");
+    } else {
+        if (populate) {
+            populate_profile_settings();
+        }
+        ibox.classList.add("visible");
+    }
 }
 
 function toggle_theme_mode() {
