@@ -308,6 +308,13 @@ function select_new_color() {
     }
 }
 
+function update_start_time_if_needed() {
+    let stats = get_current_profile().stats;
+    if (stats.identifications == 0) {
+        stats.start_time = get_current_timestamp();
+    }
+}
+
 function update_stats(correct_color, chosen_color) {
     const correct = correct_color === chosen_color;
     let stats = get_current_profile().stats;
@@ -427,6 +434,7 @@ function select_flag(elem) {
     const flag_holder = document.getElementById("flag-holder");
 
     _EMOJI_LOCK = true;
+    update_start_time_if_needed();
     update_stats(_CORRECT_COLOR, chosen_color);
     update_stats_display();
 
