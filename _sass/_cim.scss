@@ -1,3 +1,4 @@
+@use "sass:color";
 @import "variables";
 
 body {
@@ -643,11 +644,11 @@ div.pulldown-item {
 }
 
 body.colorscheme-dark div.pulldown-item:hover {
-    background-color: lighten($bg-color-dark, 12.5);
+    background-color: color.scale($bg-color-dark, $lightness: 12.5%);
 }
 
 body.colorscheme-light div.pulldown-item:hover {
-    background-color: darken($bg-color, 12.5);
+    background-color: color.scale($bg-color, $lightness: -12.5%);
 }
 
 div.pulldown-item > i.profile-settings-icon,
