@@ -452,6 +452,12 @@ function update_stats_display() {
         container_elem.classList.remove("done");
     }
 
+    if (correct == identifications) {
+        container_elem.classList.add("perfect");
+    } else {
+        container_elem.classList.remove("perfect");
+    }
+
     // Update single note stats
     const notes_correct = stats.notes.correct;
     const note_identifications = stats.notes.identifications;
