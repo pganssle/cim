@@ -9,3 +9,13 @@ _site/
 # Include the vendored Tone.js file
 !js/vendor/
 
+# Android Studio / Gradle build output
+android-wrapper/.gradle/
+android-wrapper/.idea/
+android-wrapper/local.properties
+android-wrapper/app/build/
+android-wrapper/build/
+android-wrapper/app/src/main/assets/
+
+# MacOS
+.DS_Store
