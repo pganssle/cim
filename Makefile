@@ -38,17 +38,6 @@ android-clean:
 
 .PHONY: android-setup
 android-setup:
-	$(JEKYLL) clean
-	$(JEKYLL) build
 	make android-clean
 	mkdir -p $(ANDROID_ASSETS)
-	cp -r _site/* $(ANDROID_ASSETS)
-
-# Android WebView disables fetch() used in Tone.js when legacy=false
-# Override to always use legacy=true
-	perl -pi -e 's/"?legacy"?\s*:\s*false/"legacy": true/' $(ANDROID_ASSETS)/index.html
-
-# index.html references URL-encoded filenames
-# Android loads files directly, so we must rename files to match URL encoding
-	find $(ANDROID_ASSETS) -type f \( -name '*.html' -o -name '*.js' \) \
-		-exec perl -pi -e 's/([A-G])%23([0-9])/$$1#$$2/g' {} +
+	JEKYLL_ENV=android $(JEKYLL) build --destination $(ANDROID_ASSETS)

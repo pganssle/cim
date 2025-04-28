@@ -27,6 +27,12 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         </style>
     </head>
     <script>
+        {% if jekyll.environment == "android" %}
+            {% assign IS_ANDROID_APP = true %}
+        {% else %}
+            {% assign IS_ANDROID_APP = false %}
+        {% endif %}
+
         const FIRST_BLACK_INDEX = {{ first_black_index }};
         const CHORDS_TONE = {
         {%- for color in site.data.chords -%}
@@ -43,28 +49,40 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         {%- endfor -%}
         ];
         const INSTRUMENT_INFO = {
-        {%- for instrument in site.data.instruments -%}
+            {%- for instrument in site.data.instruments -%}
             {%- assign base_url = 'static_files/samples/' | append: instrument.name -%}
             {%- assign instrument_files = site.static_files |
-                        where_exp: "file",
-                                   "file.extname == '.mp3' and file.path contains base_url" -%}
+                        where_exp: "file", "file.extname == '.mp3' and file.path contains base_url" -%}
 
             "{{instrument.name}}": {
                 "display_name": "{{instrument.display}}",
                 "base_url": "{{base_url}}/",
-                {%- if instrument.legacy -%}
+                
+                {%- if IS_ANDROID_APP -%}
+                // Android WebView disables fetch(), which is used in Tone.js when legacy=false
                 "legacy": true,
                 "fallback": "{{ instrument.fallback }}",
-                {%- else -%}
-                "legacy": false,
                 "sample_files": {
+                    {%- for file in instrument_files -%}
+                    // Android loads files directly; skip URL encoding
+                    "{{ file.name | split: 'v' | first }}" : "{{ file.name }}",
+                    {%- endfor -%}
+                },
+                {%- else -%}
+                {%- if instrument.legacy -%}
+                    "legacy": true,
+                    "fallback": "{{ instrument.fallback }}",
+                {%- else -%}
+                    "legacy": false,
+                    "sample_files": {
                     {%- for file in instrument_files -%}
                         "{{ file.name | split: 'v' | first }}" : "{{ file.name | replace: '#', '%23' }}",
                     {%- endfor -%}
                     },
                 {%- endif -%}
+                {%- endif -%}
             },
-        {%- endfor -%}
+            {%- endfor -%}
         };
     </script>
     <script type="module" src="js/vendor/Tone.js"></script>
@@ -92,7 +110,6 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         }
     </script>
 
-    </head>
     <body class="colorscheme-dark">
     <div class="cim-container">
         <div class="menu-container" id="menu-container">
@@ -255,7 +272,6 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                 {%- endfor -%}
             </select>
         </div>
-</div>
 <div class="mode-toggle-container">
     <a id="mode-toggle" class="colorscheme-toggle"
                         onclick="toggle_theme_mode()"
