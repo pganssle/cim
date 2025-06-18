@@ -182,7 +182,8 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                         | first | last -%}
                         {%- for note in _notes -%}
                         {%- assign absolute_note = color.notes[forloop.index0]
-                                                   | replace: "#", "-sharp" -%}
+                                                   | replace: "#", "-sharp"
+                                                   | replace: "b", "-flat" -%}
                         {%- assign note_class = note
                                                 | replace: "#", "-sharp"
                                                 | replace: "b", "-flat"
