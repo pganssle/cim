@@ -123,6 +123,7 @@ let _DOWNLOAD_ENABLED_LAST_CLICK = null;
 let _EASTER_EGG_CLICKS = 0;
 let _EASTER_EGG_LAST_CLICK = null;
 let _EASTER_EGG_ENABLED = false;
+let _PERSIST_REACTION_FACE_ENABLED = false;
 
 const _DEFAULT_CHORD = Object.keys(CHORDS_TONE)[1];
 const _DEFAULT_INSTRUMENT = Object.keys(INSTRUMENT_INFO)[0];
@@ -132,6 +133,7 @@ const _DEFAULT_REVEAL_CHORD_MODE = "always";
 const _DEFAULT_CHORD_DISPLAY_MODE = "shapes_and_letters";
 const _DEFAULT_SINGLE_NOTE_MODE = "white_only_on_black";
 const _DEFAULT_SINGLE_NOTE_CORRECTNESS_MODE = "only_correct";
+const _DEFAULT_PERSIST_REACTION_FACE = false;
 
 const _INFOBOX_TRIGGER_IDS = [
     "trainer-infobox-trigger",
@@ -530,10 +532,15 @@ function select_flag(elem) {
     }
     _SELECTED_ELEM = elem;
 
-    setTimeout(function() {
-        _EMOJI_LOCK = false;
-        reset_cat_emoji();
-    }, 1500);
+    if (get_current_profile().persist_reaction_face &&
+        get_current_profile().stats.identifications < get_current_target_number()) {
+        _PERSIST_REACTION_FACE_ENABLED = true;
+    } else {
+        setTimeout(function() {
+            _EMOJI_LOCK = false;
+            reset_cat_emoji();
+        }, 1500);
+    }
 
     if (_CHORDS_ON && get_current_profile().reveal_chord_mode === "after_guess") {
         document.getElementById("flag-holder").classList.add("chord-notes");
@@ -873,6 +880,11 @@ function reset_stats(done = true) {
     if (!done || (get_current_profile().stats.identifications > 0)) {
         save_session_history();
     }
+    if (_PERSIST_REACTION_FACE_ENABLED && done) {
+        reset_cat_emoji();
+        _PERSIST_REACTION_FACE_ENABLED = false;
+        _EMOJI_LOCK = false;
+    }
     get_current_profile().stats = new_stats();
     _CURRENT_COEFFICIENTS = null; // Trigger re-calculation of weights.
     save_state();
@@ -976,6 +988,7 @@ function initialize_profile_defaults(profile) {
         chord_display_mode: _DEFAULT_CHORD_DISPLAY_MODE,
         single_note_mode: _DEFAULT_SINGLE_NOTE_MODE,
         single_note_correctness_mode: _DEFAULT_SINGLE_NOTE_CORRECTNESS_MODE,
+        persist_reaction_face: _DEFAULT_PERSIST_REACTION_FACE,
     }
 
     for (const [val, default_val] of Object.entries(profile_defaults)) {
@@ -1026,10 +1039,11 @@ function new_profile_from_values(values) {
         show_chord_mode = values.show_chord_mode,
         reveal_chord_mode = values.reveal_chord_mode,
         chord_display_mode = values.chord_display_mode,
+        persist_reaction_face = values.persist_reaction_face,
     );
 }
 
-function new_profile(name, icon, id, target_number=_DEFAULT_TARGET_NUMBER, show_chord_mode=_DEFAULT_SHOW_CHORD_MODE, reveal_chord_mode=_DEFAULT_REVEAL_CHORD_MODE, chord_display_mode=_DEFAULT_CHORD_DISPLAY_MODE, single_note_mode=_DEFAULT_SINGLE_NOTE_MODE, single_note_correctness_mode=_DEFAULT_SINGLE_NOTE_CORRECTNESS_MODE) {
+function new_profile(name, icon, id, target_number=_DEFAULT_TARGET_NUMBER, show_chord_mode=_DEFAULT_SHOW_CHORD_MODE, reveal_chord_mode=_DEFAULT_REVEAL_CHORD_MODE, chord_display_mode=_DEFAULT_CHORD_DISPLAY_MODE, single_note_mode=_DEFAULT_SINGLE_NOTE_MODE, single_note_correctness_mode=_DEFAULT_SINGLE_NOTE_CORRECTNESS_MODE, persist_reaction_face=_DEFAULT_PERSIST_REACTION_FACE) {
     if (id === undefined || id === null) {
         id = _GUEST_USER_ID + 1;
         while (id in STATE["profiles"]) {
@@ -1047,6 +1061,7 @@ function new_profile(name, icon, id, target_number=_DEFAULT_TARGET_NUMBER, show_
         chord_display_mode: chord_display_mode,
         single_note_mode: single_note_mode,
         single_note_correctness_mode: single_note_correctness_mode,
+        persist_reaction_face: persist_reaction_face,
         stats: new_stats(),
         current_chord: _DEFAULT_CHORD,
         current_instrument: _DEFAULT_INSTRUMENT,
@@ -1310,6 +1325,9 @@ function get_profile_settings() {
     const target_number_elem = document.getElementById("target_number_setting");
     let target_number = target_number_elem.value;
 
+    const persist_reaction_face_elem = document.getElementById("persist_reaction_face_setting");
+    const persist_reaction_face = persist_reaction_face_elem.checked;
+
     return {
         name: profile_name,
         icon: profile_icon,
@@ -1320,6 +1338,7 @@ function get_profile_settings() {
         chord_display_mode: chord_display_mode,
         single_note_mode: single_note_mode,
         single_note_correctness_mode: single_note_correctness_mode,
+        persist_reaction_face: persist_reaction_face,
     }
 }
 
@@ -1394,6 +1413,9 @@ function populate_profile_settings() {
     let single_note_correctness_mode_elem = document.getElementById("single-note-trainer-correctness-mode-selector");
     single_note_correctness_mode_elem.value = profile.single_note_correctness_mode;
 
+    let persist_reaction_face_elem = document.getElementById("persist_reaction_face_setting");
+    persist_reaction_face_elem.checked = profile.persist_reaction_face;
+
     profile_dialog.dataset.id = profile["id"];
 
     // It is not allowed to delete the guest user or change its name.
@@ -1435,6 +1457,7 @@ function submit_profile_changes() {
     current_profile.chord_display_mode = profile_values.chord_display_mode;
     current_profile.single_note_mode = profile_values.single_note_mode;
     current_profile.single_note_correctness_mode = profile_values.single_note_correctness_mode;
+    current_profile.persist_reaction_face = profile_values.persist_reaction_face;
 
     save_state();
     populate_profile_pulldown();
@@ -1519,6 +1542,11 @@ function set_current_profile(profile) {
         // Reset the stats and retrieve any existing sessions
         reset_stats(false);
         STATE.current_profile = profile.id;
+        if (_PERSIST_REACTION_FACE_ENABLED && !profile.persist_reaction_face) {
+            reset_cat_emoji();
+            _PERSIST_REACTION_FACE_ENABLED = false;
+            _EMOJI_LOCK = false;
+        }
     }
 
     if (profile.current_chord === undefined) {
