@@ -9,17 +9,19 @@ help:
 	@echo 'make html          Generate the web site'
 	@echo 'make clean         Clean up generated site'
 
-.PHONY: init
-init:
+vendor/bundle:
 	bundle config set --local path 'vendor/bundle'
 	bundle install
 
+.PHONY: init
+init: vendor/bundle
+
 .PHONY: html
-html:
+html: vendor/bundle
 	$(JEKYLL) build
 
 .PHONY: serve
-serve:
+serve: vendor/bundle
 	$(JEKYLL) serve -w
 
 .PHONY: clean
