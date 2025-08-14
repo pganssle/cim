@@ -745,11 +745,12 @@ function should_load_single_note_trainer(is_correct) {
 }
 
 function preload_audio(color) {
-    get_current_sampler();
     if (use_legacy(color)) {
         for (const audio_file of get_audio_files()["mp3"]) {
             audio_file_elem(audio_file);
         }
+    } else {
+        get_current_sampler();
     }
 }
 
