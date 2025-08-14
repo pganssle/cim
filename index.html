@@ -19,13 +19,18 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         <link rel="stylesheet" href="{{ "assets/css/style.css" }}">
         <link rel="shortcut icon" type="image/png" href="{{ "assets/images/favicon.png" }}">
         <link rel="manifest" href="{{ "assets/manifest.json" }}">
+        {% if jekyll.environment == "android" %}
+            {% assign IS_ANDROID_APP = true %}
+        {% else %}
+            {% assign IS_ANDROID_APP = false %}
+        {% endif %}
         <style>
         {% capture sass_file %}
             {% include _note_shapes.scss %}
         {% endcapture %}
         {{ sass_file | scssify }}
         </style>
-        {% if jekyll.environment == "android" %}
+        {% if IS_ANDROID_APP %}
         <style>
             body {
                 padding-top: 40px; 
@@ -67,12 +72,6 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         {% endif %}
     </head>
     <script>
-        {% if jekyll.environment == "android" %}
-            {% assign IS_ANDROID_APP = true %}
-        {% else %}
-            {% assign IS_ANDROID_APP = false %}
-        {% endif %}
-
         const FIRST_BLACK_INDEX = {{ first_black_index }};
         const CHORDS_TONE = {
         {%- for color in site.data.chords -%}

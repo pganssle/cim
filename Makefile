@@ -9,7 +9,7 @@ help:
 	@echo 'make init          Initialize directory'
 	@echo 'make html          Generate the web site'
 	@echo 'make clean         Clean up generated site'
-	@echo 'make android-setup Set up the Android app, including building symlinks'
+	@echo 'make android-setup Set up the Android app'
 	@echo 'make android-clean Clean up the Android app'
 
 
