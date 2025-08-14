@@ -25,6 +25,41 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         {% endcapture %}
         {{ sass_file | scssify }}
         </style>
+        {% if jekyll.environment == "android" %}
+        <style>
+            body {
+                padding-top: 40px; 
+                padding-left: 10px;
+                padding-right: 10px;
+                padding-bottom: 10px;
+            }
+            
+            div.hamburger {
+                margin-top: 60px !important;
+            }
+            
+            div.profile-info-container {
+                top: 50% !important; /* Center vertically */
+                transform: translateY(-50%) !important; /* Adjust for true center */
+                max-height: 85vh !important; /* Ensure it fits in viewport with margin */
+                overflow-y: auto !important; /* Enable scrolling */
+                width: 90% !important; /* Make it wider on Android */
+                left: 5% !important; 
+                right: 5% !important; 
+            }
+            
+            /* Ensure proper scrolling behavior */
+            div.profile-info-container .entry-row {
+                margin-bottom: 15px; /* Add spacing between rows */
+            }
+            
+            /* Add padding at bottom for better scrolling */
+            div.profile-info-container .button-container {
+                padding-bottom: 20px;
+                margin-bottom: 20px;
+            }
+        </style>
+        {% endif %}
     </head>
     <script>
         {% if jekyll.environment == "android" %}
