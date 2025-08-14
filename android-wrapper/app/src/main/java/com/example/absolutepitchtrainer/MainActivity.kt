@@ -9,9 +9,18 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Enable WebView debugging for Chrome DevTools
+        WebView.setWebContentsDebuggingEnabled(true)
+
         val webView = WebView(this)
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
+        webView.settings.allowFileAccess = true
+        webView.settings.allowContentAccess = true
+        webView.settings.allowFileAccessFromFileURLs = true
+        webView.settings.allowUniversalAccessFromFileURLs = true
+        webView.settings.javaScriptCanOpenWindowsAutomatically = true
+      
         webView.webViewClient = WebViewClient()
         webView.loadUrl("file:///android_asset/index.html")
 
