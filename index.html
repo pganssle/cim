@@ -84,7 +84,12 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         {%- endfor -%}
         ];
         const INSTRUMENT_INFO = {
-            {%- for instrument in site.data.instruments -%}
+            {%- if IS_ANDROID_APP -%}
+                {%- assign instruments_data = site.data.instruments_android -%}
+            {%- else -%}
+                {%- assign instruments_data = site.data.instruments -%}
+            {%- endif -%}
+            {%- for instrument in instruments_data -%}
             {%- assign base_url = 'static_files/samples/' | append: instrument.name -%}
             {%- assign instrument_files = site.static_files |
                         where_exp: "file", "file.extname == '.mp3' and file.path contains base_url" -%}
@@ -93,17 +98,6 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                 "display_name": "{{instrument.display}}",
                 "base_url": "{{base_url}}/",
                 
-                {%- if IS_ANDROID_APP -%}
-                // Android WebView disables fetch(), which is used in Tone.js when legacy=false
-                "legacy": true,
-                "fallback": "{{ instrument.fallback }}",
-                "sample_files": {
-                    {%- for file in instrument_files -%}
-                    // Android loads files directly; skip URL encoding
-                    "{{ file.name | split: 'v' | first }}" : "{{ file.name }}",
-                    {%- endfor -%}
-                },
-                {%- else -%}
                 {%- if instrument.legacy -%}
                     "legacy": true,
                     "fallback": "{{ instrument.fallback }}",
@@ -111,10 +105,14 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                     "legacy": false,
                     "sample_files": {
                     {%- for file in instrument_files -%}
+                        {%- if IS_ANDROID_APP -%}
+                        // Android loads files directly; skip URL encoding
+                        "{{ file.name | split: 'v' | first }}" : "{{ file.name }}",
+                        {%- else -%}
                         "{{ file.name | split: 'v' | first }}" : "{{ file.name | replace: '#', '%23' }}",
+                        {%- endif -%}
                     {%- endfor -%}
                     },
-                {%- endif -%}
                 {%- endif -%}
             },
             {%- endfor -%}
@@ -302,7 +300,12 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
             </optgroup>
             </select>
             <select class="selector" name="instruments" id="instrument-selector" onchange="change_instrument()">
-                {%- for instrument in site.data.instruments -%}
+                {%- if IS_ANDROID_APP -%}
+                    {%- assign instruments_data = site.data.instruments_android -%}
+                {%- else -%}
+                    {%- assign instruments_data = site.data.instruments -%}
+                {%- endif -%}
+                {%- for instrument in instruments_data -%}
                     <option value="{{instrument.name}}">{{instrument.display}}</option>
                 {%- endfor -%}
             </select>

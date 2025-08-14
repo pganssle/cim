@@ -1,0 +1,5 @@
+# Android WebView disables fetch(), which is used in Tone.js when legacy=false 
+# Therefore, we only use legacy instruments
+- name: piano_old
+  display: "🎹 Piano"
+  legacy: true
