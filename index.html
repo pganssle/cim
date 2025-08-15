@@ -19,12 +19,57 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         <link rel="stylesheet" href="{{ "assets/css/style.css" }}">
         <link rel="shortcut icon" type="image/png" href="{{ "assets/images/favicon.png" }}">
         <link rel="manifest" href="{{ "assets/manifest.json" }}">
+        {% if jekyll.environment == "android" %}
+            {% assign IS_ANDROID_APP = true %}
+        {% else %}
+            {% assign IS_ANDROID_APP = false %}
+        {% endif %}
         <style>
         {% capture sass_file %}
             {% include _note_shapes.scss %}
         {% endcapture %}
         {{ sass_file | scssify }}
         </style>
+        {% if IS_ANDROID_APP %}
+        <style>
+            body {
+                padding-top: 40px; 
+                padding-left: 10px;
+                padding-right: 10px;
+                padding-bottom: 10px;
+            }
+            
+            div.hamburger {
+                margin-top: 60px !important;
+            }
+            
+            /* Reduce hamburger margin when menu is expanded */
+            div.menu-container.visible div.hamburger {
+                margin-top: 10px !important;
+            }
+            
+            div.profile-info-container {
+                top: 50% !important; /* Center vertically */
+                transform: translateY(-50%) !important; /* Adjust for true center */
+                max-height: 85vh !important; /* Ensure it fits in viewport with margin */
+                overflow-y: auto !important; /* Enable scrolling */
+                width: 90% !important; /* Make it wider on Android */
+                left: 5% !important; 
+                right: 5% !important; 
+            }
+            
+            /* Ensure proper scrolling behavior */
+            div.profile-info-container .entry-row {
+                margin-bottom: 15px; /* Add spacing between rows */
+            }
+            
+            /* Add padding at bottom for better scrolling */
+            div.profile-info-container .button-container {
+                padding-bottom: 20px;
+                margin-bottom: 20px;
+            }
+        </style>
+        {% endif %}
     </head>
     <script>
         const FIRST_BLACK_INDEX = {{ first_black_index }};
@@ -43,28 +88,38 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         {%- endfor -%}
         ];
         const INSTRUMENT_INFO = {
-        {%- for instrument in site.data.instruments -%}
+            {%- if IS_ANDROID_APP -%}
+                {%- assign instruments_data = site.data.instruments_android -%}
+            {%- else -%}
+                {%- assign instruments_data = site.data.instruments -%}
+            {%- endif -%}
+            {%- for instrument in instruments_data -%}
             {%- assign base_url = 'static_files/samples/' | append: instrument.name -%}
             {%- assign instrument_files = site.static_files |
-                        where_exp: "file",
-                                   "file.extname == '.mp3' and file.path contains base_url" -%}
+                        where_exp: "file", "file.extname == '.mp3' and file.path contains base_url" -%}
 
             "{{instrument.name}}": {
                 "display_name": "{{instrument.display}}",
                 "base_url": "{{base_url}}/",
+                
                 {%- if instrument.legacy -%}
-                "legacy": true,
-                "fallback": "{{ instrument.fallback }}",
+                    "legacy": true,
+                    "fallback": "{{ instrument.fallback }}",
                 {%- else -%}
-                "legacy": false,
-                "sample_files": {
+                    "legacy": false,
+                    "sample_files": {
                     {%- for file in instrument_files -%}
+                        {%- if IS_ANDROID_APP -%}
+                        // Android loads files directly; skip URL encoding
+                        "{{ file.name | split: 'v' | first }}" : "{{ file.name }}",
+                        {%- else -%}
                         "{{ file.name | split: 'v' | first }}" : "{{ file.name | replace: '#', '%23' }}",
+                        {%- endif -%}
                     {%- endfor -%}
                     },
                 {%- endif -%}
             },
-        {%- endfor -%}
+            {%- endfor -%}
         };
     </script>
     <script type="module" src="js/vendor/Tone.js"></script>
@@ -92,7 +147,6 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         }
     </script>
 
-    </head>
     <body class="colorscheme-dark">
     <div class="cim-container">
         <div class="menu-container" id="menu-container">
@@ -250,12 +304,16 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
             </optgroup>
             </select>
             <select class="selector" name="instruments" id="instrument-selector" onchange="change_instrument()">
-                {%- for instrument in site.data.instruments -%}
+                {%- if IS_ANDROID_APP -%}
+                    {%- assign instruments_data = site.data.instruments_android -%}
+                {%- else -%}
+                    {%- assign instruments_data = site.data.instruments -%}
+                {%- endif -%}
+                {%- for instrument in instruments_data -%}
                     <option value="{{instrument.name}}">{{instrument.display}}</option>
                 {%- endfor -%}
             </select>
         </div>
-</div>
 <div class="mode-toggle-container">
     <a id="mode-toggle" class="colorscheme-toggle"
                         onclick="toggle_theme_mode()"
