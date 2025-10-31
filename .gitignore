@@ -17,5 +17,9 @@ android-wrapper/app/build/
 android-wrapper/build/
 android-wrapper/app/src/main/assets/
 
+# VSCode
+
+.vscode/
+
 # MacOS
 .DS_Store
