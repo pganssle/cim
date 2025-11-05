@@ -13,11 +13,11 @@ Introduce the chords to the children one at a time, spacing out new chord introd
 
 ### Prerequisites
 
-- **Ruby**
+- **Ruby** (for Mac, run `brew install ruby@3.2`)
 - **Bundler** gem (`gem install bundler`)
 - **Make** (usually pre-installed on macOS/Linux)
 
-1. **Initialize the repositorys**
+1. **Initialize the repository**
    ```bash
    make init
    ```
@@ -27,18 +27,21 @@ Introduce the chords to the children one at a time, spacing out new chord introd
    ```bash
    make serve
    ```
-   Open your browser and navigate to `http://localhost:4000`   
+   Open your browser and navigate to `http://localhost:4000`
 
 ### Android Version Setup
 
 #### Prerequisites
 
-- All web version prerequisites
+- All web version prerequisites (Ruby, Bundler, Make)
 - **Android Studio** (latest stable version)
 - **Java Development Kit (JDK)** 11 or higher
 - Android SDK with minimum API level 21
 
-1. **Complete the web setup first** 
+1. **Initialize Android dependencies**
+   ```bash
+   make init-android
+   ```
 
 2. **Build the Android assets**
    ```bash
@@ -65,6 +68,21 @@ Introduce the chords to the children one at a time, spacing out new chord introd
    - Click the "Run" button (green play icon) in Android Studio
    - Select your device/emulator
    - The app will build and install automatically
+
+## Regenerating Chord Audio Files
+
+The pre-generated chord files are already in the repo. Only regenerate if adding new chords or changing instruments.
+
+**Prerequisites:** `ffmpeg` (Mac: `brew install ffmpeg`)
+
+**Steps:**
+1. `make generate-chords-manual` - Opens browser, click "Start Generation" button
+2. Allow multiple downloads, wait for 42 files
+3. Press `Ctrl+C` to stop server
+4. `make move-downloaded-chords` - Moves files from ~Downloads (assumes Mac)
+5. `make convert-chords-to-mp3` - Converts to MP3
+6. Verify: `ls static_files/chords/tone_js_pregenerated/*.mp3 | wc -l` (should be 42)
+7. Commit the files
 
 ## Contributing
 

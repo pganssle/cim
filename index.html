@@ -83,7 +83,14 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         const UNSORTED_AUDIO_FILES = [
         {%- for file in site.static_files -%}
             {%- if file.extname == ".mp3" and file.path contains "/static_files/chords" -%}
-                "{{ file.name }}",
+                {%- unless file.path contains "tone_js_pregenerated" -%}
+                    "{{ file.name }}",
+                {%- endunless -%}
+            {%- endif -%}
+        {%- endfor -%}
+        {%- for file in site.static_files -%}
+            {%- if file.extname == ".mp3" and file.path contains "/static_files/chords/tone_js_pregenerated" -%}
+                "tone_js_pregenerated/{{ file.name }}",
             {%- endif -%}
         {%- endfor -%}
         ];
@@ -109,12 +116,8 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                     "legacy": false,
                     "sample_files": {
                     {%- for file in instrument_files -%}
-                        {%- if IS_ANDROID_APP -%}
-                        // Android loads files directly; skip URL encoding
-                        "{{ file.name | split: 'v' | first }}" : "{{ file.name }}",
-                        {%- else -%}
-                        "{{ file.name | split: 'v' | first }}" : "{{ file.name | replace: '#', '%23' }}",
-                        {%- endif -%}
+                        {%- assign note_name = file.name | split: 'v' | first | replace: 'Sharp', '#' -%}
+                        "{{ note_name }}" : "{{ file.name }}",
                     {%- endfor -%}
                     },
                 {%- endif -%}
