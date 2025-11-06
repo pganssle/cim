@@ -1,0 +1,5 @@
+# Android WebView disables fetch(), which is used in Tone.js when legacy=false
+# Therefore, we use pre-generated chords (legacy mode)
+- name: piano_pregenerated
+  display: "🎹 Piano"
+  legacy: true

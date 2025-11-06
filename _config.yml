@@ -13,6 +13,7 @@ description: >- # this means to ignore newlines until "baseurl:"
 exclude:
   - .sass-cache/
   - .jekyll-cache/
+  - android-wrapper/
   - gemfiles/
   - Gemfile
   - Gemfile.lock

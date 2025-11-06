@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chord Generator - One-time Generation</title>
+</head>
+<body>
+    <h1>Chord Generator</h1>
+    <button id="startButton" style="font-size: 20px; padding: 10px 20px; margin: 20px;">Start Generation</button>
+    <div id="status"></div>
+    <div id="progress"></div>
+
+    <script src="../js/vendor/Tone.js?v=2"></script>
+    <script>
+        const DURATIONS = {
+            short: 1.0,
+            medium: 1.75,
+            long: 2.5
+        };
+
+        const CHORDS = [
+            { name: "red", chord: "C", notes: ["C4", "E4", "G4"] },
+            { name: "yellow", chord: "F/C", notes: ["C4", "F4", "A4"] },
+            { name: "blue", chord: "G/B", notes: ["B3", "D4", "G4"] },
+            { name: "black", chord: "F/A", notes: ["A3", "C4", "F4"] },
+            { name: "green", chord: "G/D", notes: ["D4", "G4", "B4"] },
+            { name: "orange", chord: "C/E", notes: ["E4", "G4", "C5"] },
+            { name: "purple", chord: "F", notes: ["F4", "A4", "C5"] },
+            { name: "pink", chord: "G", notes: ["G4", "B4", "D5"] },
+            { name: "brown", chord: "C/G", notes: ["G4", "C5", "E5"] },
+            { name: "gray", chord: "A", notes: ["A3", "C#4", "E4"] },
+            { name: "tan", chord: "D", notes: ["D4", "F#4", "A4"] },
+            { name: "lightgreen", chord: "E", notes: ["E4", "G#4", "B4"] },
+            { name: "lightpurple", chord: "Bb", notes: ["Bb3", "D4", "F4"] },
+            { name: "skyblue", chord: "Eb", notes: ["Eb4", "G4", "Bb4"] }
+        ];
+
+        const statusDiv = document.getElementById('status');
+        const progressDiv = document.getElementById('progress');
+
+        let generatedFiles = [];
+
+        // Sample map for piano_1 - only the actual samples we have
+        const actualSamples = {
+                "A3": "A3v11.mp3",
+                "C3": "C3v11.mp3",
+                "D#3": "DSharp3v11.mp3",
+                "F#3": "FSharp3v11.mp3",
+                "A4": "A4v11.mp3",
+                "C4": "C4v11.mp3",
+                "D#4": "DSharp4v11.mp3",
+                "F#4": "FSharp4v11.mp3",
+                "A5": "A5v11.mp3",
+                "C5": "C5v11.mp3",
+                "D#5": "DSharp5v11.mp3",
+                "F#5": "FSharp5v11.mp3",
+                "A6": "A6v11.mp3",
+                "C6": "C6v11.mp3"
+            };
+
+        // Start the generation process
+        async function start() {
+            statusDiv.textContent = 'Starting chord generation...';
+
+            // Initialize Tone.js
+            await Tone.start();
+            statusDiv.textContent = 'Generating chords...';
+
+            await generateAllChords();
+
+            statusDiv.textContent = `Complete! Generated ${generatedFiles.length} files`;
+
+            // Display the list of generated files
+            const fileListDiv = document.createElement('div');
+            fileListDiv.innerHTML = `
+                <h2>Generated Files (${generatedFiles.length} total):</h2>
+                <pre>${generatedFiles.join('\n')}</pre>
+                <h2>Next Steps:</h2>
+                <ol>
+                    <li>Check your Downloads folder for all WAV files</li>
+                    <li>Move files to static_files/chords/tone_js_pregenerated/:
+                        <pre>make move-downloaded-chords</pre>
+                    </li>
+                    <li>Convert to MP3:
+                        <pre>make convert-chords-to-mp3</pre>
+                    </li>
+                    <li>Verify files were created:
+                        <pre>ls -la static_files/chords/tone_js_pregenerated/*.mp3 | wc -l</pre>
+                        Should show 42 files (14 chords × 3 durations)
+                    </li>
+                </ol>
+            `;
+            document.body.appendChild(fileListDiv);
+
+            console.log('Generation complete!');
+            console.log('Generated files:', generatedFiles);
+        }
+
+        async function generateChord(color, chordName, notes, duration, durationKey) {
+            // Convert notes to letter notation for filename
+            // E.g., ["C4", "E4", "G4"] -> "ceg"
+            const noteToLetter = {
+                'C': 'c', 'C#': 'cs', 'Db': 'cs',
+                'D': 'd', 'D#': 'ds', 'Eb': 'ds',
+                'E': 'e',
+                'F': 'f', 'F#': 'fs', 'Gb': 'fs',
+                'G': 'g', 'G#': 'gs', 'Ab': 'gs',
+                'A': 'a', 'A#': 'as', 'Bb': 'as',
+                'B': 'h'  // German notation where B = H
+            };
+
+            const notesPrefix = notes.map(note => {
+                // Remove octave number (e.g., "C4" -> "C")
+                const noteName = note.replace(/\d+$/, '');
+                return noteToLetter[noteName] || noteName.toLowerCase();
+            }).join('');
+
+            // Format: notes_color_duration.wav (e.g., "ceg_red_short.wav")
+            const filename = `${notesPrefix}_${color}_${durationKey}.wav`;
+
+            progressDiv.textContent = `Generating: ${filename} (${duration}s)`;
+
+            // Render offline - sampler must be created inside the offline context
+            const buffer = await Tone.Offline(async () => {
+                const offlineSampler = new Tone.Sampler({
+                    urls: actualSamples,
+                    baseUrl: "../static_files/samples/piano_1/",
+                    release: 1
+                }).toDestination();
+
+                await Tone.loaded();
+                offlineSampler.triggerAttackRelease(notes, duration);
+            }, duration + 0.5);
+
+            // Convert to WAV
+            const wavBlob = audioBufferToWav(buffer);
+
+            // Trigger download
+            const url = URL.createObjectURL(wavBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            generatedFiles.push(filename);
+
+            // Small delay to prevent browser from blocking multiple downloads
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            return filename;
+        }
+
+        async function generateAllChords() {
+            let count = 0;
+            const total = CHORDS.length * Object.keys(DURATIONS).length;
+
+            for (const chord of CHORDS) {
+                for (const [durationKey, duration] of Object.entries(DURATIONS)) {
+                    await generateChord(
+                        chord.name,
+                        chord.chord,
+                        chord.notes,
+                        duration,
+                        durationKey
+                    );
+                    count++;
+                    console.log(`Progress: ${count}/${total}`);
+                }
+            }
+        }
+
+        function audioBufferToWav(audioBuffer) {
+            const numChannels = audioBuffer.numberOfChannels;
+            const sampleRate = audioBuffer.sampleRate;
+            const format = 1; // PCM
+            const bitDepth = 16;
+
+            const bytesPerSample = bitDepth / 8;
+            const blockAlign = numChannels * bytesPerSample;
+
+            const data = [];
+            for (let i = 0; i < audioBuffer.length; i++) {
+                for (let channel = 0; channel < numChannels; channel++) {
+                    const sample = audioBuffer.getChannelData(channel)[i];
+                    const s = Math.max(-1, Math.min(1, sample));
+                    data.push(s < 0 ? s * 0x8000 : s * 0x7FFF);
+                }
+            }
+
+            const dataLength = data.length * bytesPerSample;
+            const buffer = new ArrayBuffer(44 + dataLength);
+            const view = new DataView(buffer);
+
+            function writeString(view, offset, string) {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            }
+
+            // WAV header
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + dataLength, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, format, true);
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * blockAlign, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitDepth, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, dataLength, true);
+
+            let offset = 44;
+            for (let i = 0; i < data.length; i++) {
+                view.setInt16(offset, data[i], true);
+                offset += 2;
+            }
+
+            return new Blob([buffer], { type: 'audio/wav' });
+        }
+
+        // Wait for user interaction
+        document.addEventListener('DOMContentLoaded', () => {
+            const button = document.getElementById('startButton');
+            button.addEventListener('click', async () => {
+                button.disabled = true;
+                button.textContent = 'Generating...';
+                await start();
+            });
+        });
+    </script>
+</body>
+</html>
