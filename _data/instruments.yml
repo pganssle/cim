@@ -1,8 +1,5 @@
 - name: piano_1
   display: "🎹 Piano"
-- name: piano_pregenerated
-  display: "🎹 Piano (pregenerated)"
-  legacy: true
 - name: piano_old
   display: "🎹🧓 Piano (old)"
   fallback: "piano_1"
