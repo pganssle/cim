@@ -12,13 +12,18 @@ _site/
 # Android Studio / Gradle build output
 android-wrapper/.gradle/
 android-wrapper/.idea/
+android-wrapper/*.iml
 android-wrapper/local.properties
-android-wrapper/app/build/
+android-wrapper/**/build/
 android-wrapper/build/
+android-wrapper/.DS_Store
+android-wrapper/Thumbs.db
+android-wrapper/captures/
+
+# Android - generated via Makefile
 android-wrapper/app/src/main/assets/
 
 # VSCode
-
 .vscode/
 
 # MacOS
