@@ -32,17 +32,20 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         </style>
         {% if IS_ANDROID_APP %}
         <style>
-            body {
-                padding-top: 40px; 
-                padding-left: 10px;
-                padding-right: 10px;
-                padding-bottom: 10px;
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
             }
-            
+
+            div.cim-container {
+                padding: 40px 10px 10px 10px !important;
+                box-sizing: border-box !important;
+            }
+
             div.hamburger {
                 margin-top: 60px !important;
             }
-            
+
             /* Reduce hamburger margin when menu is expanded */
             div.menu-container.visible div.hamburger {
                 margin-top: 10px !important;
