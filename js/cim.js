@@ -1132,10 +1132,30 @@ function populate_stats_history_modal() {
 
         let stats = document.createElement("div");
         stats.classList.add("session-stats");
-        stats.innerText = correct + " / " + identifications + " (" +
-            percentage.toFixed(1) +
-            "%) " + emoji;
+
+        let chord_stats_text = document.createElement("div");
+        chord_stats_text.innerText = correct + " / " + identifications + " (" +
+            percentage.toFixed(1) + "%)";
+        stats.appendChild(chord_stats_text);
+
+        if (session.notes && session.notes.identifications > 0) {
+            const notes_correct = session.notes.correct;
+            const notes_identifications = session.notes.identifications;
+            const notes_percentage = calculate_percentage(notes_correct, notes_identifications);
+
+            let note_stats = document.createElement("div");
+            note_stats.classList.add("sn-session-stats");
+            note_stats.innerText = "♪ " + notes_correct + " / " + notes_identifications +
+                " (" + notes_percentage.toFixed(1) + "%)";
+            stats.appendChild(note_stats);
+        }
+
         div.appendChild(stats);
+
+        let emoji_elem = document.createElement("div");
+        emoji_elem.classList.add("session-emoji");
+        emoji_elem.innerText = emoji;
+        div.appendChild(emoji_elem);
 
         stats_container.appendChild(div);
     }
