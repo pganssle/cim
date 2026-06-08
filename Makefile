@@ -28,6 +28,11 @@ html: vendor/bundle
 serve: vendor/bundle
 	$(JEKYLL) serve -w
 
+.PHONY: release
+release: vendor/bundle
+	uv run scripts/compile_changelog.py
+	$(JEKYLL) build
+
 .PHONY: clean
 clean:
 	$(JEKYLL) clean
