@@ -1023,6 +1023,14 @@ function load_state() {
         state["current_profile"] = _GUEST_USER_ID;
     }
 
+    if (state["changelog_last_read_date"] === undefined) {
+        state["changelog_last_read_date"] = null;
+    }
+
+    if (state["suppress_changelog_notifications"] === undefined) {
+        state["suppress_changelog_notifications"] = false;
+    }
+
     for (let profile of Object.values(state.profiles)) {
         initialize_profile_defaults(profile);
     }
@@ -1613,7 +1621,40 @@ function toggle_infobox_visibility() {
     toggle_visibility(document.getElementById("i-infobox"));
 }
 
+const _CHANGELOG_TRIGGER_CONTAINER_ID = "changelog-trigger-container";
+
+function get_newest_changelog_date() {
+    return document.getElementById(_CHANGELOG_TRIGGER_CONTAINER_ID)
+        ?.dataset?.newestDate || null;
+}
+
+function check_changelog_badge() {
+    const newest = get_newest_changelog_date();
+    const container = document.getElementById(_CHANGELOG_TRIGGER_CONTAINER_ID);
+    if (!newest || STATE.suppress_changelog_notifications) {
+        container.classList.remove("has-updates");
+        return;
+    }
+    const last_read = STATE.changelog_last_read_date;
+    if (!last_read || last_read < newest) {
+        container.classList.add("has-updates");
+    } else {
+        container.classList.remove("has-updates");
+    }
+}
+
+function mark_changelog_read() {
+    const newest = get_newest_changelog_date();
+    if (newest && STATE.changelog_last_read_date !== newest) {
+        STATE.changelog_last_read_date = newest;
+        save_state();
+    }
+    document.getElementById(_CHANGELOG_TRIGGER_CONTAINER_ID)
+        .classList.remove("has-updates");
+}
+
 function toggle_changelog_visibility() {
+    mark_changelog_read();
     toggle_visibility(document.getElementById("changelog-infobox"));
 }
 
@@ -1893,6 +1934,7 @@ document.addEventListener("DOMContentLoaded", function() {
     populate_profile_pulldown();
     update_stats_display();
     clean_session_history();
+    check_changelog_badge();
 });
 
 document.addEventListener("click", function(event) {
