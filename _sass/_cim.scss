@@ -823,6 +823,23 @@ div.stats-history-item > div.session-emoji {
     font-size: 2em;
 }
 
+/* Changelog notification badge */
+div.infobox-container.has-updates > a {
+    position: relative;
+
+    &::after {
+        content: '';
+        display: block;
+        width: 0.55rem;
+        height: 0.55rem;
+        background-color: #e53e3e;
+        border-radius: 50%;
+        position: absolute;
+        top: -0.15rem;
+        right: -0.05rem;
+    }
+}
+
 /* Changelog modal */
 div.changelog-infobox {
     overflow-y: auto;
