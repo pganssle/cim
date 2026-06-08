@@ -1613,6 +1613,10 @@ function toggle_infobox_visibility() {
     toggle_visibility(document.getElementById("i-infobox"));
 }
 
+function toggle_changelog_visibility() {
+    toggle_visibility(document.getElementById("changelog-infobox"));
+}
+
 function toggle_stats_history_visibility() {
     populate_stats_history_modal();
     toggle_visibility(document.getElementById("stats-history-container"));

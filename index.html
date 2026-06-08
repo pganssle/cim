@@ -113,6 +113,14 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                     <i class="fa fa-solid fa-info-circle"></i>
                   </a>
                 </div>
+                <div class="infobox-container" id="changelog-trigger-container"
+                     data-newest-date="{{ site.data.changelog[0].date | default: '' }}">
+                    <a href="#" class="infobox-trigger"
+                       id="changelog-trigger"
+                       onclick="toggle_changelog_visibility()">
+                    <i class="fa fa-solid fa-newspaper-o"></i>
+                  </a>
+                </div>
                 <div class="infobox-container">
                     <a href="#"
                        id="stats-history-trigger"
@@ -326,6 +334,21 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
             </a>
         </div>
     </div>
+</div>
+
+<!-- Changelog / What's New -->
+<div class="infobox changelog-infobox" id="changelog-infobox">
+    <h2>What's New</h2>
+    {% for release in site.data.changelog %}
+    <div class="changelog-entry">
+        <h3 class="changelog-date">{{ release.date }}</h3>
+        <ul>
+            {% for entry in release.entries %}
+            <li>{{ entry }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
 </div>
 
 <!-- Statistics -->
