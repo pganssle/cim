@@ -1446,6 +1446,9 @@ function populate_profile_settings() {
     let persist_reaction_face_elem = document.getElementById("persist_reaction_face_setting");
     persist_reaction_face_elem.checked = profile.persist_reaction_face;
 
+    document.getElementById("suppress_changelog_notifications_setting").checked =
+        STATE.suppress_changelog_notifications;
+
     profile_dialog.dataset.id = profile["id"];
 
     // It is not allowed to delete the guest user or change its name.
@@ -1488,6 +1491,10 @@ function submit_profile_changes() {
     current_profile.single_note_mode = profile_values.single_note_mode;
     current_profile.single_note_correctness_mode = profile_values.single_note_correctness_mode;
     current_profile.persist_reaction_face = profile_values.persist_reaction_face;
+
+    STATE.suppress_changelog_notifications =
+        document.getElementById("suppress_changelog_notifications_setting").checked;
+    check_changelog_badge();
 
     save_state();
     populate_profile_pulldown();
