@@ -823,6 +823,25 @@ div.stats-history-item > div.session-emoji {
     font-size: 2em;
 }
 
+/* Changelog modal */
+div.changelog-infobox {
+    overflow-y: auto;
+
+    h2 {
+        margin-top: 0;
+    }
+}
+
+div.changelog-entry + div.changelog-entry {
+    border-top: 1px solid #ccc;
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+}
+
+h3.changelog-date {
+    margin: 0.25rem 0;
+}
+
 
 /* Flags */
 $red: red;
