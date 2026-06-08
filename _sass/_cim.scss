@@ -823,6 +823,28 @@ div.stats-history-item > div.session-emoji {
     font-size: 2em;
 }
 
+/* Global settings divider in profile dialog */
+div.entry-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1rem 0 0.5rem;
+
+    &::before, &::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: currentColor;
+        opacity: 0.3;
+    }
+}
+
+span.divider-label {
+    font-size: 0.8em;
+    opacity: 0.7;
+    white-space: nowrap;
+}
+
 /* Changelog notification badge */
 div.infobox-container.has-updates > a {
     position: relative;
