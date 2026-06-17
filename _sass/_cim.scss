@@ -328,7 +328,10 @@ div.controls {
     align-items: center;
 }
 
-div.controls a i {
+div.controls button {
+    all: unset;
+}
+div.controls button i {
     font-size: 5rem;
     margin-right: 0.25em;
     margin-left: 0.25em;
@@ -342,7 +345,7 @@ body.colorscheme-light div.controls i.fa {
     color: #0077be;
 }
 
-div.controls a.deactivated i.fa {
+div.controls button.deactivated i.fa {
     color: #0077be50;
 }
 
