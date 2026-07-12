@@ -191,8 +191,8 @@ function get_audio_files() {
         };
 
         function af_obj(filename) {
-            [base, ext] = filename.split(".");
-            [chord, color, _] = filename.split("_");
+            const [base, ext] = filename.split(".");
+            const [chord, color, _] = filename.split("_");
 
             return {
                 filename: filename,
@@ -311,7 +311,7 @@ function random_duration(mean=2, stdev=0.3, min=1.0, max=2.5) {
 
 
 function select_new_color() {
-    weights = get_current_coefficients();
+    const weights = get_current_coefficients();
     _CORRECT_COLOR = random_elem(get_selected_colors(), weights);
     if (_SELECTED_ELEM !== null) {
         _SELECTED_ELEM.classList.remove("flag-correct");
@@ -567,7 +567,7 @@ function select_single_note(elem) {
     update_stats_display();
 
     // Check if the selected note is correct
-    is_correct = (selectedNote === _CORRECT_NOTE);
+    const is_correct = (selectedNote === _CORRECT_NOTE);
     if (is_correct) {
         elem.classList.add("note-correct");
     } else {
@@ -982,7 +982,7 @@ function initialize_profile_defaults(profile) {
         }
     }
 
-    profile_defaults = {
+    const profile_defaults = {
         show_chord_mode: _DEFAULT_SHOW_CHORD_MODE,
         reveal_chord_mode: _DEFAULT_REVEAL_CHORD_MODE,
         chord_display_mode: _DEFAULT_CHORD_DISPLAY_MODE,
@@ -1010,7 +1010,7 @@ function load_state() {
         let new_profiles = {};
         new_profiles[_LEGACY_USER_ID] = new_profile("Legacy User", "fa-user", _LEGACY_USER_ID);
         new_profiles[_GUEST_USER_ID] = new_profile("Guest", "fa-user", _GUEST_USER_ID);
-        updated_state = {
+        const updated_state = {
             profiles: new_profiles,
             current_chord: state["current_chord"],
         }
@@ -1127,7 +1127,7 @@ function populate_stats_history_modal() {
 
         let date_elem = document.createElement("div");
         date_elem.classList.add("stats-date");
-        date_elem.innerText = format_datetime(date, offset = false);
+        date_elem.innerText = format_datetime(date, false);
         div.appendChild(date_elem);
 
         let stats = document.createElement("div");
@@ -1522,8 +1522,8 @@ function populate_profile_ui_elements() {
 }
 
 function set_chord_display_mode(chord_mode) {
-    use_shapes = true;
-    use_letters = true;
+    let use_shapes = true;
+    let use_letters = true;
     if (chord_mode == "shapes_only") {
         use_letters = false;
     } else if (chord_mode == "letters_only") {
