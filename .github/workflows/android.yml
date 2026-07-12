@@ -1,10 +1,10 @@
 # Builds the Capacitor-based Android app. See docs/android.md for an
 # overview of how the app and this workflow fit together.
 #
-# - Tags matching v*: build a signed release APK and attach it to a
+# - Stable version tags: build a signed release APK and attach it to a
 #   GitHub Release for the tag.
-# - workflow_dispatch: build a signed release APK and upload it as a
-#   workflow artifact (no release is created).
+# - Development tags: build a signed APK and upload it as an artifact.
+# - workflow_dispatch: build an unsigned debug APK.
 # - Pull requests touching the Android build: build an unsigned debug
 #   APK as a smoke test and upload it as a workflow artifact.
 name: Android APK
@@ -23,6 +23,8 @@ on:
       - "patches/android/**"
       - "scripts/generate_android_project.sh"
       - "scripts/generate_android_resources.sh"
+      - "scripts/tag_android_version.sh"
+      - "tests/test_tag_android_version.sh"
       - "Makefile"
       - "package.json"
       - "package-lock.json"
@@ -52,6 +54,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Test version tagging
+        run: ./tests/test_tag_android_version.sh
       - name: Install ImageMagick
         run: |
           sudo apt-get update
@@ -73,43 +77,35 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # --- Pull requests: unsigned debug APK as a smoke test ---
+      # --- Pull requests and manual runs: unsigned debug APK ---
       - name: Build debug APK
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
         run: cd android && ./gradlew assembleDebug
       - name: Upload debug APK
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: cim-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
 
-      # --- Tags and manual runs: signed release APK ---
+      # --- Tags: signed APK ---
       - name: Decode keystore
-        if: github.event_name != 'pull_request'
+        if: startsWith(github.ref, 'refs/tags/v')
         run: echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/cim-release.jks"
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
 
-      # versionName is the tag without the leading v; versionCode is
-      # major * 10000 + minor * 100 + patch, which is deterministic and
-      # increases with the version as long as minor and patch stay < 100.
       - name: Compute version from tag
-        if: github.event_name != 'pull_request'
+        if: startsWith(github.ref, 'refs/tags/v')
         id: version
         run: |
-          if [[ "$GITHUB_REF_NAME" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-            NAME="${GITHUB_REF_NAME#v}"
-            CODE=$(( 10#${BASH_REMATCH[1]} * 10000 + 10#${BASH_REMATCH[2]} * 100 + 10#${BASH_REMATCH[3]} ))
-          else
-            NAME="0.0.0-run${GITHUB_RUN_NUMBER}"
-            CODE=1
-          fi
+          NAME="${GITHUB_REF_NAME#v}"
+          CODE=$(./scripts/tag_android_version.sh --version-code "$NAME")
           echo "name=$NAME" >> "$GITHUB_OUTPUT"
           echo "code=$CODE" >> "$GITHUB_OUTPUT"
 
       - name: Build signed release APK
-        if: github.event_name != 'pull_request'
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           cd android && ./gradlew assembleRelease \
             -PcimVersionName='${{ steps.version.outputs.name }}' \
@@ -121,18 +117,18 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Rename APK
-        if: github.event_name != 'pull_request'
+        if: startsWith(github.ref, 'refs/tags/v')
         run: cp android/app/build/outputs/apk/release/app-release.apk "cim-${GITHUB_REF_NAME}.apk"
 
-      - name: Upload release APK artifact
-        if: github.event_name == 'workflow_dispatch'
+      - name: Upload development APK artifact
+        if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '.dev')
         uses: actions/upload-artifact@v4
         with:
-          name: cim-release-apk
+          name: cim-development-apk
           path: cim-*.apk
 
       - name: Attach APK to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '.dev')
         uses: softprops/action-gh-release@v2
         with:
           files: cim-*.apk

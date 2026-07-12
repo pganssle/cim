@@ -3,7 +3,6 @@
 vendor/
 .bundle/
 .jekyll_cache
-
 _site/
 .gradle/
 

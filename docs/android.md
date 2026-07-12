@@ -70,7 +70,8 @@ path to the list in `scripts/update_android_patches.sh` first.
 
 Version information isn't committed either: `versionName`/`versionCode` are
 passed to Gradle as `-PcimVersionName`/`-PcimVersionCode` (in CI, derived
-from the git tag). Local builds default to `dev`/`1`.
+from the git tag by `scripts/tag_android_version.sh`). Local builds default
+to `dev`/`1`.
 
 ## Building locally
 
@@ -107,22 +108,33 @@ the full DevTools.
 Releases are built by `.github/workflows/android.yml`:
 
 ```bash
-git tag v1.2.3
-git push origin v1.2.3
+./scripts/tag_android_version.sh
+git push origin --tags
 ```
 
-That builds a signed APK and attaches it as `cim-v1.2.3.apk` to a GitHub
+That builds a signed APK and attaches it as `cim-vYY.MM.patch.apk` to a GitHub
 Release for the tag. Sideload it directly, or point an F-Droid-style updater
 at the releases page.
 
-`versionCode` (what Android actually compares for upgrades) is computed as
-`major * 10000 + minor * 100 + patch`, so `v1.2.3` → `10203`. Two
-consequences: minor and patch must stay below 100, and tags must be cut in
-increasing version order or devices will refuse the "downgrade".
+Versions have the form `YY.MM.patch`. The script resets `patch` to `0` in a
+new month and otherwise increments the latest tag's patch number. Android's
+integer `versionCode` uses two digits for the year since 2020, two for the
+month, three for the patch, and three for the development build. For example,
+`v26.07.3` has version code `607003000`.
 
-The `workflow_dispatch` trigger builds the same signed APK but only uploads
-it as a workflow artifact, which is useful for testing the pipeline without
-publishing anything.
+The year is stored relative to 2020 because Android version codes cannot exceed
+`2100000000`; encoding the literal year would already exceed that limit. This
+layout allows 1,000 patches per month and 999 development builds per patch, and
+has enough year space through 2040.
+
+For an installable development build, run the script with `--dev`. This keeps
+the current patch and increments `.devN`; `v26.07.3.dev0` has version code
+`607003001`, so it installs over `v26.07.3`. Development tags produce signed
+workflow artifacts rather than GitHub Releases. The next stable patch has a
+higher version code than all of its predecessor's development builds.
+
+The `workflow_dispatch` trigger builds an unsigned debug APK without assigning
+a release version.
 
 ## Signing keys and secrets
 
