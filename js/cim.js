@@ -1032,14 +1032,16 @@ function load_state() {
 
 function new_profile_from_values(values) {
     return new_profile(
-        name = values.name,
-        icon = values.icon,
-        id = values.id,
-        target_number = parseInt(values.target_number),
-        show_chord_mode = values.show_chord_mode,
-        reveal_chord_mode = values.reveal_chord_mode,
-        chord_display_mode = values.chord_display_mode,
-        persist_reaction_face = values.persist_reaction_face,
+        values.name,
+        values.icon,
+        values.id,
+        parseInt(values.target_number),
+        values.show_chord_mode,
+        values.reveal_chord_mode,
+        values.chord_display_mode,
+        values.single_note_mode,
+        values.single_note_correctness_mode,
+        values.persist_reaction_face,
     );
 }
 
