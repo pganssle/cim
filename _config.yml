@@ -22,6 +22,9 @@ exclude:
   - package-lock.json
   - capacitor.config.json
   - android/
+  - android-overlay/
+  - patches/
+  - scripts/
   - docs/
   - vendor/bundle/
   - vendor/cache/

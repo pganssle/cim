@@ -17,7 +17,9 @@ on:
 
   pull_request:
     paths:
-      - "android/**"
+      - "android-overlay/**"
+      - "patches/android/**"
+      - "scripts/generate_android_project.sh"
       - "package.json"
       - "package-lock.json"
       - "capacitor.config.json"
@@ -34,7 +36,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Build the website; the Android app bundles the _site output.
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -42,21 +43,19 @@ jobs:
           bundler-cache: true
       - name: Initialize site
         run: make init
-      - name: Build with Jekyll
-        run: make html
-        env:
-          JEKYLL_ENV: production
-
-      # Copy _site into the native project (android/app/src/main/assets/public)
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - name: Sync web assets into the Android project
-        run: |
-          npm ci
-          npx cap sync android
+
+      # Builds the site, generates the native project from the Capacitor
+      # template + patches/android/ + android-overlay/ (android/ is not
+      # committed), and copies _site into it.
+      - name: Build site and Android project
+        run: make android-assets
+        env:
+          JEKYLL_ENV: production
 
       - name: Setup Java
         uses: actions/setup-java@v5

@@ -1,0 +1,20 @@
+--- a/app/src/main/java/us/ganbar/cim/MainActivity.java
++++ b/app/src/main/java/us/ganbar/cim/MainActivity.java
+@@ -1,5 +1,16 @@
+ package us.ganbar.cim;
+ 
++import android.os.Bundle;
++import android.view.WindowManager;
++
+ import com.getcapacitor.BridgeActivity;
+ 
+-public class MainActivity extends BridgeActivity {}
++public class MainActivity extends BridgeActivity {
++    @Override
++    public void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
++        // Training sessions are listen-only for long stretches; don't let the
++        // screen turn off mid-exercise.
++        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
++    }
++}

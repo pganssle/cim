@@ -37,14 +37,32 @@ tweaks. One Jekyll build serves both platforms; there is no
 
 ### What's committed vs. generated
 
-The `android/` directory is the one-time output of `npx cap add android`
-(plus small customizations: app id `us.ganbar.cim`, launcher icons, a
-keep-screen-on flag in `MainActivity`, and the signing/versioning wiring in
-`android/app/build.gradle`). Everything `cap sync` regenerates — most notably
-the ~9 MB copy of `_site` in `assets/public/` — is gitignored; if you see
-generated-looking files in a diff under `android/`, something is wrong.
+The `android/` directory is never committed. It is regenerated at build time
+by `scripts/generate_android_project.sh` (via `make android-project`), which
+is a deterministic function of three committed inputs:
 
-Version information is not committed either: `versionName`/`versionCode` are
+- `package-lock.json` — pins `@capacitor/cli` exactly, and the native
+  project template ships *inside* that npm package, so the lockfile
+  transitively pins the generated project too.
+- `patches/android/*.patch` — our edits to generated files, one patch per
+  file: the signing/versioning wiring in `app/build.gradle`, the
+  keep-screen-on flag in `MainActivity.java`, and the solid-color launch
+  background in `styles.xml`. Everything in a patch is by definition ours;
+  everything else is the template's.
+- `android-overlay/` — hand-made files copied on top (the launcher icon
+  webps and `colors.xml`).
+
+A stamp file (`android/.generated`) makes this incremental: `make` only
+regenerates the project when one of those inputs changes, so routine builds
+don't touch `android/` (or Gradle's incremental state inside it) at all.
+
+To change something in the native project: `make android-project`, edit the
+files under `android/` directly (Android Studio works fine — the project
+just isn't tracked), then `make android-patches` to capture your edits back
+into `patches/android/`. To patch a file that isn't patched yet, add its
+path to the list in `scripts/update_android_patches.sh` first.
+
+Version information isn't committed either: `versionName`/`versionCode` are
 passed to Gradle as `-PcimVersionName`/`-PcimVersionCode` (in CI, derived
 from the git tag). Local builds default to `dev`/`1`.
 
@@ -56,7 +74,8 @@ path of least
 resistance for the SDK is installing [Android
 Studio](https://developer.android.com/studio); if you'd rather not, the
 command-line tools package works too — just make sure `ANDROID_HOME` points
-at the SDK. Gradle itself comes from the committed wrapper.
+at the SDK. Gradle itself comes from the wrapper inside the generated
+project, so it doesn't need to be installed.
 
 ```bash
 make apk-debug
@@ -64,9 +83,9 @@ adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
 `make apk-debug` chains the whole pipeline: Jekyll build → `npm ci` →
-`cap sync` → `gradlew assembleDebug`. Alternatively, run `make android-assets`
-and then open `android/` in Android Studio and hit Run, which also gets you
-an emulator.
+generate `android/` → `cap sync` → `gradlew assembleDebug`. Alternatively,
+run `make android-assets` and then open `android/` in Android Studio and hit
+Run, which also gets you an emulator.
 
 Debug builds are signed with the auto-generated debug keystore, which is a
 *different* certificate from release builds — Android won't install one over
@@ -138,10 +157,14 @@ but sideloaded apps don't get that safety net.
 
 ```bash
 npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest
-npx cap sync android
+make apk-debug
 ```
 
-Major-version updates sometimes also change the native template (Gradle/AGP
-versions in `android/`); check the [Capacitor upgrade
-guide](https://capacitorjs.com/docs/updating/8-0) for the target version and
-review the resulting `android/` diff before committing.
+The lockfile change invalidates the stamp, so the next build regenerates
+`android/` from the new template. If the new template changed a file we
+patch, `git apply` fails loudly at that point; fix it by regenerating the
+patch against the new template (`make android-project` up to the failure,
+re-apply your edit by hand, `make android-patches`). Major-version updates
+sometimes want other changes too (JDK/AGP bumps) — check the [Capacitor
+upgrade guide](https://capacitorjs.com/docs/updating/8-0) for the target
+version.
