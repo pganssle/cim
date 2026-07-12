@@ -1,13 +1,12 @@
 --- a/app/src/main/res/values/styles.xml
 +++ b/app/src/main/res/values/styles.xml
-@@ -17,6 +17,10 @@
+@@ -17,6 +17,9 @@
  
  
      <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
 -        <item name="android:background">@drawable/splash</item>
-+        <!-- Solid launch background matching the app's dark theme
-+             ($bg-color-dark in _sass/_variables.scss) instead of the
-+             Capacitor logo splash images from the template. -->
++        <!-- Solid launch background matching the app's dark theme instead
++             of the Capacitor logo splash images from the template. -->
 +        <item name="windowSplashScreenBackground">@color/splash_background</item>
 +        <item name="android:background">@color/splash_background</item>
      </style>

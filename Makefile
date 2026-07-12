@@ -46,11 +46,14 @@ node_modules: package.json package-lock.json
 
 # The native project is generated, not committed: it is rebuilt from the
 # Capacitor template (pinned via package-lock.json) plus our patches and
-# overlay whenever — and only when — one of those inputs changes.
+# generated resources whenever — and only when — one of those inputs changes.
 ANDROID_INPUTS := capacitor.config.json node_modules \
 	scripts/generate_android_project.sh \
-	$(wildcard patches/android/*.patch) \
-	$(shell find android-overlay -type f)
+	scripts/generate_android_resources.sh \
+	android-resources/colors.xml.in \
+	_data/theme.json \
+	assets/images/cim_logo_512.png \
+	$(wildcard patches/android/*.patch)
 
 android/.generated: $(ANDROID_INPUTS)
 	./scripts/generate_android_project.sh

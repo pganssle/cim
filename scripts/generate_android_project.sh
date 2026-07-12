@@ -6,7 +6,7 @@
 # inside that package) plus the inputs in this repo:
 #
 #   patches/android/*.patch  edits to generated files
-#   android-overlay/         hand-made files copied on top (icons, colors)
+#   scripts/generate_android_resources.sh  resources derived from web inputs
 #
 # Normally invoked via `make android-project`, which skips it unless one
 # of those inputs has changed.
@@ -23,14 +23,14 @@ for p in patches/android/*.patch; do
     git apply --directory=android "$p"
 done
 
-cp -r android-overlay/. android/
-
 # Template content we don't use: example tests, the Capacitor-logo
 # splash images (styles-xml.patch replaces them with a solid color),
-# and the stock launcher icons (the overlay provides the CIM logo; the
-# template .pngs would collide with the same-named .webp resources).
+# and the stock launcher icons (the generated CIM icons use the same
+# resource names).
 rm -r android/app/src/test android/app/src/androidTest
 rm -r android/app/src/main/res/drawable*
 rm android/app/src/main/res/mipmap-*/ic_launcher*.png
+
+./scripts/generate_android_resources.sh
 
 echo "Generated android/ (Capacitor $(npx cap --version))"

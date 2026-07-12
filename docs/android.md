@@ -31,8 +31,8 @@ There is deliberately no service worker in the app: everything is already
 local, so there is nothing to cache, and a cache-first worker could serve
 stale files across app updates. `js/cim.js` skips registration when
 `window.Capacitor` is present. The same check adds a `capacitor-app` class to
-`<html>`, which a style block in `index.html` uses for app-specific layout
-tweaks. One Jekyll build serves both platforms; there is no
+`<html>`, which the site stylesheet uses for app-specific layout tweaks. One
+Jekyll build serves both platforms; there is no
 `JEKYLL_ENV=android`.
 
 ### What's committed vs. generated
@@ -49,12 +49,18 @@ is a deterministic function of three committed inputs:
   keep-screen-on flag in `MainActivity.java`, and the solid-color launch
   background in `styles.xml`. Everything in a patch is by definition ours;
   everything else is the template's.
-- `android-overlay/` — hand-made files copied on top (the launcher icon
-  webps and `colors.xml`).
+- `scripts/generate_android_resources.sh` — derives the density-specific
+  launcher icons from `assets/images/cim_logo_512.png` and the native splash
+  color from `_data/theme.json`. The same JSON value is injected into the
+  site's SCSS, so the web and native backgrounds cannot drift independently.
 
 A stamp file (`android/.generated`) makes this incremental: `make` only
 regenerates the project when one of those inputs changes, so routine builds
 don't touch `android/` (or Gradle's incremental state inside it) at all.
+
+Generating the launcher images requires ImageMagick's `magick` command. They
+are written only into the ignored native project and are rebuilt whenever the
+source logo or generator changes.
 
 To change something in the native project: `make android-project`, edit the
 files under `android/` directly (Android Studio works fine — the project
