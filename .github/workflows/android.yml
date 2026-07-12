@@ -17,9 +17,13 @@ on:
 
   pull_request:
     paths:
-      - "android-overlay/**"
+      - "_data/theme.json"
+      - "android-resources/**"
+      - "assets/images/cim_logo_512.png"
       - "patches/android/**"
       - "scripts/generate_android_project.sh"
+      - "scripts/generate_android_resources.sh"
+      - "Makefile"
       - "package.json"
       - "package-lock.json"
       - "capacitor.config.json"
@@ -48,10 +52,14 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Install ImageMagick
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes imagemagick
 
       # Builds the site, generates the native project from the Capacitor
-      # template + patches/android/ + android-overlay/ (android/ is not
-      # committed), and copies _site into it.
+      # template, patches, and derived resources (android/ is not committed),
+      # and copies _site into it.
       - name: Build site and Android project
         run: make android-assets
         env:

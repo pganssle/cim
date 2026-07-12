@@ -58,9 +58,9 @@ A stamp file (`android/.generated`) makes this incremental: `make` only
 regenerates the project when one of those inputs changes, so routine builds
 don't touch `android/` (or Gradle's incremental state inside it) at all.
 
-Generating the launcher images requires ImageMagick's `magick` command. They
-are written only into the ignored native project and are rebuilt whenever the
-source logo or generator changes.
+Generating the launcher images requires ImageMagick. They are written only
+into the ignored native project and are rebuilt whenever the source logo or
+generator changes.
 
 To change something in the native project: `make android-project`, edit the
 files under `android/` directly (Android Studio works fine — the project
