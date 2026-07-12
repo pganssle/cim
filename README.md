@@ -9,6 +9,10 @@ Introduce the chords to the children one at a time, spacing out new chord introd
 
 **Note**: This application is an early alpha. I\'m still in the first training phase so I\'ve put off work on the later parts of the method until my son catches up. Let me know if you need a feature to make this work, of if it seems that I\'ve misunderstood the method as described in the paper.
 
+## Android app
+
+The site is installable as a PWA, but browsers can evict the offline cache whenever they like. There is also an Android app that bundles the site inside the APK, so it works offline permanently — APKs are attached to [GitHub Releases](https://github.com/pganssle/cim/releases). See [docs/android.md](docs/android.md) for how it works, how to build it locally, and how releases are cut.
+
 ## Contributing
 
 Feel free to open issues or pull requests or fork the code! The site is designed to be be easy to re-host or run locally. I am not exactly the world's best UX designer or front-end developer, but I am a heavy consumer of this app, so any improvements would be heartily welcomed!
