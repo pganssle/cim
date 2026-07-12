@@ -36,4 +36,27 @@ test.describe("Profiles", () => {
         await page.locator("#delete-profile-button").click();
         await expect(page.locator("#profile-text")).toHaveText("Guest");
     });
+
+    test("closing the settings dialog with X discards changes", async ({ page }) => {
+        await goto_app(page);
+
+        await page.locator("#profile-settings-trigger").click();
+        await expect(page.locator("#profile-info-container")).toHaveClass(/visible/);
+        await expect(page.locator("#target_number_setting")).toHaveValue("25");
+
+        await page.locator("#target_number_setting").fill("42");
+        await page.locator("#close-add-profile-container-button").click();
+        await expect(page.locator("#profile-info-container")).not.toHaveClass(/visible/);
+
+        await page.locator("#profile-settings-trigger").click();
+        await expect(page.locator("#target_number_setting")).toHaveValue("25");
+    });
+
+    test("the guest profile cannot be renamed or deleted", async ({ page }) => {
+        await goto_app(page);
+
+        await page.locator("#profile-settings-trigger").click();
+        await expect(page.locator("#profile_name_setting")).toBeDisabled();
+        await expect(page.locator("#delete-profile-button")).toBeDisabled();
+    });
 });

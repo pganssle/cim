@@ -1,19 +1,18 @@
 import { test, expect, goto_app, play_and_wait, audio_starts } from "./fixtures/audio.js";
+import { add_profile } from "./fixtures/flows.js";
 
 // Creates and switches to a profile whose single note trainer fires after
-// every guess. Going through the dialog (rather than seeding localStorage)
-// also pins the profile-creation path: new_profile_from_values used to drop
+// every guess. The dialog route (see add_profile) keeps the
+// profile-creation path under test: new_profile_from_values used to drop
 // the single note settings entirely, which silently disabled the trainer
 // for dialog-created profiles.
-async function add_always_notes_profile(page) {
-    await page.locator("#profile-infobox-trigger").click();
-    await page.locator("#profile-container .pulldown-item", { hasText: "Add Profile" }).click();
-    await page.locator("#profile_name_setting").fill("Notey");
-    await page.locator("#npis-bolt").check();
-    await page.locator("#single-note-trainer-mode-selector").selectOption("always");
-    await page.locator("#single-note-trainer-correctness-mode-selector").selectOption("always");
-    await page.locator("#add-user-button").click();
-    await expect(page.locator("#profile-text")).toHaveText("Notey");
+function add_always_notes_profile(page) {
+    return add_profile(page, {
+        name: "Notey",
+        icon: "npis-bolt",
+        single_note_mode: "always",
+        single_note_correctness_mode: "always",
+    });
 }
 
 async function guess_correct_flag(page) {
