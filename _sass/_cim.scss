@@ -29,6 +29,47 @@ div.cim-container {
     justify-content: space-around;
 }
 
+/* The native app uses a fullscreen WebView, so it has no browser chrome to
+ * keep controls clear of the Android status bar. */
+html.capacitor-app {
+    &, body {
+        margin: 0;
+        padding: 0;
+    }
+
+    div.cim-container {
+        padding: 40px 10px 10px 10px;
+        box-sizing: border-box;
+    }
+
+    div.hamburger {
+        margin-top: 60px;
+    }
+
+    div.menu-container.visible div.hamburger {
+        margin-top: 10px;
+    }
+
+    div.profile-info-container {
+        top: 50%;
+        transform: translateY(-50%);
+        max-height: 85vh;
+        overflow-y: auto;
+        width: 90%;
+        left: 5%;
+        right: 5%;
+    }
+
+    div.profile-info-container .entry-row {
+        margin-bottom: 15px;
+    }
+
+    div.profile-info-container .button-container {
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+    }
+}
+
 div.menu-container {
     display: flex;
     flex-direction: row;
