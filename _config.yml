@@ -14,6 +14,7 @@ exclude:
   - .sass-cache/
   - android/
   - .jekyll-cache/
+  - AGENTS.md
   - docs/
   - gemfiles/
   - Gemfile
