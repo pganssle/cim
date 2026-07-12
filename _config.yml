@@ -23,6 +23,7 @@ exclude:
   - node_modules/
   - package.json
   - package-lock.json
+  - capacitor.config.json
   - e2e/
   - test/
   - playwright.config.js
