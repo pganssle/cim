@@ -1,6 +1,11 @@
 JEKYLL=bundle exec jekyll
 SHELL=bash
 
+# Keep the Gradle wrapper cache with the other build artifacts. This makes
+# Make-driven Android builds independent of the permissions on $HOME.
+GRADLE_USER_HOME ?= $(CURDIR)/.gradle
+export GRADLE_USER_HOME
+
 help:
 	@echo 'Makefile for Jekyll site'
 	@echo ''
@@ -16,6 +21,8 @@ help:
 	@echo 'make test-e2e         Run the Playwright end-to-end tests'
 	@echo ''
 	@echo 'Android (see docs/android.md):'
+	@echo 'make android-project  Generate the native project (template + patches)'
+	@echo 'make android-patches  Capture edits made in android/ back into patches/'
 	@echo 'make android-assets   Build the site and sync it into the Android project'
 	@echo 'make apk-debug        Build a debug APK for local testing'
 	@echo 'make apk-release      Build a release APK (unsigned without keystore env vars)'
@@ -63,8 +70,30 @@ test-e2e: node_modules html playwright-browsers
 .PHONY: test
 test: test-e2e
 
+# The native project is generated, not committed: it is rebuilt from the
+# Capacitor template (pinned via package-lock.json) plus our patches and
+# generated resources whenever — and only when — one of those inputs changes.
+ANDROID_INPUTS := capacitor.config.json node_modules \
+	scripts/generate_android_project.sh \
+	scripts/generate_android_resources.sh \
+	android-resources/colors.xml.in \
+	_data/theme.json \
+	assets/images/cim_logo_512.png \
+	$(wildcard patches/android/*.patch)
+
+android/.generated: $(ANDROID_INPUTS)
+	./scripts/generate_android_project.sh
+	touch $@
+
+.PHONY: android-project
+android-project: android/.generated
+
+.PHONY: android-patches
+android-patches: node_modules
+	./scripts/update_android_patches.sh
+
 .PHONY: android-assets
-android-assets: html node_modules
+android-assets: html android/.generated
 	npx cap sync android
 
 .PHONY: android-java

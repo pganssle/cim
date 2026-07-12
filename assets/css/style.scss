@@ -1,6 +1,8 @@
 ---
 ---
 
+$bg-color-dark: {{ site.data.theme.dark_background }};
+
 @import "css/fork-awesome";
 @import "theme";
 @import "cim";

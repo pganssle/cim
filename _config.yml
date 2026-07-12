@@ -29,6 +29,9 @@ exclude:
   - playwright.config.js
   - playwright-report/
   - test-results/
+  - android-overlay/
+  - patches/
+  - scripts/
   - vendor/bundle/
   - vendor/cache/
   - vendor/gems/
