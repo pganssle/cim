@@ -42,7 +42,7 @@ node_modules: package.json package-lock.json
 # try to install system packages with apt; CI does that itself.
 .PHONY: playwright-browsers
 playwright-browsers: node_modules
-	npx playwright install chromium
+	npx playwright install chromium firefox
 
 .PHONY: test-e2e
 test-e2e: node_modules html playwright-browsers
