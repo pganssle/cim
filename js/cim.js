@@ -1,6 +1,9 @@
 let TONE_SAMPLERS = {};
 
-if ("serviceWorker" in navigator) {
+// In the Capacitor app all assets are bundled in the APK and served locally,
+// so there is nothing for a service worker to cache; a cache-first worker
+// would only risk serving stale content across app updates.
+if ("serviceWorker" in navigator && !window.Capacitor) {
     navigator.serviceWorker.register("../sw.js").then(
         (registration) => {
             console.log("Service worker successfully registered.");
