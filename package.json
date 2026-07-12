@@ -1,0 +1,17 @@
+{
+  "name": "cim-trainer",
+  "private": true,
+  "description": "npm tooling for the automated test suite; the website itself has no npm build step.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1",
+    "http-server": "14.1.1",
+    "playwright": "1.61.1"
+  }
+}

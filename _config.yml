@@ -16,7 +16,15 @@ exclude:
   - gemfiles/
   - Gemfile
   - Gemfile.lock
+  - Makefile
   - node_modules/
+  - package.json
+  - package-lock.json
+  - e2e/
+  - test/
+  - playwright.config.js
+  - playwright-report/
+  - test-results/
   - vendor/bundle/
   - vendor/cache/
   - vendor/gems/
