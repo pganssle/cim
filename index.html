@@ -32,47 +32,6 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         {% endcapture %}
         {{ sass_file | scssify }}
         </style>
-        <style>
-            /* Layout tweaks for the Capacitor Android app (fullscreen WebView,
-             * no browser chrome); .capacitor-app is set on <html> above. */
-            html.capacitor-app,
-            html.capacitor-app body {
-                margin: 0;
-                padding: 0;
-            }
-
-            .capacitor-app div.cim-container {
-                padding: 40px 10px 10px 10px;
-                box-sizing: border-box;
-            }
-
-            .capacitor-app div.hamburger {
-                margin-top: 60px;
-            }
-
-            .capacitor-app div.menu-container.visible div.hamburger {
-                margin-top: 10px;
-            }
-
-            .capacitor-app div.profile-info-container {
-                top: 50%;
-                transform: translateY(-50%);
-                max-height: 85vh;
-                overflow-y: auto;
-                width: 90%;
-                left: 5%;
-                right: 5%;
-            }
-
-            .capacitor-app div.profile-info-container .entry-row {
-                margin-bottom: 15px;
-            }
-
-            .capacitor-app div.profile-info-container .button-container {
-                padding-bottom: 20px;
-                margin-bottom: 20px;
-            }
-        </style>
     </head>
     <script>
         const FIRST_BLACK_INDEX = {{ first_black_index }};
