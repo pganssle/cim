@@ -3,9 +3,17 @@
 vendor/
 .bundle/
 .jekyll_cache
-
 _site/
+.gradle/
 
 # Include the vendored Tone.js file
 !js/vendor/
 
+# npm (used only for Capacitor)
+node_modules/
+
+# The native Android project is generated at build time from the
+# Capacitor template + patches/android/ + android-overlay/; see
+# scripts/generate_android_project.sh. (Anchored so it doesn't match
+# patches/android/.)
+/android/

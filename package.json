@@ -1,0 +1,10 @@
+{
+  "name": "cim-trainer",
+  "private": true,
+  "description": "npm tooling for the Capacitor-based Android app; the website itself has no npm build step.",
+  "devDependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0"
+  }
+}

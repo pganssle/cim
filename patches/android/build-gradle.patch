@@ -1,0 +1,49 @@
+--- a/app/build.gradle
++++ b/app/build.gradle
+@@ -1,5 +1,10 @@
+ apply plugin: 'com.android.application'
+ 
++// Version information is injected at build time (from the git tag, in CI)
++// rather than committed here; local builds default to 1/"dev".
++def cimVersionCode = (project.hasProperty('cimVersionCode') ? project.property('cimVersionCode') : '1').toInteger()
++def cimVersionName = project.hasProperty('cimVersionName') ? project.property('cimVersionName') : 'dev'
++
+ android {
+     namespace = "us.ganbar.cim"
+     compileSdk = rootProject.ext.compileSdkVersion
+@@ -7,8 +12,8 @@
+         applicationId "us.ganbar.cim"
+         minSdkVersion rootProject.ext.minSdkVersion
+         targetSdkVersion rootProject.ext.targetSdkVersion
+-        versionCode 1
+-        versionName "1.0"
++        versionCode cimVersionCode
++        versionName cimVersionName
+         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+         aaptOptions {
+              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+@@ -16,8 +21,24 @@
+             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+         }
+     }
++    signingConfigs {
++        // Populated from the environment (CI decodes the keystore from a
++        // GitHub secret); without KEYSTORE_PATH set, release builds are
++        // simply unsigned.
++        release {
++            if (System.getenv("KEYSTORE_PATH")) {
++                storeFile file(System.getenv("KEYSTORE_PATH"))
++                storePassword System.getenv("KEYSTORE_PASSWORD")
++                keyAlias System.getenv("KEY_ALIAS")
++                keyPassword System.getenv("KEY_PASSWORD")
++            }
++        }
++    }
+     buildTypes {
+         release {
++            if (System.getenv("KEYSTORE_PATH")) {
++                signingConfig signingConfigs.release
++            }
+             minifyEnabled false
+             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+         }

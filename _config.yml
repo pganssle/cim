@@ -13,10 +13,19 @@ description: >- # this means to ignore newlines until "baseurl:"
 exclude:
   - .sass-cache/
   - .jekyll-cache/
+  - AGENTS.md
   - gemfiles/
   - Gemfile
   - Gemfile.lock
   - node_modules/
+  - package.json
+  - package-lock.json
+  - capacitor.config.json
+  - android/
+  - android-overlay/
+  - patches/
+  - scripts/
+  - docs/
   - vendor/bundle/
   - vendor/cache/
   - vendor/gems/
