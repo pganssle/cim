@@ -1,0 +1,100 @@
+# Deploys a preview of the built site for each pull request to the
+# pganssle/cim-previews repository, where GitHub Pages serves it at
+#   https://pganssle.github.io/cim-previews/pr-<number>/
+# and removes it again when the PR closes. One-time setup (previews repo,
+# deploy key, secret) is described in docs/previews.md.
+#
+# The preview is served from a different origin than the production site,
+# so its localStorage (training data!) is isolated from the real app. The
+# service worker does not run in previews (it is registered with a path
+# that only resolves at a site root), which also keeps previews out of any
+# browser cache.
+name: PR preview
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+
+# One preview deploy at a time per PR; later pushes supersede earlier ones.
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    # PRs from forks cannot read the deploy-key secret, so they get no
+    # preview (and must not: they would be publishing arbitrary content).
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    env:
+      PREVIEW_DIR: pr-${{ github.event.pull_request.number }}
+    steps:
+      - name: Checkout
+        if: github.event.action != 'closed'
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        if: github.event.action != 'closed'
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+      - name: Initialize site
+        if: github.event.action != 'closed'
+        run: make init
+      - name: Build site
+        if: github.event.action != 'closed'
+        run: make html
+        env:
+          JEKYLL_ENV: production
+
+      - name: Checkout previews repository
+        uses: actions/checkout@v4
+        with:
+          repository: pganssle/cim-previews
+          ssh-key: ${{ secrets.CIM_PREVIEWS_DEPLOY_KEY }}
+          path: previews
+
+      - name: Update preview
+        if: github.event.action != 'closed'
+        run: |
+          rm -rf "previews/$PREVIEW_DIR"
+          cp -r _site "previews/$PREVIEW_DIR"
+
+      - name: Remove preview
+        if: github.event.action == 'closed'
+        run: rm -rf "previews/$PREVIEW_DIR"
+
+      - name: Push to previews repository
+        run: |
+          cd previews
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing to push"
+            exit 0
+          fi
+          git commit -m "Preview for ${{ github.repository }}#${{ github.event.pull_request.number }}"
+          # Another PR's preview may land between our checkout and push.
+          for attempt in 1 2 3; do
+            git push && exit 0
+            git pull --rebase
+          done
+          exit 1
+
+      - name: Comment preview link
+        if: github.event.action != 'closed'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: preview
+          message: |
+            Preview for ${{ github.event.pull_request.head.sha }}:
+            https://pganssle.github.io/cim-previews/${{ env.PREVIEW_DIR }}/
+
+            It can take a minute or two after this comment appears for
+            GitHub Pages to publish the update.
