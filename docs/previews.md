@@ -23,8 +23,24 @@ which only resolves when the site is served from a domain root. That is
 fine for previews (no cache-first worker to pollute the browser), and the
 service worker behavior is covered by the end-to-end tests instead.
 
-PRs from forks do not get previews; they cannot (and must not) read the
-deploy-key secret.
+## Pull requests from forks
+
+Fork PRs get previews too, but publishing one requires a manual approval
+(under the run's "deploy" job) because the workflow runs on
+`pull_request_target`, which has access to the deploy-key secret. The
+privileges are split so that approval is about *publishing content*, not
+about code execution:
+
+- Only the build job executes PR code, with a read-only token and no
+  secrets.
+- Only the deploy job holds the deploy key, and it never executes PR
+  code — it publishes the built artifact. For fork PRs it runs in the
+  `preview-fork` environment, which requires review; same-repo PRs use
+  the unprotected `preview` environment and deploy automatically.
+
+Before approving, remember that the preview publishes the PR's HTML/JS on
+the `pganssle.github.io` origin, which is shared with other project sites
+(localStorage in particular), so give the diff a glance first.
 
 [cim-previews]: https://github.com/pganssle/cim-previews
 
@@ -51,5 +67,12 @@ deploy-key secret.
    and variables → Actions → New repository secret.
 
 6. Delete both local key files.
+
+7. Create the protected environment for fork previews **before** this
+   workflow lands on main (deploying to a nonexistent environment
+   auto-creates it *without* protection): Settings → Environments → New
+   environment → name it `preview-fork` → check "Required reviewers" and
+   add yourself. The unprotected `preview` environment used by same-repo
+   PRs is auto-created on first use and needs no setup.
 
 To rotate the key, repeat steps 3-6.

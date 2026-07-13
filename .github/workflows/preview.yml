@@ -2,7 +2,21 @@
 # pganssle/cim-previews repository, where GitHub Pages serves it at
 #   https://pganssle.github.io/cim-previews/pr-<number>/
 # and removes it again when the PR closes. One-time setup (previews repo,
-# deploy key, secret) is described in docs/previews.md.
+# deploy key, secret, protected environment) is described in
+# docs/previews.md.
+#
+# This runs on pull_request_target so that pull requests from forks can
+# get previews too, with the privileges split across two jobs:
+#
+#  - The build job is the only one that executes code from the pull
+#    request, and it runs with a read-only token and no secrets, so there
+#    is nothing for a malicious PR to steal. The workflow definition
+#    itself always comes from the main branch.
+#  - The deploy job is the only one with the deploy key, and it never
+#    executes PR code; it only publishes the built artifact. For PRs from
+#    forks it runs in the "preview-fork" environment, which requires
+#    manual approval, so untrusted content is only published after review.
+#    Same-repo PRs deploy without approval.
 #
 # The preview is served from a different origin than the production site,
 # so its localStorage (training data!) is isolated from the real app. The
@@ -12,7 +26,7 @@
 name: PR preview
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, reopened, synchronize, closed]
 
 # One preview deploy at a time per PR; later pushes supersede earlier ones.
@@ -22,42 +36,65 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
-  preview:
+  build:
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
-    # PRs from forks cannot read the deploy-key secret, so they get no
-    # preview (and must not: they would be publishing arbitrary content).
-    if: github.event.pull_request.head.repo.full_name == github.repository
-    env:
-      PREVIEW_DIR: pr-${{ github.event.pull_request.number }}
     steps:
-      - name: Checkout
-        if: github.event.action != 'closed'
+      - name: Checkout pull request
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
 
       - name: Setup Ruby
-        if: github.event.action != 'closed'
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
           bundler-cache: true
       - name: Initialize site
-        if: github.event.action != 'closed'
         run: make init
       - name: Build site
-        if: github.event.action != 'closed'
         run: make html
         env:
           JEKYLL_ENV: production
 
+      - name: Upload built site
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-site
+          path: _site/
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    # Also run on PR close (when build is skipped) to clean the preview up.
+    if: >-
+      always() &&
+      (needs.build.result == 'success' || github.event.action == 'closed')
+    environment: >-
+      ${{ github.event.pull_request.head.repo.full_name == github.repository
+          && 'preview' || 'preview-fork' }}
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      PREVIEW_DIR: pr-${{ github.event.pull_request.number }}
+    steps:
       - name: Checkout previews repository
         uses: actions/checkout@v4
         with:
           repository: pganssle/cim-previews
           ssh-key: ${{ secrets.CIM_PREVIEWS_DEPLOY_KEY }}
           path: previews
+
+      - name: Download built site
+        if: github.event.action != 'closed'
+        uses: actions/download-artifact@v4
+        with:
+          name: preview-site
+          path: _site
 
       - name: Update preview
         if: github.event.action != 'closed'
