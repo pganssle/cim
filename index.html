@@ -106,19 +106,12 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                     <i class="fa fa-solid fa-music"></i>
                   </a>
                 </div>
-                <div class="infobox-container">
+                <div class="infobox-container" id="i-infobox-trigger-container"
+                     data-newest-date="{{ site.data.changelog[0].date | default: '' }}">
                     <a href="#" class="infobox-trigger"
                        id="i-infobox-trigger"
                        onclick="toggle_infobox_visibility()">
                     <i class="fa fa-solid fa-info-circle"></i>
-                  </a>
-                </div>
-                <div class="infobox-container" id="changelog-trigger-container"
-                     data-newest-date="{{ site.data.changelog[0].date | default: '' }}">
-                    <a href="#" class="infobox-trigger"
-                       id="changelog-trigger"
-                       onclick="toggle_changelog_visibility()">
-                    <i class="fa fa-solid fa-newspaper-o"></i>
                   </a>
                 </div>
                 <div class="infobox-container">
@@ -280,11 +273,30 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
 
 <!-- Infobox -->
 <div class="infobox" id="i-infobox">
-    <p>This is an implementation of <a href="http://pom.sagepub.com/content/42/1/86">Eguchi's Chord Identification method</a> (paper access can be found via <a href="https://en.wikipedia.org/wiki/Sci-Hub">Sci-Hub</a>). See also <a href="https://ichionkai.co.jp/english3.html">Ichionkai Music School</a>.</p>
-    <p><a href="https://youtu.be/kNfkm6PQC20">Here is a short video explaining how we use it</a>.</p>
-    <p>This is a method for teaching absolute pitch to children aged 2-6. Children should practice ~5x per day for 2-3 minutes (about 20-25 identifications). Chords are always identified with colors, and progress in the sequence <span onclick="trigger_easter_egg()">red</span> (CEG), yellow (CFA), blue (HDG), black (ACF), green (DGH), orange (EGC), purple (FAC), pink (GHD), brown (GCE).</p>
-    <p>Introduce the chords to the children one at a time, spacing out new chord introductions by at least 2 weeks each time. Do not introduce a new chord until the child can identify all presented chords with 100% accuracy.</p>
-    <p><b>Note</b>: This application is an early alpha. I'm still in the first training phase so I've put off work on the later parts of the method until my son catches up. Let me know if you need a feature to make this work, of if it seems that I've misunderstood the method as described in the paper. Please feel free to make pull requests or report issues on <a href="https://github.com/pganssle/cim">the GitHub repository</a>.</p>
+    <div class="infobox-scroll-content" id="i-infobox-content">
+        <p>This is an implementation of <a href="http://pom.sagepub.com/content/42/1/86">Eguchi's Chord Identification method</a> (paper access can be found via <a href="https://en.wikipedia.org/wiki/Sci-Hub">Sci-Hub</a>). See also <a href="https://ichionkai.co.jp/english3.html">Ichionkai Music School</a>. The code is open source and developed <a href="https://github.com/pganssle/cim">on GitHub</a>.</p>
+        <p><a href="https://youtu.be/kNfkm6PQC20">Here is a short video explaining how we use it</a>.</p>
+        <p>This is a method for teaching absolute pitch to children aged 2-6. Children should practice ~5x per day for 2-3 minutes (about 20-25 identifications). Chords are always identified with colors, and progress in the sequence <span onclick="trigger_easter_egg()">red</span> (CEG), yellow (CFA), blue (HDG), black (ACF), green (DGH), orange (EGC), purple (FAC), pink (GHD), brown (GCE).</p>
+        <p>Introduce the chords to the children one at a time, spacing out new chord introductions by at least 2 weeks each time. Do not introduce a new chord until the child can identify all presented chords with 100% accuracy.</p>
+
+        <section class="changelog-section" id="changelog-section">
+            <h2>What's New</h2>
+            {% for release in site.data.changelog %}
+            <div class="changelog-entry">
+                <h3 class="changelog-date">{{ release.date }}</h3>
+                <ul>
+                    {% for entry in release.entries %}
+                    <li>{{ entry }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </section>
+    </div>
+    <button type="button" class="changelog-scroll-hint" id="changelog-scroll-hint"
+            onclick="scroll_to_changelog()" aria-label="Scroll to What's New">
+        <span aria-hidden="true">&darr;</span> What's new below
+    </button>
 </div>
 
 <!-- Music player -->
@@ -334,21 +346,6 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
             </a>
         </div>
     </div>
-</div>
-
-<!-- Changelog / What's New -->
-<div class="infobox changelog-infobox" id="changelog-infobox">
-    <h2>What's New</h2>
-    {% for release in site.data.changelog %}
-    <div class="changelog-entry">
-        <h3 class="changelog-date">{{ release.date }}</h3>
-        <ul>
-            {% for entry in release.entries %}
-            <li>{{ entry }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endfor %}
 </div>
 
 <!-- Statistics -->

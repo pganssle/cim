@@ -1625,10 +1625,20 @@ function toggle_trainer_visibility() {
 }
 
 function toggle_infobox_visibility() {
-    toggle_visibility(document.getElementById("i-infobox"));
+    const infobox = document.getElementById("i-infobox");
+    const opening = !is_visible_infobox(infobox);
+    toggle_visibility(infobox);
+    if (opening) {
+        requestAnimationFrame(update_changelog_visibility);
+    } else {
+        update_changelog_visibility();
+    }
 }
 
-const _CHANGELOG_TRIGGER_CONTAINER_ID = "changelog-trigger-container";
+const _CHANGELOG_TRIGGER_CONTAINER_ID = "i-infobox-trigger-container";
+const _CHANGELOG_SECTION_ID = "changelog-section";
+const _CHANGELOG_SCROLL_CONTENT_ID = "i-infobox-content";
+const _CHANGELOG_SCROLL_HINT_ID = "changelog-scroll-hint";
 
 function get_newest_changelog_date() {
     return document.getElementById(_CHANGELOG_TRIGGER_CONTAINER_ID)
@@ -1650,6 +1660,15 @@ function check_changelog_badge() {
     }
 }
 
+function has_unread_changelog() {
+    const newest = get_newest_changelog_date();
+    if (!newest || STATE.suppress_changelog_notifications) {
+        return false;
+    }
+    return !STATE.changelog_last_read_date ||
+        STATE.changelog_last_read_date < newest;
+}
+
 function mark_changelog_read() {
     const newest = get_newest_changelog_date();
     if (newest && STATE.changelog_last_read_date !== newest) {
@@ -1660,9 +1679,36 @@ function mark_changelog_read() {
         .classList.remove("has-updates");
 }
 
-function toggle_changelog_visibility() {
-    mark_changelog_read();
-    toggle_visibility(document.getElementById("changelog-infobox"));
+function update_changelog_visibility() {
+    const infobox = document.getElementById("i-infobox");
+    const scroll_content = document.getElementById(_CHANGELOG_SCROLL_CONTENT_ID);
+    const changelog = document.getElementById(_CHANGELOG_SECTION_ID);
+    const scroll_hint = document.getElementById(_CHANGELOG_SCROLL_HINT_ID);
+    scroll_hint.classList.remove("visible");
+
+    if (!is_visible_infobox(infobox) || !has_unread_changelog()) {
+        return;
+    }
+
+    const content_rect = scroll_content.getBoundingClientRect();
+    const changelog_rect = changelog.getBoundingClientRect();
+    const changelog_is_visible = changelog_rect.top < content_rect.bottom &&
+        changelog_rect.bottom > content_rect.top;
+    if (changelog_is_visible) {
+        mark_changelog_read();
+        return;
+    }
+
+    const can_scroll_down = scroll_content.scrollTop + scroll_content.clientHeight <
+        scroll_content.scrollHeight - 1;
+    scroll_hint.classList.toggle("visible", can_scroll_down);
+}
+
+function scroll_to_changelog() {
+    document.getElementById(_CHANGELOG_SECTION_ID).scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+    });
 }
 
 function toggle_stats_history_visibility() {
@@ -1942,6 +1988,10 @@ document.addEventListener("DOMContentLoaded", function() {
     update_stats_display();
     clean_session_history();
     check_changelog_badge();
+
+    document.getElementById(_CHANGELOG_SCROLL_CONTENT_ID).addEventListener(
+        "scroll", update_changelog_visibility, { passive: true });
+    window.addEventListener("resize", update_changelog_visibility);
 });
 
 document.addEventListener("click", function(event) {
