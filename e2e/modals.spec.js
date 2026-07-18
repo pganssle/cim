@@ -18,6 +18,51 @@ test.describe("Informational modal", () => {
         await expect(page.locator("#i-infobox")).toContainText("Eguchi");
     });
 
+    test("includes What's New and the GitHub link in the updated introduction", async ({ page }) => {
+        await goto_app(page);
+
+        await expect(page.locator("#changelog-trigger")).toHaveCount(0);
+        await page.locator("#i-infobox-trigger").click();
+
+        const first_paragraph = page.locator("#i-infobox-content > p").first();
+        await expect(first_paragraph).toContainText(
+            "The code is open source and developed on GitHub");
+        await expect(first_paragraph.locator("a[href='https://github.com/pganssle/cim']"))
+            .toHaveText("on GitHub");
+        await expect(page.locator("#i-infobox")).not.toContainText("early alpha");
+        await expect(page.locator("#changelog-section h2")).toHaveText("What's New");
+        await expect(page.locator("#changelog-section .changelog-entry")).not.toHaveCount(0);
+    });
+
+    test("keeps the news badge until What's New is visible", async ({ page }) => {
+        await page.setViewportSize({ width: 800, height: 400 });
+        await goto_app(page);
+
+        const trigger_container = page.locator("#i-infobox-trigger-container");
+        await expect(trigger_container).toHaveClass(/has-updates/);
+
+        await page.locator("#i-infobox-trigger").click();
+        await expect(page.locator("#i-infobox")).toHaveClass(/visible/);
+        await expect(page.locator("#changelog-scroll-hint")).toHaveClass(/visible/);
+        await expect(trigger_container).toHaveClass(/has-updates/);
+
+        const scroll_content = page.locator("#i-infobox-content");
+        await expect.poll(() => scroll_content.evaluate(
+            (element) => element.scrollHeight > element.clientHeight)).toBe(true);
+        await page.locator("#changelog-scroll-hint").click();
+
+        await expect(page.locator("#changelog-section h2")).toBeInViewport();
+        await expect(trigger_container).not.toHaveClass(/has-updates/);
+        await expect(page.locator("#changelog-scroll-hint")).not.toHaveClass(/visible/);
+        await expect.poll(() => page.evaluate(() =>
+            JSON.parse(localStorage.getItem("cim_state")).changelog_last_read_date))
+            .toBe(await trigger_container.getAttribute("data-newest-date"));
+
+        await page.reload();
+        await expect(page.locator("#play-button")).not.toHaveClass(/deactivated/);
+        await expect(trigger_container).not.toHaveClass(/has-updates/);
+    });
+
     test("clicking elsewhere closes it", async ({ page }) => {
         await goto_app(page);
 

@@ -1023,6 +1023,14 @@ function load_state() {
         state["current_profile"] = _GUEST_USER_ID;
     }
 
+    if (state["changelog_last_read_date"] === undefined) {
+        state["changelog_last_read_date"] = null;
+    }
+
+    if (state["suppress_changelog_notifications"] === undefined) {
+        state["suppress_changelog_notifications"] = false;
+    }
+
     for (let profile of Object.values(state.profiles)) {
         initialize_profile_defaults(profile);
     }
@@ -1438,6 +1446,9 @@ function populate_profile_settings() {
     let persist_reaction_face_elem = document.getElementById("persist_reaction_face_setting");
     persist_reaction_face_elem.checked = profile.persist_reaction_face;
 
+    document.getElementById("suppress_changelog_notifications_setting").checked =
+        STATE.suppress_changelog_notifications;
+
     profile_dialog.dataset.id = profile["id"];
 
     // It is not allowed to delete the guest user or change its name.
@@ -1480,6 +1491,10 @@ function submit_profile_changes() {
     current_profile.single_note_mode = profile_values.single_note_mode;
     current_profile.single_note_correctness_mode = profile_values.single_note_correctness_mode;
     current_profile.persist_reaction_face = profile_values.persist_reaction_face;
+
+    STATE.suppress_changelog_notifications =
+        document.getElementById("suppress_changelog_notifications_setting").checked;
+    check_changelog_badge();
 
     save_state();
     populate_profile_pulldown();
@@ -1610,7 +1625,90 @@ function toggle_trainer_visibility() {
 }
 
 function toggle_infobox_visibility() {
-    toggle_visibility(document.getElementById("i-infobox"));
+    const infobox = document.getElementById("i-infobox");
+    const opening = !is_visible_infobox(infobox);
+    toggle_visibility(infobox);
+    if (opening) {
+        requestAnimationFrame(update_changelog_visibility);
+    } else {
+        update_changelog_visibility();
+    }
+}
+
+const _CHANGELOG_TRIGGER_CONTAINER_ID = "i-infobox-trigger-container";
+const _CHANGELOG_SECTION_ID = "changelog-section";
+const _CHANGELOG_SCROLL_CONTENT_ID = "i-infobox-content";
+const _CHANGELOG_SCROLL_HINT_ID = "changelog-scroll-hint";
+
+function get_newest_changelog_date() {
+    return document.getElementById(_CHANGELOG_TRIGGER_CONTAINER_ID)
+        ?.dataset?.newestDate || null;
+}
+
+function check_changelog_badge() {
+    const newest = get_newest_changelog_date();
+    const container = document.getElementById(_CHANGELOG_TRIGGER_CONTAINER_ID);
+    if (!newest || STATE.suppress_changelog_notifications) {
+        container.classList.remove("has-updates");
+        return;
+    }
+    const last_read = STATE.changelog_last_read_date;
+    if (!last_read || last_read < newest) {
+        container.classList.add("has-updates");
+    } else {
+        container.classList.remove("has-updates");
+    }
+}
+
+function has_unread_changelog() {
+    const newest = get_newest_changelog_date();
+    if (!newest || STATE.suppress_changelog_notifications) {
+        return false;
+    }
+    return !STATE.changelog_last_read_date ||
+        STATE.changelog_last_read_date < newest;
+}
+
+function mark_changelog_read() {
+    const newest = get_newest_changelog_date();
+    if (newest && STATE.changelog_last_read_date !== newest) {
+        STATE.changelog_last_read_date = newest;
+        save_state();
+    }
+    document.getElementById(_CHANGELOG_TRIGGER_CONTAINER_ID)
+        .classList.remove("has-updates");
+}
+
+function update_changelog_visibility() {
+    const infobox = document.getElementById("i-infobox");
+    const scroll_content = document.getElementById(_CHANGELOG_SCROLL_CONTENT_ID);
+    const changelog = document.getElementById(_CHANGELOG_SECTION_ID);
+    const scroll_hint = document.getElementById(_CHANGELOG_SCROLL_HINT_ID);
+    scroll_hint.classList.remove("visible");
+
+    if (!is_visible_infobox(infobox) || !has_unread_changelog()) {
+        return;
+    }
+
+    const content_rect = scroll_content.getBoundingClientRect();
+    const changelog_rect = changelog.getBoundingClientRect();
+    const changelog_is_visible = changelog_rect.top < content_rect.bottom &&
+        changelog_rect.bottom > content_rect.top;
+    if (changelog_is_visible) {
+        mark_changelog_read();
+        return;
+    }
+
+    const can_scroll_down = scroll_content.scrollTop + scroll_content.clientHeight <
+        scroll_content.scrollHeight - 1;
+    scroll_hint.classList.toggle("visible", can_scroll_down);
+}
+
+function scroll_to_changelog() {
+    document.getElementById(_CHANGELOG_SECTION_ID).scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+    });
 }
 
 function toggle_stats_history_visibility() {
@@ -1889,6 +1987,11 @@ document.addEventListener("DOMContentLoaded", function() {
     populate_profile_pulldown();
     update_stats_display();
     clean_session_history();
+    check_changelog_badge();
+
+    document.getElementById(_CHANGELOG_SCROLL_CONTENT_ID).addEventListener(
+        "scroll", update_changelog_visibility, { passive: true });
+    window.addEventListener("resize", update_changelog_visibility);
 });
 
 document.addEventListener("click", function(event) {

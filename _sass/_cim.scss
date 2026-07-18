@@ -823,6 +823,94 @@ div.stats-history-item > div.session-emoji {
     font-size: 2em;
 }
 
+/* Global settings divider in profile dialog */
+div.entry-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1rem 0 0.5rem;
+
+    &::before, &::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: currentColor;
+        opacity: 0.3;
+    }
+}
+
+span.divider-label {
+    font-size: 0.8em;
+    opacity: 0.7;
+    white-space: nowrap;
+}
+
+/* Changelog notification badge on the information button */
+div.infobox-container.has-updates > a {
+    position: relative;
+
+    &::after {
+        content: '';
+        display: block;
+        width: 0.55rem;
+        height: 0.55rem;
+        background-color: #e53e3e;
+        border-radius: 50%;
+        position: absolute;
+        top: -0.15rem;
+        right: -0.05rem;
+    }
+}
+
+/* Information modal and embedded changelog */
+div.infobox#i-infobox {
+    padding: 0;
+    overflow: hidden;
+}
+
+div.infobox-scroll-content {
+    box-sizing: border-box;
+    max-height: 90vh;
+    max-height: 90dvh;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+section.changelog-section h2 {
+    margin-bottom: 0.5rem;
+}
+
+button.changelog-scroll-hint {
+    display: none;
+    position: absolute;
+    bottom: 0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid currentColor;
+    border-radius: 1rem;
+    color: inherit;
+    background: inherit;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+button.changelog-scroll-hint.visible {
+    display: block;
+}
+
+div.changelog-entry + div.changelog-entry {
+    border-top: 1px solid #ccc;
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+}
+
+h3.changelog-date {
+    margin: 0.25rem 0;
+}
+
 
 /* Flags */
 $red: red;
