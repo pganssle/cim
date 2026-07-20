@@ -1,5 +1,9 @@
 - name: piano_1
   display: "🎹 Piano"
+- name: piano_underwater
+  display: "🎹🐟 Underwater Piano"
+- name: piano_ash
+  display: "🎹🌋 Ash's Piano"
 - name: piano_old
   display: "🎹🧓 Piano (old)"
   fallback: "piano_1"
