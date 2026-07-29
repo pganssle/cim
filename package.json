@@ -1,17 +1,35 @@
 {
   "name": "cim-trainer",
   "private": true,
-  "description": "npm tooling for the automated test suite; the website itself has no npm build step.",
+  "description": "npm tooling for automated tests and changelog compilation; the website itself has no npm build step.",
   "type": "module",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
+    "release:news": "news-fragments burn",
     "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@playwright/test": "1.61.1",
     "http-server": "14.1.1",
+    "news-fragments": "^4.4.4",
     "playwright": "1.61.1"
+  },
+  "release-it": {
+    "plugins": {
+      "news-fragments": {
+        "changelogFile": "NEWS.md",
+        "changelogDateFormat": "YYYY-MM-DD",
+        "changelogTemplate": "## {{newVersion}}\n\n{{#fragments}}{{#each fragmentEntries}}- {{this}}\n{{/each}}{{/fragments}}\n",
+        "fragmentsFolder": "changelog.d",
+        "fragmentsTypes": [
+          {
+            "title": "Changes",
+            "extension": "md"
+          }
+        ]
+      }
+    }
   }
 }

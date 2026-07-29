@@ -1,8 +1,7 @@
-# changelog.d
+# Changelog fragments
 
 Drop one `.md` file here per user-visible change. Each file becomes a single
-bullet point in the changelog. File names don't matter — entries are sorted
-alphabetically before being compiled.
+bullet point in the changelog. File names don't matter.
 
 Write in plain English from the user's perspective. Good:
 
@@ -12,5 +11,5 @@ Bad:
 
     Refactored `should_load_single_note_trainer` to accept a correctness flag.
 
-Run `make release` to compile these into `_data/changelog.yml` and `NEWS.md`,
-then rebuild the site. The files in this directory are deleted after compilation.
+Run `make release` to compile the fragments into `NEWS.md` and rebuild the
+site. The processed `.md` files are deleted after compilation.

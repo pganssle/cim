@@ -30,8 +30,9 @@ test.describe("Informational modal", () => {
         await expect(first_paragraph.locator("a[href='https://github.com/pganssle/cim']"))
             .toHaveText("on GitHub");
         await expect(page.locator("#i-infobox")).not.toContainText("early alpha");
-        await expect(page.locator("#changelog-section h2")).toHaveText("What's New");
-        await expect(page.locator("#changelog-section .changelog-entry")).not.toHaveCount(0);
+        await expect(page.locator("#changelog-section > h2")).toHaveText("What's New");
+        await expect(page.locator("#changelog-section .changelog-entries > h2"))
+            .not.toHaveCount(0);
 
         const changelog = page.locator(".changelog-container");
         await expect(changelog).toContainText("What's New");
@@ -61,7 +62,7 @@ test.describe("Informational modal", () => {
             (element) => element.scrollHeight > element.clientHeight)).toBe(true);
         await page.locator("#changelog-scroll-hint").click();
 
-        await expect(page.locator("#changelog-section h2")).toBeInViewport();
+        await expect(page.locator("#changelog-section > h2")).toBeInViewport();
         await expect(trigger_container).not.toHaveClass(/has-updates/);
         await expect(page.locator("#changelog-scroll-hint")).not.toHaveClass(/visible/);
         await expect.poll(() => page.evaluate(() =>

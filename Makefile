@@ -6,7 +6,9 @@ help:
 	@echo ''
 	@echo 'Usage:'
 	@echo 'make init          Initialize directory'
+	@echo 'make serve         Run the development server'
 	@echo 'make html          Generate the web site'
+	@echo 'make release       Compile changelog fragments and build the site'
 	@echo 'make clean         Clean up generated site'
 	@echo ''
 	@echo 'Tests:'
@@ -29,8 +31,8 @@ serve: vendor/bundle
 	$(JEKYLL) serve -w
 
 .PHONY: release
-release: vendor/bundle
-	uv run scripts/compile_changelog.py
+release: vendor/bundle node_modules
+	npm run release:news -- "$$(date +%F)"
 	$(JEKYLL) build
 
 .PHONY: clean
