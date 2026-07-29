@@ -1,6 +1,9 @@
 ---
 ---
 {% include note_variables.html %}
+{% capture news_markdown %}{% include_relative NEWS.md %}{% endcapture %}
+{% assign news_releases = news_markdown | split: "## " %}
+{% assign newest_news_date = news_releases[1] | slice: 0, 10 | strip %}
 
 <!doctype html>
 <html>
@@ -107,7 +110,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
                   </a>
                 </div>
                 <div class="infobox-container" id="i-infobox-trigger-container"
-                     data-newest-date="{{ site.data.changelog[0].date | default: '' }}">
+                     data-newest-date="{{ newest_news_date | default: '' }}">
                     <a href="#" class="infobox-trigger"
                        id="i-infobox-trigger"
                        onclick="toggle_infobox_visibility()">
@@ -282,16 +285,9 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         <div class="changelog-container">
             <section class="changelog-section" id="changelog-section">
                 <h2>What's New</h2>
-                {% for release in site.data.changelog %}
-                <div class="changelog-entry">
-                    <h3 class="changelog-date">{{ release.date }}</h3>
-                    <ul>
-                        {% for entry in release.entries %}
-                        <li>{{ entry }}</li>
-                        {% endfor %}
-                    </ul>
+                <div class="changelog-entries">
+                    {{ news_markdown | markdownify }}
                 </div>
-                {% endfor %}
             </section>
         </div>
     </div>
@@ -437,7 +433,7 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         <span class="divider-label">App Settings (All Profiles)</span>
     </div>
     <div class="entry-row">
-        <label for="suppress_changelog_notifications_setting">Don't notify me about app changes:</label>
+        <label for="suppress_changelog_notifications_setting">Disable What's New notifications:</label>
         <input type="checkbox" id="suppress_changelog_notifications_setting" class="entry">
     </div>
     <div class="button-container">

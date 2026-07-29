@@ -60,3 +60,33 @@ test.describe("Profiles", () => {
         await expect(page.locator("#delete-profile-button")).toBeDisabled();
     });
 });
+
+test.describe("App settings", () => {
+    test("What's New notifications are enabled by default and can be disabled", async ({ page }) => {
+        await goto_app(page);
+
+        const trigger_container = page.locator("#i-infobox-trigger-container");
+        const notification_setting = page.getByLabel("Disable What's New notifications:");
+        await expect(trigger_container).toHaveClass(/has-updates/);
+
+        await page.locator("#profile-settings-trigger").click();
+        await expect(notification_setting).not.toBeChecked();
+        await notification_setting.check();
+        await page.locator("#submit-changes-button").click();
+
+        await expect(trigger_container).not.toHaveClass(/has-updates/);
+        await expect.poll(() => page.evaluate(() =>
+            JSON.parse(localStorage.getItem("cim_state")).suppress_changelog_notifications))
+            .toBe(true);
+
+        await page.reload();
+        await expect(page.locator("#play-button")).not.toHaveClass(/deactivated/);
+        await expect(trigger_container).not.toHaveClass(/has-updates/);
+        await page.locator("#profile-settings-trigger").click();
+        await expect(notification_setting).toBeChecked();
+
+        await notification_setting.uncheck();
+        await page.locator("#submit-changes-button").click();
+        await expect(trigger_container).toHaveClass(/has-updates/);
+    });
+});

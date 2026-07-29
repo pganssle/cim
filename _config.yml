@@ -12,6 +12,7 @@ description: >- # this means to ignore newlines until "baseurl:"
 #
 exclude:
   - .sass-cache/
+  - android/
   - .jekyll-cache/
   - docs/
   - gemfiles/

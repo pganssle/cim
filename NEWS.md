@@ -1,5 +1,3 @@
-# News
-
 ## 2026-06-06
 - Fixed the stats history popup, which was too wide and required horizontal scrolling.
 - Single note stats now appear in the stats history popup when single note mode is active.
