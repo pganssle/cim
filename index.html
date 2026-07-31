@@ -269,6 +269,11 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
     <a id="download-link" class="download-button colorscheme-toggle" onclick="download_state()">
         <i class="fa fa-download fa-fw" aria-hidden="true"></i>
     </a>
+    <a id="upload-link" class="download-button colorscheme-toggle" onclick="open_import_file_picker()">
+        <i class="fa fa-upload fa-fw" aria-hidden="true"></i>
+    </a>
+    <input type="file" id="import-file-input" accept="application/json,.json"
+           onchange="import_state_file(this)" hidden>
 </div>
 <!------------------------------------------------------>
 <!----------------------  Modals  ---------------------->
@@ -440,6 +445,47 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         <button class="button settings-button" id="delete-profile-button" onclick="delete_profile()">Delete Profile</button>
         <button class="button settings-button" id="submit-changes-button" onclick="submit_profile_changes()">Save Changes</button>
         <button class="button add-button" id="add-user-button" onclick="add_profile()">Add Profile</button>
+    </div>
+</div>
+
+<!-- Import / merge dialog (unlocked with the export easter egg) -->
+<div class="profile-info-container import-state-container" id="import-state-container"
+     role="dialog" aria-modal="true" aria-labelledby="import-state-title">
+    <button type="button" class="close-button" aria-label="Cancel import"
+            onclick="cancel_import()">&times;</button>
+    <div id="import-action-step">
+        <h2 id="import-state-title">Import backup</h2>
+        <p id="import-file-description"></p>
+        <p>Would you like to merge this backup with the data on this device,
+           or replace the data on this device?</p>
+        <div class="button-container">
+            <button type="button" id="merge-import-button"
+                    onclick="merge_import()">Merge</button>
+            <button type="button" id="replace-import-button"
+                    onclick="replace_import()">Replace</button>
+            <button type="button" id="cancel-import-button"
+                    onclick="cancel_import()">Cancel</button>
+        </div>
+    </div>
+    <div id="import-conflict-step" hidden>
+        <h2 id="import-conflict-title"></h2>
+        <p>Choose which value to keep for each setting.</p>
+        <div class="import-settings-grid" id="import-settings-grid"></div>
+        <div class="import-all-controls">
+            <button type="button" id="all-from-newer-button"
+                    onclick="choose_all_import_settings('newer')">All from newer</button>
+            <label>
+                <input type="checkbox" id="apply-import-choice-to-all">
+                Apply choice to all users
+            </label>
+            <button type="button" id="all-from-older-button"
+                    onclick="choose_all_import_settings('older')">All from older</button>
+        </div>
+        <div class="button-container">
+            <button type="button" id="next-import-conflict-button"
+                    onclick="save_import_settings_choice()">Next user</button>
+            <button type="button" onclick="cancel_import()">Cancel</button>
+        </div>
     </div>
 </div>
 <div class="shape-container">

@@ -751,6 +751,67 @@ a.download-button.visible {
     display: block;
 }
 
+.import-state-container {
+    max-height: 90vh;
+    max-height: 90dvh;
+    overflow-y: auto;
+
+    @media only screen and (max-width: 700px) {
+        width: 90vw;
+        width: 90dvw;
+    }
+}
+
+.import-state-container button {
+    display: inline-block;
+}
+
+.import-state-container .close-button {
+    border: 0;
+    padding: 0;
+    color: inherit;
+    background: transparent;
+    cursor: pointer;
+}
+
+.import-state-container h2 {
+    padding-right: 2.5rem;
+}
+
+.import-settings-grid {
+    display: grid;
+    grid-template-columns: minmax(7rem, 1fr) minmax(9rem, 2fr) minmax(9rem, 2fr);
+    gap: 0.5rem 1rem;
+    align-items: center;
+
+    @media only screen and (max-width: 700px) {
+        grid-template-columns: minmax(6rem, 1fr) minmax(7rem, 2fr) minmax(7rem, 2fr);
+        gap: 0.4rem;
+        font-size: 0.85em;
+    }
+}
+
+.import-settings-grid .import-setting-heading {
+    font-weight: bold;
+    text-align: center;
+}
+
+.import-settings-grid .import-setting-value {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    overflow-wrap: anywhere;
+}
+
+.import-all-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: space-between;
+    align-items: center;
+    margin: 1rem 0;
+}
+
 // Stats container
 div.stats-history-container {
     width: max-content;
