@@ -1,4 +1,5 @@
 import { test, expect, goto_app } from "./fixtures/audio.js";
+import { expect_no_red_dot, expect_red_dot } from "./fixtures/visual.js";
 
 test.describe("Profiles", () => {
     test("a profile can be added, edited, and deleted", async ({ page }) => {
@@ -66,8 +67,10 @@ test.describe("App settings", () => {
         await goto_app(page);
 
         const trigger_container = page.locator("#i-infobox-trigger-container");
+        const trigger = page.locator("#i-infobox-trigger");
         const notification_setting = page.getByLabel("Disable What's New notifications:");
         await expect(trigger_container).toHaveClass(/has-updates/);
+        await expect_red_dot(trigger);
 
         await page.locator("#profile-settings-trigger").click();
         await expect(notification_setting).not.toBeChecked();
@@ -75,6 +78,7 @@ test.describe("App settings", () => {
         await page.locator("#submit-changes-button").click();
 
         await expect(trigger_container).not.toHaveClass(/has-updates/);
+        await expect_no_red_dot(trigger);
         await expect.poll(() => page.evaluate(() =>
             JSON.parse(localStorage.getItem("cim_state")).suppress_changelog_notifications))
             .toBe(true);
@@ -82,11 +86,13 @@ test.describe("App settings", () => {
         await page.reload();
         await expect(page.locator("#play-button")).not.toHaveClass(/deactivated/);
         await expect(trigger_container).not.toHaveClass(/has-updates/);
+        await expect_no_red_dot(trigger);
         await page.locator("#profile-settings-trigger").click();
         await expect(notification_setting).toBeChecked();
 
         await notification_setting.uncheck();
         await page.locator("#submit-changes-button").click();
         await expect(trigger_container).toHaveClass(/has-updates/);
+        await expect_red_dot(trigger);
     });
 });
