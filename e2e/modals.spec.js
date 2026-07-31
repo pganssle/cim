@@ -1,5 +1,6 @@
 import { test, expect, goto_app } from "./fixtures/audio.js";
 import { answer_rounds, add_profile } from "./fixtures/flows.js";
+import { expect_no_red_dot, expect_red_dot } from "./fixtures/visual.js";
 
 // Clicks just outside the left edge of the given element, at its vertical
 // middle. How much of the page the modal covers varies between browser
@@ -45,17 +46,23 @@ test.describe("Informational modal", () => {
         }).toBe(true);
     });
 
-    test("keeps the news badge until What's New is visible", async ({ page }) => {
+    test("shows the news badge on a first visit until What's New is visible", async ({ page }) => {
         await page.setViewportSize({ width: 800, height: 400 });
         await goto_app(page);
 
         const trigger_container = page.locator("#i-infobox-trigger-container");
+        const trigger = page.locator("#i-infobox-trigger");
         await expect(trigger_container).toHaveClass(/has-updates/);
+        await expect_red_dot(trigger);
+        await expect.poll(() => page.evaluate(() =>
+            JSON.parse(localStorage.getItem("cim_state")).changelog_last_read_date))
+            .toBe(null);
 
         await page.locator("#i-infobox-trigger").click();
         await expect(page.locator("#i-infobox")).toHaveClass(/visible/);
         await expect(page.locator("#changelog-scroll-hint")).toHaveClass(/visible/);
         await expect(trigger_container).toHaveClass(/has-updates/);
+        await expect_red_dot(trigger);
 
         const scroll_content = page.locator("#i-infobox-content");
         await expect.poll(() => scroll_content.evaluate(
@@ -64,6 +71,7 @@ test.describe("Informational modal", () => {
 
         await expect(page.locator("#changelog-section > h2")).toBeInViewport();
         await expect(trigger_container).not.toHaveClass(/has-updates/);
+        await expect_no_red_dot(trigger);
         await expect(page.locator("#changelog-scroll-hint")).not.toHaveClass(/visible/);
         await expect.poll(() => page.evaluate(() =>
             JSON.parse(localStorage.getItem("cim_state")).changelog_last_read_date))
@@ -72,6 +80,26 @@ test.describe("Informational modal", () => {
         await page.reload();
         await expect(page.locator("#play-button")).not.toHaveClass(/deactivated/);
         await expect(trigger_container).not.toHaveClass(/has-updates/);
+        await expect_no_red_dot(trigger);
+    });
+
+    test("shows the news badge only on the information icon in the mobile menu", async ({ page }) => {
+        await page.setViewportSize({ width: 600, height: 800 });
+        await goto_app(page);
+
+        const trigger_container = page.locator("#i-infobox-trigger-container");
+        const trigger = page.locator("#i-infobox-trigger");
+        const hamburger = page.locator("#hamburger-link");
+
+        await expect(trigger_container).toHaveClass(/has-updates/);
+        await expect(trigger).toBeHidden();
+        await expect_no_red_dot(hamburger);
+
+        await hamburger.click();
+
+        await expect(page.locator("#menu-container")).toHaveClass(/visible/);
+        await expect_red_dot(trigger);
+        await expect_no_red_dot(hamburger);
     });
 
     test("clicking elsewhere closes it", async ({ page }) => {
