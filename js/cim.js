@@ -120,6 +120,12 @@ let _TONE_STARTED = false;
 let _SESSION_HISTORY = null;
 let _DOWNLOAD_ENABLED_CLICKS = 0;
 let _DOWNLOAD_ENABLED_LAST_CLICK = null;
+let _PENDING_IMPORT = null;
+let _IMPORT_MERGED_STATE = null;
+let _IMPORT_MERGED_HISTORY = null;
+let _IMPORT_CONFLICTS = [];
+let _IMPORT_CONFLICT_INDEX = 0;
+let _IMPORT_CHOICE_FOR_ALL = null;
 let _EASTER_EGG_CLICKS = 0;
 let _EASTER_EGG_LAST_CLICK = null;
 let _EASTER_EGG_ENABLED = false;
@@ -134,6 +140,17 @@ const _DEFAULT_CHORD_DISPLAY_MODE = "shapes_and_letters";
 const _DEFAULT_SINGLE_NOTE_MODE = "white_only_on_black";
 const _DEFAULT_SINGLE_NOTE_CORRECTNESS_MODE = "only_correct";
 const _DEFAULT_PERSIST_REACTION_FACE = false;
+const _PROFILE_SETTING_FIELDS = [
+    ["name", "Profile name"],
+    ["icon", "Icon"],
+    ["target_number", "Target number"],
+    ["show_chord_mode", "Show chord names"],
+    ["reveal_chord_mode", "Reveal chord names"],
+    ["chord_display_mode", "Chord name display"],
+    ["single_note_mode", "Single note trainer"],
+    ["single_note_correctness_mode", "Single note correctness"],
+    ["persist_reaction_face", "Persist reaction face"],
+];
 
 const _INFOBOX_TRIGGER_IDS = [
     "trainer-infobox-trigger",
@@ -1072,6 +1089,7 @@ function new_profile(name, icon, id, target_number=_DEFAULT_TARGET_NUMBER, show_
         single_note_mode: single_note_mode,
         single_note_correctness_mode: single_note_correctness_mode,
         persist_reaction_face: persist_reaction_face,
+        settings_updated_time: get_current_timestamp(),
         stats: new_stats(),
         current_chord: _DEFAULT_CHORD,
         current_instrument: _DEFAULT_INSTRUMENT,
@@ -1491,6 +1509,7 @@ function submit_profile_changes() {
     current_profile.single_note_mode = profile_values.single_note_mode;
     current_profile.single_note_correctness_mode = profile_values.single_note_correctness_mode;
     current_profile.persist_reaction_face = profile_values.persist_reaction_face;
+    current_profile.settings_updated_time = get_current_timestamp();
 
     STATE.suppress_changelog_notifications =
         document.getElementById("suppress_changelog_notifications_setting").checked;
@@ -1757,6 +1776,7 @@ function enable_download() {
 
     let elem = document.getElementById("download-link");
     elem.classList.add("visible");
+    document.getElementById("upload-link").classList.add("visible");
 }
 
 function trigger_easter_egg() {
@@ -1790,6 +1810,8 @@ function trigger_easter_egg() {
 
 function download_state() {
     const state_json = JSON.stringify({
+        format_version: 1,
+        exported_at: get_current_timestamp(),
         state: STATE,
         history: get_session_history()
     }, null, 2);
@@ -1800,6 +1822,341 @@ function download_state() {
     download_elem.download = "cim_state_" + Math.round(get_current_timestamp()) + ".json"
     download_elem.click();
     download_elem.remove();
+}
+
+function open_import_file_picker() {
+    document.getElementById("import-file-input").click();
+}
+
+function reset_import_dialog() {
+    _PENDING_IMPORT = null;
+    _IMPORT_MERGED_STATE = null;
+    _IMPORT_MERGED_HISTORY = null;
+    _IMPORT_CONFLICTS = [];
+    _IMPORT_CONFLICT_INDEX = 0;
+    _IMPORT_CHOICE_FOR_ALL = null;
+
+    const file_input = document.getElementById("import-file-input");
+    file_input.value = "";
+    document.getElementById("import-action-step").hidden = false;
+    document.getElementById("import-conflict-step").hidden = true;
+    document.getElementById("apply-import-choice-to-all").checked = false;
+}
+
+function cancel_import() {
+    document.getElementById("import-state-container").classList.remove("visible");
+    reset_import_dialog();
+}
+
+function validate_import(imported) {
+    if (imported === null || typeof imported !== "object" ||
+        imported.state === null || typeof imported.state !== "object" ||
+        imported.state.profiles === null || typeof imported.state.profiles !== "object" ||
+        Array.isArray(imported.state.profiles)) {
+        throw new Error("This file is not a CIM backup.");
+    }
+
+    for (const profile of Object.values(imported.state.profiles)) {
+        if (profile === null || typeof profile !== "object" ||
+            (typeof profile.id !== "number" && typeof profile.id !== "string") ||
+            !Number.isFinite(Number(profile.id)) ||
+            typeof profile.name !== "string" || typeof profile.icon !== "string" ||
+            !Number.isInteger(Number(profile.target_number)) ||
+            Number(profile.target_number) < 1) {
+            throw new Error("The backup contains an invalid profile.");
+        }
+        initialize_profile_defaults(profile);
+    }
+
+    if (imported.history === undefined || imported.history === null) {
+        imported.history = {};
+    }
+    if (typeof imported.history !== "object" || Array.isArray(imported.history)) {
+        throw new Error("The backup's session history is invalid.");
+    }
+    for (const profile_history of Object.values(imported.history)) {
+        if (profile_history === null || typeof profile_history !== "object" ||
+            Array.isArray(profile_history) ||
+            Object.values(profile_history).some((sessions) => !Array.isArray(sessions))) {
+            throw new Error("The backup's session history is invalid.");
+        }
+    }
+
+    return imported;
+}
+
+async function import_state_file(file_input) {
+    const file = file_input.files[0];
+    if (file === undefined) {
+        return;
+    }
+
+    try {
+        _PENDING_IMPORT = validate_import(JSON.parse(await file.text()));
+    } catch (error) {
+        alert("Could not import this file: " + error.message);
+        reset_import_dialog();
+        return;
+    }
+
+    document.getElementById("import-file-description").textContent =
+        "Selected backup: " + file.name;
+    document.getElementById("import-state-container").classList.add("visible");
+}
+
+function install_imported_data(state, history) {
+    localStorage.setObject(STATE_KEY, state);
+    localStorage.setObject(SESSION_HISTORY_KEY, history);
+    window.location.reload();
+}
+
+function replace_import() {
+    install_imported_data(_PENDING_IMPORT.state, _PENDING_IMPORT.history);
+}
+
+function clone_object(value) {
+    if (value === undefined) {
+        return undefined;
+    }
+    return JSON.parse(JSON.stringify(value));
+}
+
+function profile_settings_differ(first, second) {
+    return _PROFILE_SETTING_FIELDS.some(
+        ([field]) => JSON.stringify(first[field]) !== JSON.stringify(second[field]));
+}
+
+function profile_settings_timestamp(profile, backup_timestamp=null) {
+    if (Number.isFinite(profile.settings_updated_time)) {
+        return profile.settings_updated_time;
+    }
+    if (Number.isFinite(backup_timestamp) && backup_timestamp > 0) {
+        return backup_timestamp;
+    }
+    if (profile.stats !== undefined && Number.isFinite(profile.stats.updated_time)) {
+        return profile.stats.updated_time;
+    }
+    return 0;
+}
+
+function current_backup_timestamp() {
+    return Math.max(0, ...Object.values(STATE.profiles).map(
+        (profile) => profile_settings_timestamp(profile)));
+}
+
+function next_profile_id(profiles) {
+    let id = _GUEST_USER_ID + 1;
+    while (Object.prototype.hasOwnProperty.call(profiles, id)) {
+        id++;
+    }
+    return id;
+}
+
+function find_merge_profile_id(profiles, imported_profile) {
+    const imported_id = String(imported_profile.id);
+    const profile_at_id = profiles[imported_id];
+    if (profile_at_id !== undefined &&
+        (imported_profile.id == _GUEST_USER_ID ||
+         profile_at_id.name.toLowerCase() === imported_profile.name.toLowerCase())) {
+        return imported_id;
+    }
+
+    const matching_name = Object.values(profiles).find(
+        (profile) => profile.name.toLowerCase() === imported_profile.name.toLowerCase());
+    return matching_name === undefined ? null : String(matching_name.id);
+}
+
+function merge_session_arrays(current_sessions, imported_sessions) {
+    const sessions = [...(current_sessions || []), ...(imported_sessions || [])];
+    const unique_sessions = new Map();
+    for (const session of sessions) {
+        const key = [session.start_time, session.updated_time,
+                     session.identifications, session.current_chord].join("|");
+        unique_sessions.set(key, clone_object(session));
+    }
+    return Array.from(unique_sessions.values()).sort(
+        (first, second) => (first.start_time || 0) - (second.start_time || 0));
+}
+
+function merge_profile_history(target_history, imported_history) {
+    for (const [chord, sessions] of Object.entries(imported_history || {})) {
+        target_history[chord] = merge_session_arrays(target_history[chord], sessions);
+    }
+}
+
+function newer_profile(first, second) {
+    const first_time = first.stats?.updated_time || 0;
+    const second_time = second.stats?.updated_time || 0;
+    return first_time >= second_time ? first : second;
+}
+
+function merge_import() {
+    const imported_state = _PENDING_IMPORT.state;
+    const imported_history = _PENDING_IMPORT.history;
+    const imported_timestamp = Number(_PENDING_IMPORT.exported_at) || 0;
+    const local_timestamp = current_backup_timestamp();
+    const imported_to_merged_ids = {};
+
+    _IMPORT_MERGED_STATE = clone_object(STATE);
+    _IMPORT_MERGED_HISTORY = clone_object(get_session_history());
+    _IMPORT_CONFLICTS = [];
+
+    for (const imported_profile of Object.values(imported_state.profiles)) {
+        let target_id = find_merge_profile_id(
+            _IMPORT_MERGED_STATE.profiles, imported_profile);
+        if (target_id === null) {
+            target_id = String(imported_profile.id);
+            if (Object.prototype.hasOwnProperty.call(
+                    _IMPORT_MERGED_STATE.profiles, target_id)) {
+                target_id = String(next_profile_id(_IMPORT_MERGED_STATE.profiles));
+            }
+            const added_profile = clone_object(imported_profile);
+            added_profile.id = Number(target_id);
+            _IMPORT_MERGED_STATE.profiles[target_id] = added_profile;
+        } else {
+            const local_profile = _IMPORT_MERGED_STATE.profiles[target_id];
+            const base_profile = clone_object(newer_profile(local_profile, imported_profile));
+            base_profile.id = local_profile.id;
+            _IMPORT_MERGED_STATE.profiles[target_id] = base_profile;
+
+            if (profile_settings_differ(local_profile, imported_profile)) {
+                const local_settings_time =
+                    profile_settings_timestamp(local_profile, local_timestamp);
+                const imported_settings_time =
+                    profile_settings_timestamp(imported_profile, imported_timestamp);
+                _IMPORT_CONFLICTS.push({
+                    target_id: target_id,
+                    local: clone_object(local_profile),
+                    imported: clone_object(imported_profile),
+                    newer: imported_settings_time > local_settings_time
+                        ? "imported" : "local",
+                });
+            }
+        }
+        imported_to_merged_ids[String(imported_profile.id)] = target_id;
+    }
+
+    for (const [imported_id, profile_history] of Object.entries(imported_history)) {
+        const target_id = imported_to_merged_ids[imported_id] || imported_id;
+        if (_IMPORT_MERGED_HISTORY[target_id] === undefined) {
+            _IMPORT_MERGED_HISTORY[target_id] = {};
+        }
+        merge_profile_history(_IMPORT_MERGED_HISTORY[target_id], profile_history);
+    }
+
+    _IMPORT_MERGED_STATE.changelog_last_read_date = Math.max(
+        _IMPORT_MERGED_STATE.changelog_last_read_date || 0,
+        imported_state.changelog_last_read_date || 0) || null;
+    if (imported_timestamp > local_timestamp &&
+        imported_state.suppress_changelog_notifications !== undefined) {
+        _IMPORT_MERGED_STATE.suppress_changelog_notifications =
+            imported_state.suppress_changelog_notifications;
+    }
+
+    if (_IMPORT_CONFLICTS.length === 0) {
+        install_imported_data(_IMPORT_MERGED_STATE, _IMPORT_MERGED_HISTORY);
+        return;
+    }
+
+    _IMPORT_CONFLICT_INDEX = 0;
+    document.getElementById("import-action-step").hidden = true;
+    document.getElementById("import-conflict-step").hidden = false;
+    populate_import_settings_conflict();
+}
+
+function setting_display_value(field, value) {
+    if (field === "icon") {
+        return String(value).replace(/^fa-/, "").replaceAll("-", " ");
+    }
+    if (typeof value === "boolean") {
+        return value ? "Yes" : "No";
+    }
+    return String(value).replaceAll("_", " ");
+}
+
+function populate_import_settings_conflict() {
+    const conflict = _IMPORT_CONFLICTS[_IMPORT_CONFLICT_INDEX];
+    const grid = document.getElementById("import-settings-grid");
+    grid.replaceChildren();
+    document.getElementById("import-conflict-title").textContent =
+        "Settings for " + conflict.local.name;
+
+    const local_age = conflict.newer === "local" ? "newer" : "older";
+    const imported_age = conflict.newer === "imported" ? "newer" : "older";
+    for (const heading of [
+            "Setting",
+            "On this device (" + local_age + ")",
+            "From backup (" + imported_age + ")"]) {
+        const element = document.createElement("div");
+        element.className = "import-setting-heading";
+        element.textContent = heading;
+        grid.appendChild(element);
+    }
+
+    const selected_side = _IMPORT_CHOICE_FOR_ALL === null
+        ? conflict.newer
+        : (_IMPORT_CHOICE_FOR_ALL === "newer"
+            ? conflict.newer
+            : (conflict.newer === "local" ? "imported" : "local"));
+
+    for (const [field, label] of _PROFILE_SETTING_FIELDS) {
+        const label_element = document.createElement("div");
+        label_element.textContent = label;
+        grid.appendChild(label_element);
+
+        for (const side of ["local", "imported"]) {
+            const value_label = document.createElement("label");
+            value_label.className = "import-setting-value";
+            const radio = document.createElement("input");
+            radio.type = "radio";
+            radio.name = "import-setting-" + field;
+            radio.value = side;
+            radio.checked = side === selected_side;
+            value_label.appendChild(radio);
+            value_label.append(setting_display_value(field, conflict[side][field]));
+            grid.appendChild(value_label);
+        }
+    }
+
+    const next_button = document.getElementById("next-import-conflict-button");
+    next_button.textContent = _IMPORT_CONFLICT_INDEX === _IMPORT_CONFLICTS.length - 1
+        ? "Finish import" : "Next user";
+}
+
+function choose_all_import_settings(age) {
+    const conflict = _IMPORT_CONFLICTS[_IMPORT_CONFLICT_INDEX];
+    const side = age === "newer"
+        ? conflict.newer
+        : (conflict.newer === "local" ? "imported" : "local");
+    for (const radio of document.querySelectorAll(
+            "#import-settings-grid input[type='radio'][value='" + side + "']")) {
+        radio.checked = true;
+    }
+
+    if (document.getElementById("apply-import-choice-to-all").checked) {
+        _IMPORT_CHOICE_FOR_ALL = age;
+    }
+}
+
+function save_import_settings_choice() {
+    const conflict = _IMPORT_CONFLICTS[_IMPORT_CONFLICT_INDEX];
+    const merged_profile = _IMPORT_MERGED_STATE.profiles[conflict.target_id];
+    for (const [field] of _PROFILE_SETTING_FIELDS) {
+        const selected = document.querySelector(
+            "input[name='import-setting-" + field + "']:checked").value;
+        merged_profile[field] = clone_object(conflict[selected][field]);
+    }
+    merged_profile.settings_updated_time = Math.max(
+        profile_settings_timestamp(conflict.local),
+        profile_settings_timestamp(
+            conflict.imported, Number(_PENDING_IMPORT.exported_at) || 0));
+
+    _IMPORT_CONFLICT_INDEX++;
+    if (_IMPORT_CONFLICT_INDEX === _IMPORT_CONFLICTS.length) {
+        install_imported_data(_IMPORT_MERGED_STATE, _IMPORT_MERGED_HISTORY);
+        return;
+    }
+    populate_import_settings_conflict();
 }
 
 const WEEK_SECONDS = 7 * 24 * 3600;
