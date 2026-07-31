@@ -100,6 +100,19 @@ generate `android/` → `cap sync` → `gradlew assembleDebug`. Alternatively,
 run `make android-assets` and then open `android/` in Android Studio and hit
 Run, which also gets you an emulator.
 
+The normal `make test` target also runs the Android WebView smoke tests when
+an Android emulator SDK and JDK 21–24 are available. If they are not
+installed, it prints a warning, skips the Android portion, and still runs the
+web test suite. To require the Android tests explicitly, run:
+
+```bash
+make test-android
+```
+
+That target creates a Gradle-managed Pixel 2 emulator, installs the debug and
+test APKs, launches `MainActivity`, and verifies that the bundled Capacitor
+app loads in its WebView. The emulator image is downloaded on first use.
+
 Debug builds are signed with the auto-generated debug keystore, which is a
 *different* certificate from release builds — Android won't install one over
 the other, so uninstall first when switching between a debug build and a

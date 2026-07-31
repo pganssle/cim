@@ -31,6 +31,9 @@ rm -r android/app/src/test android/app/src/androidTest
 rm -r android/app/src/main/res/drawable*
 rm android/app/src/main/res/mipmap-*/ic_launcher*.png
 
+mkdir -p android/app/src/androidTest
+cp -R android-tests/. android/app/src/androidTest/
+
 ./scripts/generate_android_resources.sh
 
 echo "Generated android/ (Capacitor $(npx cap --version))"

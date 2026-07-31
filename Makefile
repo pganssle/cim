@@ -19,6 +19,7 @@ help:
 	@echo 'Tests:'
 	@echo 'make test             Run the automated tests'
 	@echo 'make test-e2e         Run the Playwright end-to-end tests'
+	@echo 'make test-android     Run the Android WebView smoke tests'
 	@echo ''
 	@echo 'Android (see docs/android.md):'
 	@echo 'make android-project  Generate the native project (template + patches)'
@@ -69,6 +70,14 @@ test-e2e: node_modules html playwright-browsers
 
 .PHONY: test
 test: test-e2e
+	@sdk=$${ANDROID_HOME:-$${ANDROID_SDK_ROOT:-}}; \
+	major=$$(java -version 2>&1 | sed -n 's/.*version "\([0-9]*\).*/\1/p'); \
+	if [ -z "$$sdk" ] || [ ! -x "$$sdk/emulator/emulator" ] || \
+	   [ -z "$$major" ] || [ "$$major" -lt 21 ] || [ "$$major" -gt 24 ]; then \
+		echo "warning: skipping Android tests (requires Android emulator SDK and JDK 21-24)" >&2; \
+	else \
+		$(MAKE) test-android; \
+	fi
 
 # The native project is generated, not committed: it is rebuilt from the
 # Capacitor template (pinned via package-lock.json) plus our patches and
@@ -76,6 +85,7 @@ test: test-e2e
 ANDROID_INPUTS := capacitor.config.json node_modules \
 	scripts/generate_android_project.sh \
 	scripts/generate_android_resources.sh \
+	$(shell find android-tests -type f) \
 	android-resources/colors.xml.in \
 	_data/theme.json \
 	assets/images/cim_logo_512.png \
@@ -103,6 +113,11 @@ android-java:
 		echo "error: apk builds require JDK 21-24; found Java $${major:-unknown}" >&2; \
 		exit 1; \
 	fi
+
+.PHONY: test-android
+test-android: android-assets android-java
+	cd android && ./gradlew pixel2api35DebugAndroidTest \
+		-Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
 
 .PHONY: apk-debug
 apk-debug: android-assets android-java

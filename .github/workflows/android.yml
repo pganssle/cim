@@ -19,6 +19,7 @@ on:
     paths:
       - "_data/theme.json"
       - "android-resources/**"
+      - "android-tests/**"
       - "assets/images/cim_logo_512.png"
       - "patches/android/**"
       - "scripts/generate_android_project.sh"
@@ -76,6 +77,12 @@ jobs:
           java-version: 21
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Enable KVM
+        run: sudo chmod 666 /dev/kvm
+
+      - name: Run Android WebView smoke tests
+        run: make test-android
 
       # --- Pull requests and manual runs: unsigned debug APK ---
       - name: Build debug APK
