@@ -16,6 +16,7 @@ fi
 
 PATCHED_FILES=(
     app/build.gradle
+    app/src/main/AndroidManifest.xml
     app/src/main/java/us/ganbar/cim/MainActivity.java
     app/src/main/res/values/styles.xml
 )

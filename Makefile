@@ -20,11 +20,13 @@ help:
 	@echo 'make test             Run the automated tests'
 	@echo 'make test-e2e         Run the Playwright end-to-end tests'
 	@echo 'make test-android     Run the Android WebView smoke tests'
+	@echo 'make test-fdroiddata  Test the F-Droid build recipe in its official image'
 	@echo ''
 	@echo 'Android (see docs/android.md):'
 	@echo 'make android-project  Generate the native project (template + patches)'
 	@echo 'make android-patches  Capture edits made in android/ back into patches/'
 	@echo 'make android-assets   Build the site and sync it into the Android project'
+	@echo 'make store-screenshots Regenerate the Android store screenshots'
 	@echo 'make apk-debug        Build a debug APK for local testing'
 	@echo 'make apk-release      Build a release APK (unsigned without keystore env vars)'
 
@@ -64,12 +66,32 @@ node_modules: package.json package-lock.json
 playwright-browsers: node_modules
 	npx playwright install chromium firefox
 
+.PHONY: playwright-chromium
+playwright-chromium: node_modules
+	npx playwright install chromium
+
+.PHONY: store-screenshots
+store-screenshots: html playwright-chromium
+	npm run screenshots:store
+
 .PHONY: test-e2e
 test-e2e: node_modules html playwright-browsers
 	npm run test:e2e
 
+.PHONY: test-fdroid-metadata
+test-fdroid-metadata:
+	node tests/test_fdroid_metadata.mjs
+
+.PHONY: test-fdroiddata-lint
+test-fdroiddata-lint: test-fdroid-metadata
+	./scripts/test_fdroiddata.sh lint
+
+.PHONY: test-fdroiddata
+test-fdroiddata: test-fdroid-metadata
+	./scripts/test_fdroiddata.sh build "$$(git rev-parse HEAD)"
+
 .PHONY: test
-test: test-e2e
+test: test-fdroid-metadata test-e2e
 	@sdk=$${ANDROID_HOME:-$${ANDROID_SDK_ROOT:-}}; \
 	major=$$(java -version 2>&1 | sed -n 's/.*version "\([0-9]*\).*/\1/p'); \
 	if [ -z "$$sdk" ] || [ ! -x "$$sdk/emulator/emulator" ] || \
@@ -118,6 +140,10 @@ android-java:
 test-android: android-assets android-java
 	cd android && ./gradlew pixel2api35DebugAndroidTest \
 		-Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
+
+.PHONY: test-android-reproducible
+test-android-reproducible: android-java
+	./scripts/test_reproducible_android_build.sh
 
 .PHONY: apk-debug
 apk-debug: android-assets android-java

@@ -2,11 +2,10 @@
 
 ## Installing from GitHub Releases
 
-The Android app isn't in F-Droid's main repository. The signed APKs are
-published on the project's [GitHub Releases][cim-releases] page instead. To
-install the app and get notified about future releases, use
-[Obtainium][obtainium], an app available through F-Droid that tracks releases
-from sites such as GitHub:
+An Android app is available from the project's [GitHub Releases][cim-releases]
+page, but it is not yet available from any app stores. We plan to submit it to
+F-Droid and Google Play. In the meantime, [Obtainium][obtainium] can install
+the APK and consume future releases directly from GitHub:
 
 1. [Install F-Droid](https://f-droid.org/en/) on the Android device.
 2. Use F-Droid to install [Obtainium][obtainium].
@@ -73,21 +72,23 @@ is a deterministic function of three committed inputs:
   transitively pins the generated project too.
 - `patches/android/*.patch` — our edits to generated files, one patch per
   file: the signing/versioning wiring in `app/build.gradle`, the
-  keep-screen-on flag in `MainActivity.java`, and the solid-color launch
-  background in `styles.xml`. Everything in a patch is by definition ours;
-  everything else is the template's.
-- `scripts/generate_android_resources.sh` — derives the density-specific
-  launcher icons from `assets/images/cim_logo_512.png` and the native splash
-  color from `_data/theme.json`. The same JSON value is injected into the
-  site's SCSS, so the web and native backgrounds cannot drift independently.
+  launcher icon reference in `AndroidManifest.xml`, the keep-screen-on flag
+  in `MainActivity.java`, and the solid-color launch background in
+  `styles.xml`. Everything in a patch is by definition ours; everything else
+  is the template's.
+- `scripts/generate_android_resources.sh` — copies the committed
+  `assets/images/cim_logo_512.png` byte-for-byte into the native project and
+  derives the native splash color from `_data/theme.json`. The same JSON
+  value is injected into the site's SCSS, so the web and native backgrounds
+  cannot drift independently.
 
 A stamp file (`android/.generated`) makes this incremental: `make` only
 regenerates the project when one of those inputs changes, so routine builds
 don't touch `android/` (or Gradle's incremental state inside it) at all.
 
-Generating the launcher images requires ImageMagick. They are written only
-into the ignored native project and are rebuilt whenever the source logo or
-generator changes.
+The launcher image is not resampled during the build. Apart from avoiding an
+unnecessary build dependency, this ensures that different image-processing
+libraries cannot produce different APKs from the same source.
 
 To change something in the native project: `make android-project`, edit the
 files under `android/` directly (Android Studio works fine — the project
@@ -95,10 +96,11 @@ just isn't tracked), then `make android-patches` to capture your edits back
 into `patches/android/`. To patch a file that isn't patched yet, add its
 path to the list in `scripts/update_android_patches.sh` first.
 
-Version information isn't committed either: `versionName`/`versionCode` are
-passed to Gradle as `-PcimVersionName`/`-PcimVersionCode` (in CI, derived
-from the git tag by `scripts/tag_android_version.sh`). Local builds default
-to `dev`/`1`.
+The current stable version is committed once in `android-version.json`.
+F-Droid's metadata reads it for update checks, the release script updates it,
+and the metadata-consistency test prevents the build recipe from drifting
+away from it. `versionName`/`versionCode` are passed to Gradle as
+`-PcimVersionName`/`-PcimVersionCode`; local builds default to `dev`/`1`.
 
 ## Building locally
 
@@ -134,6 +136,53 @@ That target creates a Gradle-managed Pixel 2 emulator, installs the debug and
 test APKs, launches `MainActivity`, and verifies that the bundled Capacitor
 app loads in its WebView. The emulator image is downloaded on first use.
 
+### F-Droid and reproducibility tests
+
+The files under `fastlane/metadata/android/en-US/` are the canonical app-store
+description, icon, and screenshots. F-Droid reads these directly from the
+source tree. Regenerate the screenshots after an appreciable UI change with:
+
+```bash
+make store-screenshots
+```
+
+This builds the site, installs the pinned Playwright browser when necessary,
+and captures a phone-sized blue-level view plus the main trainer, single-note
+follow-on, music trainer, and statistics views on a landscape tablet. The
+script supplies the sample history used by the statistics screenshot, so the
+whole set can be recreated without preparing browser state by hand.
+
+The build recipe lives at `fdroid/metadata/us.ganbar.cim.yml`. Its current
+version fields and `android-version.json` are updated together by the release
+script and checked by every `make test` run. Two explicit tests use the real,
+pinned fdroiddata toolchain:
+
+```bash
+make test-fdroiddata-lint
+make test-fdroiddata
+```
+
+The first lints the metadata. The second clones the current commit and builds
+it inside F-Droid's official build-server container, including the source and
+binary scanners. Both require Git, Docker, and network access; downloaded
+repositories, SDK packages, and the container image are cached under
+`.misc_local/fdroid-test/`.
+
+`make test-android-reproducible` also builds the unsigned release APK twice
+from clean generated projects and requires byte-for-byte equality. Stable-tag
+CI runs both this check and the full F-Droid recipe before publishing an APK.
+The launcher image is copied rather than resampled and Jekyll excludes
+machine-local build files, so the GitHub and F-Droid environments receive the
+same inputs.
+
+The F-Droid metadata points at the corresponding APK on GitHub Releases and
+pins the public SHA-256 fingerprint of the release certificate. F-Droid can
+therefore copy that APK's signature onto its independently built APK, require
+the result to verify, and publish the same signed binary. Stable release CI
+performs this comparison before uploading anything. It signs with the pinned
+Android build-tools 34 `apksigner`; newer signer versions currently produce
+signatures that F-Droid's signature-copy verification cannot consume.
+
 Debug builds are signed with the auto-generated debug keystore, which is a
 *different* certificate from release builds — Android won't install one over
 the other, so uninstall first when switching between a debug build and a
@@ -152,9 +201,11 @@ Releases are built by `.github/workflows/android.yml`:
 git push origin --tags
 ```
 
-That builds a signed APK and attaches it as `cim-vYY.MM.patch.apk` to a GitHub
-Release for the tag. Sideload it directly, or use Obtainium as described
-above to track the releases page.
+For a stable release, the script updates `android-version.json` and the
+F-Droid build entry, makes a `Prepare vYY.MM.patch` commit when necessary,
+then tags that commit. The workflow builds a signed APK and attaches it as
+`cim-vYY.MM.patch.apk` to a GitHub Release for the tag. Sideload it directly,
+or use Obtainium as described above to track the releases page.
 
 Versions have the form `YY.MM.patch`. The script resets `patch` to `0` in a
 new month and otherwise increments the latest tag's patch number. Android's

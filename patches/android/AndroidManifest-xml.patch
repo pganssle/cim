@@ -1,0 +1,12 @@
+--- a/app/src/main/AndroidManifest.xml
++++ b/app/src/main/AndroidManifest.xml
+@@ -4,7 +4,7 @@
+     <application
+         android:allowBackup="true"
+-        android:icon="@mipmap/ic_launcher"
++        android:icon="@drawable/ic_launcher"
+         android:label="@string/app_name"
+-        android:roundIcon="@mipmap/ic_launcher_round"
++        android:roundIcon="@drawable/ic_launcher"
+         android:supportsRtl="true"
+         android:theme="@style/AppTheme">

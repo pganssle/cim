@@ -8,6 +8,7 @@
   },
   "scripts": {
     "release:news": "news-fragments burn",
+    "screenshots:store": "node scripts/update_store_screenshots.mjs",
     "test:e2e": "playwright test"
   },
   "devDependencies": {

@@ -18,14 +18,23 @@ on:
   pull_request:
     paths:
       - "_data/theme.json"
+      - "_config.yml"
       - "android-resources/**"
+      - "android-version.json"
       - "android-tests/**"
       - "assets/images/cim_logo_512.png"
+      - "fastlane/**"
+      - "fdroid/**"
       - "patches/android/**"
       - "scripts/generate_android_project.sh"
       - "scripts/generate_android_resources.sh"
       - "scripts/tag_android_version.sh"
+      - "scripts/update_android_version.mjs"
+      - "scripts/update_store_screenshots.mjs"
+      - "scripts/test_fdroiddata.sh"
+      - "scripts/test_reproducible_android_build.sh"
       - "tests/test_tag_android_version.sh"
+      - "tests/test_fdroid_metadata.mjs"
       - "Makefile"
       - "package.json"
       - "package-lock.json"
@@ -53,15 +62,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22.23.2
           cache: npm
       - name: Test version tagging
         run: ./tests/test_tag_android_version.sh
-      - name: Install ImageMagick
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes imagemagick
-
       # Builds the site, generates the native project from the Capacitor
       # template, patches, and derived resources (android/ is not committed),
       # and copies _site into it.
@@ -77,6 +81,13 @@ jobs:
           java-version: 21
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Verify reproducible release build
+        run: make test-android-reproducible
+
+      - name: Test F-Droid build recipe
+        if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '.dev')
+        run: make test-fdroiddata
 
       - name: Enable KVM
         run: sudo chmod 666 /dev/kvm
@@ -102,6 +113,15 @@ jobs:
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
 
+      # apksigcopier cannot verify signatures produced by build-tools 35+.
+      # Pinning only the signer leaves compilation on the current SDK while
+      # allowing F-Droid to publish our verified, upstream-signed APK.
+      - name: Install reproducible APK signer
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'build-tools;34.0.0'
+
       - name: Compute version from tag
         if: startsWith(github.ref, 'refs/tags/v')
         id: version
@@ -111,21 +131,32 @@ jobs:
           echo "name=$NAME" >> "$GITHUB_OUTPUT"
           echo "code=$CODE" >> "$GITHUB_OUTPUT"
 
-      - name: Build signed release APK
+      - name: Build unsigned release APK
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           cd android && ./gradlew assembleRelease \
             -PcimVersionName='${{ steps.version.outputs.name }}' \
             -PcimVersionCode='${{ steps.version.outputs.code }}'
+
+      - name: Sign release APK
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          "$SDK/build-tools/34.0.0/apksigner" sign \
+            --ks "$RUNNER_TEMP/cim-release.jks" \
+            --ks-pass env:KEYSTORE_PASSWORD \
+            --ks-key-alias "$KEY_ALIAS" \
+            --key-pass env:KEY_PASSWORD \
+            --out "cim-${GITHUB_REF_NAME}.apk" \
+            android/app/build/outputs/apk/release/app-release-unsigned.apk
         env:
-          KEYSTORE_PATH: ${{ runner.temp }}/cim-release.jks
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Rename APK
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: cp android/app/build/outputs/apk/release/app-release.apk "cim-${GITHUB_REF_NAME}.apk"
+      - name: Verify F-Droid reproducibility
+        if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '.dev')
+        run: ./scripts/test_fdroiddata.sh verify "cim-${GITHUB_REF_NAME}.apk"
 
       - name: Upload development APK artifact
         if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '.dev')
