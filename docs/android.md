@@ -1,5 +1,26 @@
 # The Android app
 
+## Installing from GitHub Releases
+
+The Android app isn't in F-Droid's main repository. The signed APKs are
+published on the project's [GitHub Releases][cim-releases] page instead. To
+install the app and get notified about future releases, use
+[Obtainium][obtainium], an app available through F-Droid that tracks releases
+from sites such as GitHub:
+
+1. [Install F-Droid](https://f-droid.org/en/) on the Android device.
+2. Use F-Droid to install [Obtainium][obtainium].
+3. In Obtainium, select **Add App** and enter
+   `https://github.com/pganssle/cim` as the app source URL.
+4. Add the app, then install the latest release.
+
+Obtainium will check the GitHub Releases page for later versions. You can also
+download the APK from that page and install it directly, but then you will
+need to check for updates yourself.
+
+[cim-releases]: https://github.com/pganssle/cim/releases
+[obtainium]: https://f-droid.org/packages/dev.imranr.obtainium.fdroid/
+
 The website is [installable as a PWA][pwa-install] using, for example,
 [Chrome][chrome-pwa] or [Firefox for Android][firefox-pwa], but a PWA's
 offline availability depends on the browser's service worker cache, and
@@ -132,8 +153,8 @@ git push origin --tags
 ```
 
 That builds a signed APK and attaches it as `cim-vYY.MM.patch.apk` to a GitHub
-Release for the tag. Sideload it directly, or point an F-Droid-style updater
-at the releases page.
+Release for the tag. Sideload it directly, or use Obtainium as described
+above to track the releases page.
 
 Versions have the form `YY.MM.patch`. The script resets `patch` to `0` in a
 new month and otherwise increments the latest tag's patch number. Android's
