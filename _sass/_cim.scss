@@ -1030,8 +1030,8 @@ a.download-button.visible {
 // Stats container
 div.stats-history-container {
     width: max-content;
-    max-height: 40vh; // Fallback
-    max-height: 40dvh;
+    max-height: 80vh; // Fallback
+    max-height: 80dvh;
     max-width: 100vw; // Fallback
     max-width: 100dvw;
     overflow-y: auto;
