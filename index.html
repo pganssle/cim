@@ -266,12 +266,16 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
         >
         <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
     </a>
-    <a id="download-link" class="download-button colorscheme-toggle" onclick="download_state()">
-        <i class="fa fa-download fa-fw" aria-hidden="true"></i>
-    </a>
-    <a id="upload-link" class="download-button colorscheme-toggle" onclick="open_import_file_picker()">
-        <i class="fa fa-upload fa-fw" aria-hidden="true"></i>
-    </a>
+    <span class="transfer-button-container">
+        <a id="download-link" class="download-button colorscheme-toggle" onclick="download_state()"
+           aria-label="Download backup" title="Download backup">
+            <i class="fa fa-download fa-fw" aria-hidden="true"></i>
+        </a>
+        <a id="upload-link" class="download-button colorscheme-toggle" onclick="open_import_file_picker()"
+           aria-label="Upload backup" title="Upload backup">
+            <i class="fa fa-upload fa-fw" aria-hidden="true"></i>
+        </a>
+    </span>
     <input type="file" id="import-file-input" accept="application/json,.json"
            onchange="import_state_file(this)" hidden>
 </div>
@@ -454,37 +458,93 @@ This is a method for teaching absolute pitch to children aged 2-6. Children shou
     <button type="button" class="close-button" aria-label="Cancel import"
             onclick="cancel_import()">&times;</button>
     <div id="import-action-step">
-        <h2 id="import-state-title">Import backup</h2>
-        <p id="import-file-description"></p>
-        <p>Would you like to merge this backup with the data on this device,
-           or replace the data on this device?</p>
-        <div class="button-container">
-            <button type="button" id="merge-import-button"
-                    onclick="merge_import()">Merge</button>
-            <button type="button" id="replace-import-button"
-                    onclick="replace_import()">Replace</button>
-            <button type="button" id="cancel-import-button"
-                    onclick="cancel_import()">Cancel</button>
+        <h2 id="import-state-title">Choose what to import</h2>
+        <p id="import-file-description" class="import-file-description"></p>
+        <p id="import-followup-description" class="import-followup-description"></p>
+
+        <div id="import-single-profile" hidden>
+            <div class="import-profile-comparison">
+                <section class="import-profile-card" id="existing-profile-card">
+                    <h3>On this device</h3>
+                    <div id="existing-profile-summary"></div>
+                </section>
+                <section class="import-profile-card imported" id="incoming-profile-card">
+                    <h3>From backup</h3>
+                    <div id="incoming-profile-summary"></div>
+                </section>
+            </div>
+            <p id="single-profile-merge-description" class="import-merge-description"></p>
+            <div class="button-container import-button-container">
+                <button type="button" class="import-button primary" id="merge-import-button"
+                        onclick="select_single_import_action('merge')">Merge</button>
+                <button type="button" class="import-button" id="replace-import-button"
+                        onclick="select_single_import_action('replace')">Replace</button>
+                <button type="button" class="import-button" id="cancel-import-button"
+                        onclick="cancel_import()">Cancel</button>
+            </div>
+        </div>
+
+        <div id="import-multiple-profiles" hidden>
+            <div class="import-table-wrapper">
+                <table class="import-profile-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">User</th>
+                            <th colspan="3">Existing</th>
+                            <th colspan="3">To be imported</th>
+                            <th rowspan="2">Merge</th>
+                            <th rowspan="2">Replace</th>
+                            <th rowspan="2">Don't import</th>
+                        </tr>
+                        <tr>
+                            <th>Start</th><th>End</th><th>Sessions</th>
+                            <th>Start</th><th>End</th><th>Sessions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="import-profile-table-body"></tbody>
+                    <tfoot>
+                        <tr class="import-select-all-row">
+                            <th>Select all:</th>
+                            <td colspan="6">
+                                <button type="button" class="import-button subtle"
+                                        id="clear-import-selections-button"
+                                        onclick="clear_import_selections()">Clear selections</button>
+                            </td>
+                            <td><input type="radio" name="select-all-import" value="merge"
+                                       aria-label="Merge all" onchange="select_all_import_profiles('merge')"></td>
+                            <td><input type="radio" name="select-all-import" value="replace"
+                                       aria-label="Replace all" onchange="select_all_import_profiles('replace')"></td>
+                            <td><input type="radio" name="select-all-import" value="skip"
+                                       aria-label="Don't import any" onchange="select_all_import_profiles('skip')"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="button-container import-button-container">
+                <button type="button" class="import-button primary" id="continue-import-button"
+                        onclick="continue_import_selection()" disabled>Continue</button>
+                <button type="button" class="import-button" onclick="cancel_import()">Cancel</button>
+            </div>
         </div>
     </div>
     <div id="import-conflict-step" hidden>
         <h2 id="import-conflict-title"></h2>
-        <p>Choose which value to keep for each setting.</p>
+        <p id="import-conflict-description">Choose which value to keep for each setting.</p>
         <div class="import-settings-grid" id="import-settings-grid"></div>
         <div class="import-all-controls">
-            <button type="button" id="all-from-newer-button"
+            <button type="button" class="import-button" id="all-from-newer-button"
                     onclick="choose_all_import_settings('newer')">All from newer</button>
             <label>
                 <input type="checkbox" id="apply-import-choice-to-all">
-                Apply choice to all users
+                <span id="apply-import-choice-label"></span>
             </label>
-            <button type="button" id="all-from-older-button"
+            <button type="button" class="import-button" id="all-from-older-button"
                     onclick="choose_all_import_settings('older')">All from older</button>
         </div>
-        <div class="button-container">
-            <button type="button" id="next-import-conflict-button"
+        <div class="button-container import-button-container">
+            <button type="button" class="import-button primary" id="next-import-conflict-button"
                     onclick="save_import_settings_choice()">Next user</button>
-            <button type="button" onclick="cancel_import()">Cancel</button>
+            <button type="button" class="import-button" onclick="cancel_import()">Cancel</button>
         </div>
     </div>
 </div>

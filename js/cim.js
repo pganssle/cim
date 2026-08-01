@@ -121,6 +121,7 @@ let _SESSION_HISTORY = null;
 let _DOWNLOAD_ENABLED_CLICKS = 0;
 let _DOWNLOAD_ENABLED_LAST_CLICK = null;
 let _PENDING_IMPORT = null;
+let _IMPORT_PROFILE_PLANS = [];
 let _IMPORT_MERGED_STATE = null;
 let _IMPORT_MERGED_HISTORY = null;
 let _IMPORT_CONFLICTS = [];
@@ -150,6 +151,9 @@ const _PROFILE_SETTING_FIELDS = [
     ["single_note_mode", "Single note trainer"],
     ["single_note_correctness_mode", "Single note correctness"],
     ["persist_reaction_face", "Persist reaction face"],
+];
+const _GLOBAL_SETTING_FIELDS = [
+    ["suppress_changelog_notifications", "Disable What's New notifications"],
 ];
 
 const _INFOBOX_TRIGGER_IDS = [
@@ -1830,6 +1834,7 @@ function open_import_file_picker() {
 
 function reset_import_dialog() {
     _PENDING_IMPORT = null;
+    _IMPORT_PROFILE_PLANS = [];
     _IMPORT_MERGED_STATE = null;
     _IMPORT_MERGED_HISTORY = null;
     _IMPORT_CONFLICTS = [];
@@ -1840,12 +1845,52 @@ function reset_import_dialog() {
     file_input.value = "";
     document.getElementById("import-action-step").hidden = false;
     document.getElementById("import-conflict-step").hidden = true;
+    document.getElementById("import-single-profile").hidden = true;
+    document.getElementById("import-multiple-profiles").hidden = true;
     document.getElementById("apply-import-choice-to-all").checked = false;
 }
 
 function cancel_import() {
     document.getElementById("import-state-container").classList.remove("visible");
     reset_import_dialog();
+}
+
+function import_value_description(value) {
+    if (value === undefined) {
+        return "missing";
+    }
+    return JSON.stringify(value);
+}
+
+function invalid_import_profile(profile, field, requirement) {
+    const name = typeof profile.name === "string" ? profile.name : "<unnamed>";
+    const id = profile.id === undefined ? "missing" : import_value_description(profile.id);
+    throw new Error(
+        "Profile \"" + name + "\" (ID " + id + "): `" + field + "` " + requirement +
+        "; got " + import_value_description(profile[field]) + ".");
+}
+
+function validate_import_profile_choice(profile, field, choices) {
+    if (!choices.includes(profile[field])) {
+        invalid_import_profile(
+            profile, field, "must be one of " + choices.map(
+                (choice) => "`" + choice + "`").join(", "));
+    }
+}
+
+function migrate_imported_profile(profile) {
+    // Older backups predate these settings. A null target also appeared in
+    // backups produced while an empty target field was accepted by the UI.
+    if (profile.target_number === undefined || profile.target_number === null) {
+        profile.target_number = _DEFAULT_TARGET_NUMBER;
+    }
+    if (profile.current_chord === undefined || profile.current_chord === null) {
+        profile.current_chord = _DEFAULT_CHORD;
+    }
+    if (profile.current_instrument === undefined || profile.current_instrument === null) {
+        profile.current_instrument = _DEFAULT_INSTRUMENT;
+    }
+    initialize_profile_defaults(profile);
 }
 
 function validate_import(imported) {
@@ -1857,15 +1902,51 @@ function validate_import(imported) {
     }
 
     for (const profile of Object.values(imported.state.profiles)) {
-        if (profile === null || typeof profile !== "object" ||
-            (typeof profile.id !== "number" && typeof profile.id !== "string") ||
-            !Number.isFinite(Number(profile.id)) ||
-            typeof profile.name !== "string" || typeof profile.icon !== "string" ||
-            !Number.isInteger(Number(profile.target_number)) ||
-            Number(profile.target_number) < 1) {
-            throw new Error("The backup contains an invalid profile.");
+        if (profile === null || typeof profile !== "object" || Array.isArray(profile)) {
+            throw new Error("The backup contains a profile that is not an object.");
         }
-        initialize_profile_defaults(profile);
+        if ((typeof profile.id !== "number" && typeof profile.id !== "string") ||
+            !Number.isFinite(Number(profile.id))) {
+            invalid_import_profile(profile, "id", "must be a numeric ID");
+        }
+        if (typeof profile.name !== "string" || profile.name.length === 0) {
+            invalid_import_profile(profile, "name", "must be a non-empty string");
+        }
+        if (typeof profile.icon !== "string" || profile.icon.length === 0) {
+            invalid_import_profile(profile, "icon", "must be a non-empty string");
+        }
+
+        migrate_imported_profile(profile);
+        if (!Number.isInteger(Number(profile.target_number)) ||
+            Number(profile.target_number) < 1) {
+            invalid_import_profile(
+                profile, "target_number", "must be a positive integer");
+        }
+        if (profile.stats === null || typeof profile.stats !== "object" ||
+            Array.isArray(profile.stats)) {
+            invalid_import_profile(profile, "stats", "must be an object");
+        }
+        validate_import_profile_choice(
+            profile, "current_chord", Object.keys(CHORDS_TONE));
+        validate_import_profile_choice(
+            profile, "current_instrument", Object.keys(INSTRUMENT_INFO));
+        validate_import_profile_choice(
+            profile, "show_chord_mode", ["always", "black_only", "never"]);
+        validate_import_profile_choice(
+            profile, "reveal_chord_mode", ["always", "after_guess"]);
+        validate_import_profile_choice(
+            profile, "chord_display_mode",
+            ["shapes_and_letters", "shapes_only", "letters_only"]);
+        validate_import_profile_choice(
+            profile, "single_note_mode",
+            ["white_only_on_black", "all_on_black", "always", "never"]);
+        validate_import_profile_choice(
+            profile, "single_note_correctness_mode",
+            ["only_correct", "only_incorrect", "always"]);
+        if (typeof profile.persist_reaction_face !== "boolean") {
+            invalid_import_profile(
+                profile, "persist_reaction_face", "must be a boolean");
+        }
     }
 
     if (imported.history === undefined || imported.history === null) {
@@ -1874,15 +1955,51 @@ function validate_import(imported) {
     if (typeof imported.history !== "object" || Array.isArray(imported.history)) {
         throw new Error("The backup's session history is invalid.");
     }
-    for (const profile_history of Object.values(imported.history)) {
+    for (const [profile_id, profile_history] of Object.entries(imported.history)) {
         if (profile_history === null || typeof profile_history !== "object" ||
-            Array.isArray(profile_history) ||
-            Object.values(profile_history).some((sessions) => !Array.isArray(sessions))) {
-            throw new Error("The backup's session history is invalid.");
+            Array.isArray(profile_history)) {
+            throw new Error(
+                "Session history for profile ID " + profile_id + " must be an object; got " +
+                import_value_description(profile_history) + ".");
+        }
+        for (const [chord, sessions] of Object.entries(profile_history)) {
+            if (!Array.isArray(sessions)) {
+                throw new Error(
+                    "Session history for profile ID " + profile_id + ", chord `" + chord +
+                    "` must be an array; got " + import_value_description(sessions) + ".");
+            }
         }
     }
 
+    if (imported.state.changelog_last_read_date === undefined) {
+        imported.state.changelog_last_read_date = null;
+    }
+    if (imported.state.suppress_changelog_notifications === undefined) {
+        imported.state.suppress_changelog_notifications = false;
+    }
+
     return imported;
+}
+
+function latest_backup_data_timestamp(imported) {
+    let latest = 0;
+    for (const profile of Object.values(imported.state.profiles)) {
+        latest = Math.max(
+            latest,
+            Number(profile.settings_updated_time) || 0,
+            Number(profile.stats?.updated_time) || 0);
+    }
+    for (const profile_history of Object.values(imported.history)) {
+        for (const sessions of Object.values(profile_history)) {
+            for (const session of sessions) {
+                latest = Math.max(
+                    latest,
+                    Number(session.updated_time) || 0,
+                    Number(session.start_time) || 0);
+            }
+        }
+    }
+    return latest;
 }
 
 async function import_state_file(file_input) {
@@ -1899,8 +2016,20 @@ async function import_state_file(file_input) {
         return;
     }
 
+    if (!Number.isFinite(Number(_PENDING_IMPORT.exported_at)) ||
+        Number(_PENDING_IMPORT.exported_at) <= 0) {
+        _PENDING_IMPORT.exported_at = latest_backup_data_timestamp(_PENDING_IMPORT);
+    }
+
     document.getElementById("import-file-description").textContent =
         "Selected backup: " + file.name;
+    try {
+        prepare_import_preview();
+    } catch (error) {
+        alert("Could not import this file: " + error.message);
+        reset_import_dialog();
+        return;
+    }
     document.getElementById("import-state-container").classList.add("visible");
 }
 
@@ -1908,10 +2037,6 @@ function install_imported_data(state, history) {
     localStorage.setObject(STATE_KEY, state);
     localStorage.setObject(SESSION_HISTORY_KEY, history);
     window.location.reload();
-}
-
-function replace_import() {
-    install_imported_data(_PENDING_IMPORT.state, _PENDING_IMPORT.history);
 }
 
 function clone_object(value) {
@@ -1922,7 +2047,11 @@ function clone_object(value) {
 }
 
 function profile_settings_differ(first, second) {
-    return _PROFILE_SETTING_FIELDS.some(
+    return differing_settings(first, second, _PROFILE_SETTING_FIELDS).length > 0;
+}
+
+function differing_settings(first, second, fields) {
+    return fields.filter(
         ([field]) => JSON.stringify(first[field]) !== JSON.stringify(second[field]));
 }
 
@@ -1966,6 +2095,323 @@ function find_merge_profile_id(profiles, imported_profile) {
     return matching_name === undefined ? null : String(matching_name.id);
 }
 
+function profile_sessions(profile_history) {
+    const sessions = Object.values(profile_history || {}).flat()
+        .filter((session) => Number(session.identifications) > 0)
+        .map((session) => clone_object(session));
+
+    const unique = new Map();
+    for (const session of sessions) {
+        const key = [session.start_time, session.updated_time,
+                     session.identifications, session.current_chord].join("|");
+        unique.set(key, session);
+    }
+    return Array.from(unique.values()).sort(
+        (first, second) => (first.start_time || 0) - (second.start_time || 0));
+}
+
+function summarize_profile(profile, profile_history) {
+    const sessions = profile_sessions(profile_history);
+    const first = sessions.reduce((earliest, session) =>
+        earliest === null || Number(session.start_time) < Number(earliest.start_time)
+            ? session : earliest, null);
+    const last = sessions.reduce((latest, session) =>
+        latest === null || Number(session.updated_time) > Number(latest.updated_time)
+            ? session : latest, null);
+    return {
+        sessions: sessions.length,
+        first: first,
+        last: last,
+        last_updated: Number(profile.stats?.updated_time) || 0,
+    };
+}
+
+function profile_has_importable_data(profile, profile_history) {
+    if (summarize_profile(profile, profile_history).sessions > 0 ||
+        Number(profile.stats?.identifications) > 0 ||
+        profile.current_chord !== _DEFAULT_CHORD ||
+        profile.current_instrument !== _DEFAULT_INSTRUMENT) {
+        return true;
+    }
+    if (profile.id != _GUEST_USER_ID) {
+        return true;
+    }
+
+    const defaults = {
+        name: "Guest",
+        icon: "fa-user",
+        target_number: _DEFAULT_TARGET_NUMBER,
+        show_chord_mode: _DEFAULT_SHOW_CHORD_MODE,
+        reveal_chord_mode: _DEFAULT_REVEAL_CHORD_MODE,
+        chord_display_mode: _DEFAULT_CHORD_DISPLAY_MODE,
+        single_note_mode: _DEFAULT_SINGLE_NOTE_MODE,
+        single_note_correctness_mode: _DEFAULT_SINGLE_NOTE_CORRECTNESS_MODE,
+        persist_reaction_face: _DEFAULT_PERSIST_REACTION_FACE,
+    };
+    return profile_settings_differ(profile, defaults);
+}
+
+function format_import_date(timestamp) {
+    return timestamp ? format_date(new Date(timestamp * 1000)) : "—";
+}
+
+function profile_conflict_count(local_profile, imported_profile) {
+    if (local_profile === null) {
+        return 0;
+    }
+    return differing_settings(
+        local_profile, imported_profile, _PROFILE_SETTING_FIELDS).length;
+}
+
+function prepare_import_preview() {
+    const imported_profiles = Object.values(_PENDING_IMPORT.state.profiles)
+        .filter((profile) => profile_has_importable_data(
+            profile, _PENDING_IMPORT.history[String(profile.id)]));
+    _IMPORT_PROFILE_PLANS = imported_profiles.map((profile) => {
+        const target_id = find_merge_profile_id(STATE.profiles, profile);
+        const local_profile = target_id === null ? null : STATE.profiles[target_id];
+        return {
+            imported_id: String(profile.id),
+            target_id: target_id,
+            local: local_profile,
+            imported: profile,
+            action: null,
+            conflicts: profile_conflict_count(local_profile, profile),
+        };
+    });
+
+    if (_IMPORT_PROFILE_PLANS.length === 0) {
+        throw new Error("This backup has no profiles with history or non-default settings.");
+    }
+
+    const profile_word = _IMPORT_PROFILE_PLANS.length === 1 ? "profile" : "profiles";
+    const session_count = _IMPORT_PROFILE_PLANS.reduce((total, plan) =>
+        total + summarize_profile(
+            plan.imported, _PENDING_IMPORT.history[plan.imported_id]).sessions, 0);
+    const global_conflict = differing_settings(
+        STATE, _PENDING_IMPORT.state, _GLOBAL_SETTING_FIELDS).length > 0;
+    const profile_conflicts = _IMPORT_PROFILE_PLANS.filter(
+        (plan) => plan.conflicts > 0).length;
+    const followups = profile_conflicts + (global_conflict ? 1 : 0);
+    document.getElementById("import-followup-description").textContent =
+        "The backup contains " + _IMPORT_PROFILE_PLANS.length + " " + profile_word +
+        " and " + session_count + " completed " +
+        (session_count === 1 ? "session" : "sessions") + ". " +
+        (followups === 0
+            ? "All merges can happen automatically."
+            : "Depending on your selections, up to " + followups + " settings " +
+              (followups === 1 ? "choice" : "choices") + " will follow.");
+    document.getElementById("import-followup-description").textContent +=
+        " Replace only replaces the selected profile; other profiles on this device are kept.";
+
+    if (_IMPORT_PROFILE_PLANS.length === 1) {
+        populate_single_profile_preview(_IMPORT_PROFILE_PLANS[0]);
+    } else {
+        populate_multiple_profile_preview();
+    }
+}
+
+function append_profile_identity(container, profile) {
+    const identity = document.createElement("div");
+    identity.className = "import-profile-identity";
+    const icon = document.createElement("i");
+    icon.className = "fa fa-solid " + profile.icon;
+    icon.setAttribute("aria-hidden", "true");
+    const name = document.createElement("span");
+    name.textContent = profile.name;
+    identity.append(icon, name);
+    container.appendChild(identity);
+}
+
+function append_color_date(container, session, date_field) {
+    const dot = document.createElement("div");
+    dot.className = "import-color-dot " + session.current_chord;
+    dot.title = session.current_chord;
+    const date = document.createElement("span");
+    date.textContent = format_import_date(session[date_field]);
+    container.append(dot, date);
+}
+
+function render_profile_summary(container, profile, profile_history) {
+    container.replaceChildren();
+    if (profile === null) {
+        const empty = document.createElement("p");
+        empty.textContent = "No matching profile on this device.";
+        empty.className = "import-merge-description";
+        container.appendChild(empty);
+        return;
+    }
+
+    append_profile_identity(container, profile);
+    const summary = summarize_profile(profile, profile_history);
+    const details = document.createElement("dl");
+    details.className = "import-profile-detail";
+
+    const append_detail = (label, value) => {
+        const term = document.createElement("dt");
+        term.textContent = label;
+        const description = document.createElement("dd");
+        if (typeof value === "string") {
+            description.textContent = value;
+        } else {
+            description.appendChild(value);
+        }
+        details.append(term, description);
+    };
+
+    if (summary.sessions === 0) {
+        append_detail("History", "No completed sessions");
+    } else {
+        const endpoints = document.createElement("span");
+        endpoints.className = "import-history-endpoints";
+        append_color_date(endpoints, summary.first, "start_time");
+        const separator = document.createElement("span");
+        separator.textContent = "–";
+        endpoints.appendChild(separator);
+        append_color_date(endpoints, summary.last, "updated_time");
+        append_detail("History", endpoints);
+    }
+    append_detail("Sessions", String(summary.sessions));
+    const current = document.createElement("span");
+    current.className = "import-history-endpoints";
+    append_color_date(current, {
+        current_chord: profile.current_chord,
+        updated_time: summary.last_updated,
+    }, "updated_time");
+    append_detail("Current", current);
+    container.appendChild(details);
+}
+
+function populate_single_profile_preview(plan) {
+    document.getElementById("import-single-profile").hidden = false;
+    document.getElementById("import-multiple-profiles").hidden = true;
+    render_profile_summary(
+        document.getElementById("existing-profile-summary"),
+        plan.local,
+        plan.target_id === null ? {} : get_session_history()[plan.target_id]);
+    render_profile_summary(
+        document.getElementById("incoming-profile-summary"),
+        plan.imported,
+        _PENDING_IMPORT.history[plan.imported_id]);
+
+    const description = plan.local === null
+        ? "This is a new profile, so merging can happen automatically."
+        : (plan.conflicts === 0
+            ? "The profile settings agree, so merging can happen automatically."
+            : "Merging will require one settings choice screen for this profile.");
+    document.getElementById("single-profile-merge-description").textContent = description;
+}
+
+function append_table_cell(row, value) {
+    const cell = document.createElement("td");
+    cell.textContent = value;
+    row.appendChild(cell);
+}
+
+function append_table_summary(row, profile, profile_history) {
+    if (profile === null) {
+        const cell = document.createElement("td");
+        cell.colSpan = 3;
+        cell.textContent = "New profile";
+        row.appendChild(cell);
+        return;
+    }
+    const summary = summarize_profile(profile, profile_history);
+    append_table_cell(row, format_import_date(summary.first?.start_time));
+    append_table_cell(row, format_import_date(summary.last?.updated_time));
+    append_table_cell(row, String(summary.sessions));
+}
+
+function populate_multiple_profile_preview() {
+    document.getElementById("import-single-profile").hidden = true;
+    document.getElementById("import-multiple-profiles").hidden = false;
+    const body = document.getElementById("import-profile-table-body");
+    body.replaceChildren();
+
+    for (const [index, plan] of _IMPORT_PROFILE_PLANS.entries()) {
+        const row = document.createElement("tr");
+        const heading = document.createElement("th");
+        heading.scope = "row";
+        const identity = document.createElement("span");
+        identity.className = "import-table-profile-name";
+        const icon = document.createElement("i");
+        icon.className = "fa fa-solid " + plan.imported.icon;
+        const name = document.createElement("span");
+        name.textContent = plan.imported.name;
+        identity.append(icon, name);
+        heading.appendChild(identity);
+        const conflict_note = document.createElement("span");
+        conflict_note.className = "import-table-conflicts";
+        conflict_note.textContent = plan.conflicts === 0
+            ? "Automatic merge"
+            : plan.conflicts + " setting " +
+              (plan.conflicts === 1 ? "difference" : "differences");
+        heading.appendChild(conflict_note);
+        row.appendChild(heading);
+
+        append_table_summary(
+            row,
+            plan.local,
+            plan.target_id === null ? {} : get_session_history()[plan.target_id]);
+        append_table_summary(
+            row, plan.imported, _PENDING_IMPORT.history[plan.imported_id]);
+
+        for (const action of ["merge", "replace", "skip"]) {
+            const cell = document.createElement("td");
+            const radio = document.createElement("input");
+            radio.type = "radio";
+            radio.name = "import-profile-" + index;
+            radio.value = action;
+            const action_label = action === "skip" ? "Don't import" :
+                action[0].toUpperCase() + action.slice(1);
+            radio.setAttribute(
+                "aria-label", action_label + " " + plan.imported.name);
+            radio.addEventListener("change", () => {
+                plan.action = action;
+                update_import_continue_button();
+            });
+            cell.appendChild(radio);
+            row.appendChild(cell);
+        }
+        body.appendChild(row);
+    }
+    update_import_continue_button();
+}
+
+function update_import_continue_button() {
+    document.getElementById("continue-import-button").disabled =
+        _IMPORT_PROFILE_PLANS.some((plan) => plan.action === null);
+}
+
+function clear_import_selections() {
+    for (const radio of document.querySelectorAll(
+            ".import-profile-table input[type='radio']")) {
+        radio.checked = false;
+    }
+    for (const plan of _IMPORT_PROFILE_PLANS) {
+        plan.action = null;
+    }
+    update_import_continue_button();
+}
+
+function select_all_import_profiles(action) {
+    for (const [index, plan] of _IMPORT_PROFILE_PLANS.entries()) {
+        plan.action = action;
+        document.querySelector(
+            "input[name='import-profile-" + index + "'][value='" + action + "']").checked = true;
+    }
+    update_import_continue_button();
+}
+
+function select_single_import_action(action) {
+    _IMPORT_PROFILE_PLANS[0].action = action;
+    continue_import_selection();
+}
+
+function continue_import_selection() {
+    apply_import_plan();
+}
+
 function merge_session_arrays(current_sessions, imported_sessions) {
     const sessions = [...(current_sessions || []), ...(imported_sessions || [])];
     const unique_sessions = new Map();
@@ -1990,20 +2436,34 @@ function newer_profile(first, second) {
     return first_time >= second_time ? first : second;
 }
 
-function merge_import() {
+function latest_changelog_read_date(local_date, imported_date) {
+    if (local_date === null || local_date === undefined) {
+        return imported_date ?? null;
+    }
+    if (imported_date === null || imported_date === undefined) {
+        return local_date;
+    }
+    return local_date >= imported_date ? local_date : imported_date;
+}
+
+function apply_import_plan() {
     const imported_state = _PENDING_IMPORT.state;
-    const imported_history = _PENDING_IMPORT.history;
     const imported_timestamp = Number(_PENDING_IMPORT.exported_at) || 0;
     const local_timestamp = current_backup_timestamp();
-    const imported_to_merged_ids = {};
 
     _IMPORT_MERGED_STATE = clone_object(STATE);
     _IMPORT_MERGED_HISTORY = clone_object(get_session_history());
     _IMPORT_CONFLICTS = [];
 
-    for (const imported_profile of Object.values(imported_state.profiles)) {
-        let target_id = find_merge_profile_id(
-            _IMPORT_MERGED_STATE.profiles, imported_profile);
+    const selected_plans = _IMPORT_PROFILE_PLANS.filter(
+        (plan) => plan.action !== "skip");
+    if (selected_plans.length === 0) {
+        cancel_import();
+        return;
+    }
+    for (const plan of selected_plans) {
+        const imported_profile = plan.imported;
+        let target_id = plan.target_id;
         if (target_id === null) {
             target_id = String(imported_profile.id);
             if (Object.prototype.hasOwnProperty.call(
@@ -2013,44 +2473,67 @@ function merge_import() {
             const added_profile = clone_object(imported_profile);
             added_profile.id = Number(target_id);
             _IMPORT_MERGED_STATE.profiles[target_id] = added_profile;
+        } else if (plan.action === "replace") {
+            const replacement = clone_object(imported_profile);
+            replacement.id = _IMPORT_MERGED_STATE.profiles[target_id].id;
+            _IMPORT_MERGED_STATE.profiles[target_id] = replacement;
         } else {
             const local_profile = _IMPORT_MERGED_STATE.profiles[target_id];
             const base_profile = clone_object(newer_profile(local_profile, imported_profile));
             base_profile.id = local_profile.id;
             _IMPORT_MERGED_STATE.profiles[target_id] = base_profile;
 
-            if (profile_settings_differ(local_profile, imported_profile)) {
+            const differing_fields = differing_settings(
+                local_profile, imported_profile, _PROFILE_SETTING_FIELDS);
+            if (differing_fields.length > 0) {
                 const local_settings_time =
-                    profile_settings_timestamp(local_profile, local_timestamp);
+                    profile_settings_timestamp(local_profile);
                 const imported_settings_time =
                     profile_settings_timestamp(imported_profile, imported_timestamp);
                 _IMPORT_CONFLICTS.push({
                     target_id: target_id,
                     local: clone_object(local_profile),
                     imported: clone_object(imported_profile),
+                    fields: differing_fields,
+                    kind: "profile",
+                    name: local_profile.name,
                     newer: imported_settings_time > local_settings_time
                         ? "imported" : "local",
                 });
             }
         }
-        imported_to_merged_ids[String(imported_profile.id)] = target_id;
-    }
 
-    for (const [imported_id, profile_history] of Object.entries(imported_history)) {
-        const target_id = imported_to_merged_ids[imported_id] || imported_id;
-        if (_IMPORT_MERGED_HISTORY[target_id] === undefined) {
-            _IMPORT_MERGED_HISTORY[target_id] = {};
+        const imported_profile_history =
+            _PENDING_IMPORT.history[plan.imported_id] || {};
+        if (plan.action === "replace") {
+            _IMPORT_MERGED_HISTORY[target_id] = clone_object(imported_profile_history);
+        } else {
+            if (_IMPORT_MERGED_HISTORY[target_id] === undefined) {
+                _IMPORT_MERGED_HISTORY[target_id] = {};
+            }
+            merge_profile_history(
+                _IMPORT_MERGED_HISTORY[target_id], imported_profile_history);
         }
-        merge_profile_history(_IMPORT_MERGED_HISTORY[target_id], profile_history);
     }
 
-    _IMPORT_MERGED_STATE.changelog_last_read_date = Math.max(
-        _IMPORT_MERGED_STATE.changelog_last_read_date || 0,
-        imported_state.changelog_last_read_date || 0) || null;
-    if (imported_timestamp > local_timestamp &&
-        imported_state.suppress_changelog_notifications !== undefined) {
-        _IMPORT_MERGED_STATE.suppress_changelog_notifications =
-            imported_state.suppress_changelog_notifications;
+    // Reading the changelog in either backup means it remains read. An import
+    // must never make a previously dismissed notification unread again.
+    _IMPORT_MERGED_STATE.changelog_last_read_date = latest_changelog_read_date(
+        _IMPORT_MERGED_STATE.changelog_last_read_date,
+        imported_state.changelog_last_read_date);
+
+    const global_fields = differing_settings(
+        STATE, imported_state, _GLOBAL_SETTING_FIELDS);
+    if (selected_plans.length > 0 && global_fields.length > 0) {
+        _IMPORT_CONFLICTS.push({
+            target_id: null,
+            local: clone_object(STATE),
+            imported: clone_object(imported_state),
+            fields: global_fields,
+            kind: "global",
+            name: "Global settings",
+            newer: imported_timestamp > local_timestamp ? "imported" : "local",
+        });
     }
 
     if (_IMPORT_CONFLICTS.length === 0) {
@@ -2065,9 +2548,6 @@ function merge_import() {
 }
 
 function setting_display_value(field, value) {
-    if (field === "icon") {
-        return String(value).replace(/^fa-/, "").replaceAll("-", " ");
-    }
     if (typeof value === "boolean") {
         return value ? "Yes" : "No";
     }
@@ -2079,7 +2559,12 @@ function populate_import_settings_conflict() {
     const grid = document.getElementById("import-settings-grid");
     grid.replaceChildren();
     document.getElementById("import-conflict-title").textContent =
-        "Settings for " + conflict.local.name;
+        "Merge conflicts found for " + conflict.name + " (" +
+        (_IMPORT_CONFLICT_INDEX + 1) + " of " + _IMPORT_CONFLICTS.length + " conflicts)";
+    document.getElementById("import-conflict-description").textContent =
+        conflict.kind === "global"
+            ? "Choose which value to keep for the app-wide setting."
+            : "Choose which value to keep for each setting that differs.";
 
     const local_age = conflict.newer === "local" ? "newer" : "older";
     const imported_age = conflict.newer === "imported" ? "newer" : "older";
@@ -2093,14 +2578,15 @@ function populate_import_settings_conflict() {
         grid.appendChild(element);
     }
 
-    const selected_side = _IMPORT_CHOICE_FOR_ALL === null
+    const selected_side = conflict.kind === "global" || _IMPORT_CHOICE_FOR_ALL === null
         ? conflict.newer
         : (_IMPORT_CHOICE_FOR_ALL === "newer"
             ? conflict.newer
             : (conflict.newer === "local" ? "imported" : "local"));
 
-    for (const [field, label] of _PROFILE_SETTING_FIELDS) {
+    for (const [field, label] of conflict.fields) {
         const label_element = document.createElement("div");
+        label_element.className = "import-setting-name";
         label_element.textContent = label;
         grid.appendChild(label_element);
 
@@ -2113,14 +2599,34 @@ function populate_import_settings_conflict() {
             radio.value = side;
             radio.checked = side === selected_side;
             value_label.appendChild(radio);
-            value_label.append(setting_display_value(field, conflict[side][field]));
+            const value_element = document.createElement("span");
+            value_element.className = "import-setting-value-text";
+            if (field === "icon") {
+                const icon = document.createElement("i");
+                icon.className = "fa fa-solid import-setting-icon " + conflict[side][field];
+                icon.setAttribute("aria-label", setting_display_value(
+                    field, conflict[side][field]));
+                value_element.appendChild(icon);
+            } else {
+                value_element.textContent = setting_display_value(
+                    field, conflict[side][field]);
+            }
+            value_label.appendChild(value_element);
             grid.appendChild(value_label);
         }
     }
 
+    const remaining_users = _IMPORT_CONFLICTS.slice(_IMPORT_CONFLICT_INDEX + 1)
+        .filter((remaining) => remaining.kind === "profile").length;
+    const apply_container = document.getElementById("apply-import-choice-to-all").closest("label");
+    apply_container.hidden = conflict.kind !== "profile" || remaining_users === 0;
+    document.getElementById("apply-import-choice-label").textContent =
+        "Apply choice to remaining " + remaining_users + " " +
+        (remaining_users === 1 ? "user" : "users");
+
     const next_button = document.getElementById("next-import-conflict-button");
     next_button.textContent = _IMPORT_CONFLICT_INDEX === _IMPORT_CONFLICTS.length - 1
-        ? "Finish import" : "Next user";
+        ? "Finish import" : "Next conflict";
 }
 
 function choose_all_import_settings(age) {
@@ -2133,29 +2639,35 @@ function choose_all_import_settings(age) {
         radio.checked = true;
     }
 
-    if (document.getElementById("apply-import-choice-to-all").checked) {
+    if (conflict.kind === "profile" &&
+        document.getElementById("apply-import-choice-to-all").checked) {
         _IMPORT_CHOICE_FOR_ALL = age;
     }
 }
 
 function save_import_settings_choice() {
     const conflict = _IMPORT_CONFLICTS[_IMPORT_CONFLICT_INDEX];
-    const merged_profile = _IMPORT_MERGED_STATE.profiles[conflict.target_id];
-    for (const [field] of _PROFILE_SETTING_FIELDS) {
+    const merge_target = conflict.kind === "global"
+        ? _IMPORT_MERGED_STATE
+        : _IMPORT_MERGED_STATE.profiles[conflict.target_id];
+    for (const [field] of conflict.fields) {
         const selected = document.querySelector(
             "input[name='import-setting-" + field + "']:checked").value;
-        merged_profile[field] = clone_object(conflict[selected][field]);
+        merge_target[field] = clone_object(conflict[selected][field]);
     }
-    merged_profile.settings_updated_time = Math.max(
-        profile_settings_timestamp(conflict.local),
-        profile_settings_timestamp(
-            conflict.imported, Number(_PENDING_IMPORT.exported_at) || 0));
+    if (conflict.kind === "profile") {
+        merge_target.settings_updated_time = Math.max(
+            profile_settings_timestamp(conflict.local),
+            profile_settings_timestamp(
+                conflict.imported, Number(_PENDING_IMPORT.exported_at) || 0));
+    }
 
     _IMPORT_CONFLICT_INDEX++;
     if (_IMPORT_CONFLICT_INDEX === _IMPORT_CONFLICTS.length) {
         install_imported_data(_IMPORT_MERGED_STATE, _IMPORT_MERGED_HISTORY);
         return;
     }
+    document.getElementById("apply-import-choice-to-all").checked = false;
     populate_import_settings_conflict();
 }
 
