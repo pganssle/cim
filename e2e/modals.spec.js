@@ -30,6 +30,8 @@ test.describe("Informational modal", () => {
             "The code is open source and developed on GitHub");
         await expect(first_paragraph.locator("a[href='https://github.com/pganssle/cim']"))
             .toHaveText("on GitHub");
+        await expect(first_paragraph.locator("a[href='THIRD_PARTY_NOTICES.html']"))
+            .toHaveText("third-party notices");
         await expect(page.locator("#i-infobox")).not.toContainText("early alpha");
         await expect(page.locator("#changelog-section > h2")).toHaveText("What's New");
         await expect(page.locator("#changelog-section .changelog-entries > h2"))
