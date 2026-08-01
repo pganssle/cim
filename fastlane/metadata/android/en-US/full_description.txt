@@ -1,0 +1,18 @@
+Chord Identification Method Trainer is an implementation of Eguchi's chord
+identification method, an approach to teaching absolute pitch to young
+children.
+
+The trainer plays a chord and asks the child to identify it by color. It is
+designed for several short practice sessions each day and introduces new
+chords gradually as the child progresses.
+
+Features include:
+
+* Multiple profiles on one device
+* Configurable levels, session lengths, and instruments
+* Practice history and statistics
+* Single-note follow-up exercises
+* All audio and application files bundled for permanent offline use
+
+All training data stays on the device. State can be exported manually using
+the application's hidden backup controls.

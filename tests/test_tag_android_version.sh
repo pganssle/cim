@@ -48,6 +48,36 @@ assert_equal "$(next_version true)" "$year.$month.3.dev1"
 
 touch dirty
 assert_fails create_tag false
+git add dirty
+git -c user.name=Test -c user.email=test@example.com \
+    commit --quiet -m 'Make tree clean again'
+
+mkdir -p scripts fdroid/metadata
+cp "$OLDPWD/scripts/update_android_version.mjs" scripts/
+cat > android-version.json <<'EOF'
+{
+  "versionName": "00.00.0",
+  "versionCode": 1
+}
+EOF
+cat > fdroid/metadata/us.ganbar.cim.yml <<'EOF'
+Builds:
+  - versionName: 00.00.0
+    versionCode: 1
+    commit: v00.00.0
+CurrentVersion: 00.00.0
+CurrentVersionCode: 1
+EOF
+git add android-version.json fdroid scripts
+git -c user.name=Test -c user.email=test@example.com \
+    commit --quiet -m 'Add Android metadata'
+git config user.name Test
+git config user.email test@example.com
+create_tag false > /dev/null
+assert_equal "$(git tag --points-at HEAD)" "v$year.$month.4"
+assert_equal "$(node -p "require('./android-version.json').versionName")" \
+    "$year.$month.4"
+assert_equal "$(git log -1 --format=%s)" "Prepare v$year.$month.4"
 popd > /dev/null
 
 echo 'Version tagging tests passed'

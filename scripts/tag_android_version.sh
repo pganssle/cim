@@ -122,6 +122,15 @@ create_tag() {
     version=$(next_version "$dev")
     local code
     code=$(version_code "$version")
+
+    if [[ $dev == false ]]; then
+        node scripts/update_android_version.mjs "$version" "$code"
+        if ! git diff --quiet -- android-version.json fdroid/metadata/; then
+            git add android-version.json fdroid/metadata/us.ganbar.cim.yml
+            git commit -m "Prepare v$version"
+        fi
+    fi
+
     git tag "v$version"
     echo "Created v$version (versionCode $code)"
 }

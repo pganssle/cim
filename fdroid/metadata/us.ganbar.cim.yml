@@ -1,0 +1,55 @@
+Categories:
+  - Science & Education
+License: Apache-2.0
+AuthorName: Paul Ganssle
+WebSite: https://cim.ganbar.us/
+SourceCode: https://github.com/pganssle/cim
+IssueTracker: https://github.com/pganssle/cim/issues
+Changelog: https://github.com/pganssle/cim/releases
+Binaries: https://github.com/pganssle/cim/releases/download/v%v/cim-v%v.apk
+AllowedAPKSigningKeys: 815ea4ee3f146cb1f2bf03e0b9a99caedf8813549421f97b713074ee8194c9d1
+
+AutoName: Chord Identification Method Trainer
+
+MaintainerNotes: |-
+  The two scanignored archives are Capacitor's source Android project
+  templates. `npx cap add android` needs them to generate the native project;
+  they are not included in the resulting APK.
+
+RepoType: git
+Repo: https://github.com/pganssle/cim.git
+
+Builds:
+  - versionName: 26.08.0
+    versionCode: 608000000
+    commit: v26.08.0
+    sudo:
+      - apt-get update
+      - apt-get install -y build-essential bundler ruby-dev xz-utils
+      - curl -Lo node.tar.xz https://nodejs.org/dist/v22.23.2/node-v22.23.2-linux-x64.tar.xz
+      - echo "d60acfe00a2932254bb0ad20e01b0d74397a0875595de719654b214f4b03f307  node.tar.xz"
+        | sha256sum -c -
+      - tar xJf node.tar.xz --strip-components=1 -C /usr/local/
+    output: android/app/build/outputs/apk/release/app-release-unsigned.apk
+    prebuild:
+      - npm ci
+      - bundle config set --local path vendor/bundle
+      - bundle install
+      - make android-assets
+    scanignore:
+      - node_modules/@capacitor/cli/assets/android-template.tar.gz
+      - node_modules/@capacitor/cli/assets/capacitor-cordova-android-plugins.tar.gz
+    scandelete:
+      - .jekyll-cache
+      - node_modules
+      - vendor/bundle
+    build:
+      - cd android
+      - gradle assembleRelease -PcimVersionName=$$VERSION$$ -PcimVersionCode=$$VERCODE$$
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags ^v[0-9]{2}\.[0-9]{2}\.[0-9]+$
+UpdateCheckData:
+  android-version.json|"versionCode":\s*([0-9]+)|android-version.json|"versionName":\s*"([^"]+)"
+CurrentVersion: 26.08.0
+CurrentVersionCode: 608000000

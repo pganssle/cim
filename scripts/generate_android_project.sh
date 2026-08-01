@@ -25,11 +25,10 @@ done
 
 # Template content we don't use: example tests, the Capacitor-logo
 # splash images (styles-xml.patch replaces them with a solid color),
-# and the stock launcher icons (the generated CIM icons use the same
-# resource names).
+# and the stock launcher icons (the CIM icon is copied from a committed PNG).
 rm -r android/app/src/test android/app/src/androidTest
 rm -r android/app/src/main/res/drawable*
-rm android/app/src/main/res/mipmap-*/ic_launcher*.png
+rm -r android/app/src/main/res/mipmap-*
 
 mkdir -p android/app/src/androidTest
 cp -R android-tests/. android/app/src/androidTest/
