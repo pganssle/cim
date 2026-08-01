@@ -13,3 +13,6 @@ Introduce the chords to the children one at a time, spacing out new chord introd
 
 Feel free to open issues or pull requests or fork the code! The site is designed to be be easy to re-host or run locally. I am not exactly the world's best UX designer or front-end developer, but I am a heavy consumer of this app, so any improvements would be heartily welcomed!
 
+See [Third-party notices](THIRD_PARTY_NOTICES.md) for attribution and licensing
+information for the audio samples, vendored software, fonts, and icons included
+in the application.
