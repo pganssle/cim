@@ -11,5 +11,6 @@ Bad:
 
     Refactored `should_load_single_note_trainer` to accept a correctness flag.
 
-Run `make release` to compile the fragments into `NEWS.md` and rebuild the
-site. The processed `.md` files are deleted after compilation.
+`make html`, `make serve`, and `make release` render pending entries under
+`Web-only Preview` without changing or deleting the fragments. The next stable
+Android release moves them permanently into `NEWS.md` under its version.

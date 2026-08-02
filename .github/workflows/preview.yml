@@ -55,6 +55,10 @@ jobs:
           bundler-cache: true
       - name: Initialize site
         run: make init
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
       - name: Build site
         run: make html
         env:

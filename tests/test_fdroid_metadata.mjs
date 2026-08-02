@@ -3,6 +3,8 @@ import childProcess from "node:child_process";
 import fs from "node:fs";
 
 const version = JSON.parse(fs.readFileSync("android-version.json", "utf8"));
+const changelog =
+  `fastlane/metadata/android/en-US/changelogs/${version.versionCode}.txt`;
 const metadata = fs.readFileSync(
   "fdroid/metadata/us.ganbar.cim.yml",
   "utf8",
@@ -49,8 +51,11 @@ for (const file of [
   "fastlane/metadata/android/en-US/images/tenInchScreenshots/02-single-note-follow-on.png",
   "fastlane/metadata/android/en-US/images/tenInchScreenshots/03-music-trainer.png",
   "fastlane/metadata/android/en-US/images/tenInchScreenshots/04-statistics.png",
+  changelog,
 ]) {
   assert(fs.statSync(file).size > 0, `${file} is missing or empty`);
 }
+assert(fs.readFileSync(changelog, "utf8").length <= 500,
+  `${changelog} exceeds F-Droid's 500-character limit`);
 
 console.log("F-Droid metadata is consistent with android-version.json");

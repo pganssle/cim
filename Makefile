@@ -38,17 +38,19 @@ vendor/bundle:
 init: vendor/bundle
 
 .PHONY: html
-html: vendor/bundle
+html: vendor/bundle news
 	$(JEKYLL) build
 
 .PHONY: serve
-serve: vendor/bundle
+serve: vendor/bundle news
 	$(JEKYLL) serve -w
 
+.PHONY: news
+news:
+	node scripts/update_changelog.mjs build "$$(date +%F)"
+
 .PHONY: release
-release: vendor/bundle node_modules
-	npm run release:news -- "$$(date +%F)"
-	$(JEKYLL) build
+release: html
 
 .PHONY: clean
 clean:

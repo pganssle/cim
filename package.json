@@ -7,7 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "release:news": "news-fragments burn",
+    "build:news": "node scripts/update_changelog.mjs build",
     "screenshots:store": "node scripts/update_store_screenshots.mjs",
     "test:e2e": "playwright test"
   },
@@ -17,23 +17,6 @@
     "@capacitor/core": "^8.0.0",
     "@playwright/test": "1.61.1",
     "http-server": "14.1.1",
-    "news-fragments": "^4.4.4",
     "playwright": "1.61.1"
-  },
-  "release-it": {
-    "plugins": {
-      "news-fragments": {
-        "changelogFile": "NEWS.md",
-        "changelogDateFormat": "YYYY-MM-DD",
-        "changelogTemplate": "## {{newVersion}}\n\n{{#fragments}}{{#each fragmentEntries}}- {{this}}\n{{/each}}{{/fragments}}\n",
-        "fragmentsFolder": "changelog.d",
-        "fragmentsTypes": [
-          {
-            "title": "Changes",
-            "extension": "md"
-          }
-        ]
-      }
-    }
   }
 }

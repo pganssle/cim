@@ -52,8 +52,9 @@ git add dirty
 git -c user.name=Test -c user.email=test@example.com \
     commit --quiet -m 'Make tree clean again'
 
-mkdir -p scripts fdroid/metadata
+mkdir -p scripts fdroid/metadata changelog.d fastlane/metadata/android/en-US/changelogs
 cp "$OLDPWD/scripts/update_android_version.mjs" scripts/
+cp "$OLDPWD/scripts/update_changelog.mjs" scripts/
 cat > android-version.json <<'EOF'
 {
   "versionName": "00.00.0",
@@ -68,7 +69,20 @@ Builds:
 CurrentVersion: 00.00.0
 CurrentVersionCode: 1
 EOF
+cat > NEWS.md <<'EOF'
+## Web-only Preview
+
+### 2099-12-31
+- Added a release test entry.
+
+## Android Version v00.00.0
+
+### 2000-01-01
+- Added the original release.
+EOF
+echo 'Contributor instructions.' > changelog.d/README
 git add android-version.json fdroid scripts
+git add NEWS.md changelog.d
 git -c user.name=Test -c user.email=test@example.com \
     commit --quiet -m 'Add Android metadata'
 git config user.name Test
@@ -78,6 +92,15 @@ assert_equal "$(git tag --points-at HEAD)" "v$year.$month.4"
 assert_equal "$(node -p "require('./android-version.json').versionName")" \
     "$year.$month.4"
 assert_equal "$(git log -1 --format=%s)" "Prepare v$year.$month.4"
+code=$(version_code "$year.$month.4")
+test -s "fastlane/metadata/android/en-US/changelogs/$code.txt"
+assert_equal "$(cat "fastlane/metadata/android/en-US/changelogs/$code.txt")" \
+    '- Added a release test entry.'
+if grep -q 'Web-only Preview' NEWS.md; then
+    echo 'error: released NEWS.md still contains Web-only Preview' >&2
+    exit 1
+fi
+grep -q "^## Android Version v$year.$month.4$" NEWS.md
 popd > /dev/null
 
 echo 'Version tagging tests passed'

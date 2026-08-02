@@ -38,23 +38,31 @@ For any user-visible change, create a short `.md` file in `changelog.d/`:
 echo "Added support for left-handed mode." > changelog.d/left-handed-mode.md
 ```
 
-The file name doesn't matter. Write one entry per file, in plain English from the user's perspective. These are compiled into `NEWS.md` by `make release`.
+The file name doesn't matter. Write one entry per file, in plain English from the user's perspective. Site builds combine these with `NEWS.md` without changing either source.
 
 ## Making a release
 
-`make release` compiles all pending `changelog.d/` entries and rebuilds the site:
+`make release` renders all pending `changelog.d/` entries and rebuilds the site:
 
 ```sh
 make release
 ```
 
-This runs `news-fragments`, which:
+This runs the changelog compiler, which:
 
 1. Reads all `*.md` files in `changelog.d/`.
-2. Prepends a new dated block to `NEWS.md`.
-3. Deletes the processed `changelog.d/*.md` files.
+2. Adds a new dated block under `Web-only Preview` in the generated site.
+3. Leaves `NEWS.md` and the fragments unchanged.
 
-Then Jekyll rebuilds the site. `NEWS.md` is the single changelog source and is rendered directly into the information modal.
+Then Jekyll rebuilds the site. The information modal combines the released
+entries in `NEWS.md` with the pending fragments.
+
+Stable Android release preparation consumes the fragments, moves their dated
+preview blocks into `NEWS.md` under an
+`Android Version vYY.MM.patch` heading and writes the same entries, without
+the individual dates, to Fastlane's version-specific F-Droid changelog. The
+`Web-only Preview` heading is omitted when there are no changes newer than the
+most recent Android release.
 
 ## Pull requests
 
