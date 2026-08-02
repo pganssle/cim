@@ -7,40 +7,91 @@ import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 
 const repo_root = dirname(dirname(fileURLToPath(import.meta.url)));
-const cli = join(repo_root, "node_modules", "news-fragments", "src", "cli", "index.js");
+const script = join(repo_root, "scripts", "update_changelog.mjs");
+const released_news = `## Android Version v25.01.0
 
-test("news-fragments compiles and removes pending changelog entries", async ({}, testInfo) => {
+### 2025-01-01
+- An older change.
+`;
+
+function run_changelog(worktree, ...args) {
+    return spawnSync(process.execPath, [script, ...args], {
+        cwd: worktree,
+        encoding: "utf8",
+    });
+}
+
+test("web changelog entries appear only when fragments are pending", async ({}, testInfo) => {
     test.skip(testInfo.project.name !== "chromium", "Changelog compilation only needs one Node runtime.");
 
     const worktree = await mkdtemp(join(tmpdir(), "cim-changelog-"));
     try {
-        const package_config = JSON.parse(
-            await readFile(join(repo_root, "package.json"), "utf8"));
-        await writeFile(join(worktree, "package.json"), JSON.stringify({
-            name: "cim-changelog-test",
-            private: true,
-            type: "module",
-            "release-it": package_config["release-it"],
-        }));
         await mkdir(join(worktree, "changelog.d"));
         await writeFile(join(worktree, "changelog.d", "README"), "Contributor instructions.");
+        await writeFile(join(worktree, "NEWS.md"), released_news);
+
+        let result = run_changelog(worktree, "build", "2099-12-31");
+        expect(result.status, result.stderr || result.stdout).toBe(0);
+        await expect(readFile(join(worktree, "NEWS.md"), "utf8"))
+            .resolves.toBe(released_news);
+        await expect(readFile(join(worktree, "_includes/news.md"), "utf8"))
+            .resolves.toBe(released_news);
+
         await writeFile(join(worktree, "changelog.d", "first.md"), "Added the first change.");
         await writeFile(join(worktree, "changelog.d", "second.md"), "Fixed the second change.");
-        await writeFile(join(worktree, "NEWS.md"), "## 2025-01-01\n\n- An older change.\n");
+        result = run_changelog(worktree, "build", "2099-12-31");
+        expect(result.status, result.stderr || result.stdout).toBe(0);
 
-        const result = spawnSync(process.execPath, [cli, "burn", "2099-12-31"], {
-            cwd: worktree,
-            encoding: "utf8",
-        });
+        const news = await readFile(join(worktree, "_includes/news.md"), "utf8");
+        expect(news).toMatch(/^## Web-only Preview\n\n### 2099-12-31/);
+        expect(news).toContain("- Added the first change.");
+        expect(news).toContain("- Fixed the second change.");
+        expect(news.indexOf("Web-only Preview"))
+            .toBeLessThan(news.indexOf("Android Version v25.01.0"));
+        await expect(readdir(join(worktree, "changelog.d")))
+            .resolves.toEqual(["README", "first.md", "second.md"]);
+        await expect(readFile(join(worktree, "NEWS.md"), "utf8"))
+            .resolves.toBe(released_news);
+
+        result = run_changelog(worktree, "web", "2099-12-31");
+        expect(result.status, result.stderr || result.stdout).toBe(0);
+        await expect(readdir(join(worktree, "changelog.d"))).resolves.toEqual(["README"]);
+    } finally {
+        await rm(worktree, { recursive: true, force: true });
+    }
+});
+
+test("Android releases consolidate preview entries and write F-Droid notes",
+        async ({}, testInfo) => {
+    test.skip(testInfo.project.name !== "chromium", "Changelog compilation only needs one Node runtime.");
+
+    const worktree = await mkdtemp(join(tmpdir(), "cim-android-changelog-"));
+    try {
+        await writeFile(join(worktree, "NEWS.md"), `## Web-only Preview
+
+### 2099-12-31
+- Added the newest change.
+
+### 2099-12-01
+- Fixed an earlier change.
+
+${released_news}`);
+        const result = run_changelog(worktree, "android", "99.12.3", "123456");
         expect(result.status, result.stderr || result.stdout).toBe(0);
 
         const news = await readFile(join(worktree, "NEWS.md"), "utf8");
-        expect(news).toMatch(/^\s*\[\/\/\]: # \(s-2099-12-31\)/);
-        expect(news).toContain("## 2099-12-31");
-        expect(news).toContain("- Added the first change.");
-        expect(news).toContain("- Fixed the second change.");
-        expect(news.indexOf("## 2099-12-31")).toBeLessThan(news.indexOf("## 2025-01-01"));
-        await expect(readdir(join(worktree, "changelog.d"))).resolves.toEqual(["README"]);
+        expect(news).not.toContain("Web-only Preview");
+        expect(news).toMatch(/^## Android Version v99\.12\.3\n\n### 2099-12-31/);
+        expect(news).toContain("### 2099-12-01");
+        expect(news.indexOf("Android Version v99.12.3"))
+            .toBeLessThan(news.indexOf("Android Version v25.01.0"));
+
+        const fdroid = await readFile(join(worktree,
+            "fastlane/metadata/android/en-US/changelogs/123456.txt"), "utf8");
+        expect(fdroid).toBe(
+            "- Added the newest change.\n- Fixed an earlier change.\n");
+        expect(fdroid).not.toContain("2099-12-31");
+        expect(fdroid.length).toBeLessThanOrEqual(500);
     } finally {
         await rm(worktree, { recursive: true, force: true });
     }

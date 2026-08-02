@@ -48,6 +48,10 @@ jobs:
         uses: actions/configure-pages@v3
       - name: Initialize site
         run: make init
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
       - name: Build with Jekyll
         run: make html
         # run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"

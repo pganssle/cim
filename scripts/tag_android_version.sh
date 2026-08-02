@@ -124,9 +124,13 @@ create_tag() {
     code=$(version_code "$version")
 
     if [[ $dev == false ]]; then
+        node scripts/update_changelog.mjs web "$(date +%F)"
+        node scripts/update_changelog.mjs android "$version" "$code"
         node scripts/update_android_version.mjs "$version" "$code"
-        if ! git diff --quiet -- android-version.json fdroid/metadata/; then
-            git add android-version.json fdroid/metadata/us.ganbar.cim.yml
+        git add -A -- NEWS.md changelog.d android-version.json \
+            fdroid/metadata/us.ganbar.cim.yml \
+            "fastlane/metadata/android/en-US/changelogs/$code.txt"
+        if ! git diff --cached --quiet; then
             git commit -m "Prepare v$version"
         fi
     fi

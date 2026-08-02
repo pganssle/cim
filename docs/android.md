@@ -201,11 +201,14 @@ Releases are built by `.github/workflows/android.yml`:
 git push origin --tags
 ```
 
-For a stable release, the script updates `android-version.json` and the
-F-Droid build entry, makes a `Prepare vYY.MM.patch` commit when necessary,
-then tags that commit. The workflow builds a signed APK and attaches it as
-`cim-vYY.MM.patch.apk` to a GitHub Release for the tag. Sideload it directly,
-or use Obtainium as described above to track the releases page.
+For a stable release, the script compiles any pending changelog fragments,
+moves the `Web-only Preview` entries in `NEWS.md` under the new Android
+version, and writes an undated, version-code-named copy for F-Droid. It then
+updates `android-version.json` and the F-Droid build entry, makes a
+`Prepare vYY.MM.patch` commit, and tags that commit. The workflow builds a
+signed APK and attaches it as `cim-vYY.MM.patch.apk` to a GitHub Release for
+the tag. Sideload it directly, or use Obtainium as described above to track
+the releases page.
 
 Versions have the form `YY.MM.patch`. The script resets `patch` to `0` in a
 new month and otherwise increments the latest tag's patch number. Android's

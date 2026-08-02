@@ -1,9 +1,9 @@
 ---
 ---
 {% include note_variables.html %}
-{% capture news_markdown %}{% include_relative NEWS.md %}{% endcapture %}
-{% assign news_releases = news_markdown | split: "## " %}
-{% assign newest_news_date = news_releases[1] | slice: 0, 10 | strip %}
+{% capture news_markdown %}{% include news.md %}{% endcapture %}
+{% assign news_dates = news_markdown | split: "### " %}
+{% assign newest_news_date = news_dates[1] | slice: 0, 10 | strip %}
 
 <!doctype html>
 <html>
