@@ -210,6 +210,11 @@ signed APK and attaches it as `cim-vYYYY.MM.patch.apk` to a GitHub Release for
 the tag. Sideload it directly, or use Obtainium as described above to track
 the releases page.
 
+The tag workflow creates the GitHub Release; don't create one manually. If no
+release appears after pushing the tag, check the corresponding `Android APK`
+workflow run. A failed prerequisite stops the job before it builds, signs, or
+publishes the APK.
+
 Versions have the form `YYYY.MM.patch`. The script resets `patch` to `0` in a
 new month and otherwise increments the latest tag's patch number. Android's
 integer `versionCode` stores the year since 2020, followed by two digits for
