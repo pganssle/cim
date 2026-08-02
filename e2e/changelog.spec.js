@@ -8,7 +8,7 @@ import { expect, test } from "@playwright/test";
 
 const repo_root = dirname(dirname(fileURLToPath(import.meta.url)));
 const script = join(repo_root, "scripts", "update_changelog.mjs");
-const released_news = `## Android Version v25.01.0
+const released_news = `## Android Version v2025.01.0
 
 ### 2025-01-01
 - An older change.
@@ -47,7 +47,7 @@ test("web changelog entries appear only when fragments are pending", async ({}, 
         expect(news).toContain("- Added the first change.");
         expect(news).toContain("- Fixed the second change.");
         expect(news.indexOf("Web-only Preview"))
-            .toBeLessThan(news.indexOf("Android Version v25.01.0"));
+            .toBeLessThan(news.indexOf("Android Version v2025.01.0"));
         await expect(readdir(join(worktree, "changelog.d")))
             .resolves.toEqual(["README", "first.md", "second.md"]);
         await expect(readFile(join(worktree, "NEWS.md"), "utf8"))
@@ -76,15 +76,15 @@ test("Android releases consolidate preview entries and write F-Droid notes",
 - Fixed an earlier change.
 
 ${released_news}`);
-        const result = run_changelog(worktree, "android", "99.12.3", "123456");
+        const result = run_changelog(worktree, "android", "2099.12.3", "123456");
         expect(result.status, result.stderr || result.stdout).toBe(0);
 
         const news = await readFile(join(worktree, "NEWS.md"), "utf8");
         expect(news).not.toContain("Web-only Preview");
-        expect(news).toMatch(/^## Android Version v99\.12\.3\n\n### 2099-12-31/);
+        expect(news).toMatch(/^## Android Version v2099\.12\.3\n\n### 2099-12-31/);
         expect(news).toContain("### 2099-12-01");
-        expect(news.indexOf("Android Version v99.12.3"))
-            .toBeLessThan(news.indexOf("Android Version v25.01.0"));
+        expect(news.indexOf("Android Version v2099.12.3"))
+            .toBeLessThan(news.indexOf("Android Version v2025.01.0"));
 
         const fdroid = await readFile(join(worktree,
             "fastlane/metadata/android/en-US/changelogs/123456.txt"), "utf8");

@@ -42,7 +42,7 @@ test.describe("Informational modal", () => {
         await expect(page.locator("#i-infobox-trigger-container"))
             .toHaveAttribute("data-newest-date", newest_date);
         await expect(page.locator("#changelog-section .changelog-entries > h2").nth(1))
-            .toHaveText("Android Version v26.08.0");
+            .toHaveText("Android Version v2026.08.0");
 
         const changelog = page.locator(".changelog-container");
         await expect(changelog).toContainText("What's New");

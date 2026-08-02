@@ -4,7 +4,7 @@ import fs from "node:fs";
 
 const [versionName, versionCodeText] = process.argv.slice(2);
 const versionCode = Number(versionCodeText);
-if (!/^\d{2}\.\d{2}\.\d+$/.test(versionName ?? "") ||
+if (!/^\d{4}\.\d{2}\.\d+$/.test(versionName ?? "") ||
     !Number.isSafeInteger(versionCode)) {
   console.error(`usage: ${process.argv[1]} VERSION_NAME VERSION_CODE`);
   process.exit(2);

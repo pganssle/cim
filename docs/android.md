@@ -205,25 +205,25 @@ For a stable release, the script compiles any pending changelog fragments,
 moves the `Web-only Preview` entries in `NEWS.md` under the new Android
 version, and writes an undated, version-code-named copy for F-Droid. It then
 updates `android-version.json` and the F-Droid build entry, makes a
-`Prepare vYY.MM.patch` commit, and tags that commit. The workflow builds a
-signed APK and attaches it as `cim-vYY.MM.patch.apk` to a GitHub Release for
+`Prepare vYYYY.MM.patch` commit, and tags that commit. The workflow builds a
+signed APK and attaches it as `cim-vYYYY.MM.patch.apk` to a GitHub Release for
 the tag. Sideload it directly, or use Obtainium as described above to track
 the releases page.
 
-Versions have the form `YY.MM.patch`. The script resets `patch` to `0` in a
+Versions have the form `YYYY.MM.patch`. The script resets `patch` to `0` in a
 new month and otherwise increments the latest tag's patch number. Android's
-integer `versionCode` uses two digits for the year since 2020, two for the
-month, three for the patch, and three for the development build. For example,
-`v26.07.3` has version code `607003000`.
+integer `versionCode` stores the year since 2020, followed by two digits for
+the month, two for the patch, and three for the development build. For example,
+`v2026.07.3` has version code `60703000`.
 
 The year is stored relative to 2020 because Android version codes cannot exceed
 `2100000000`; encoding the literal year would already exceed that limit. This
-layout allows 1,000 patches per month and 999 development builds per patch, and
-has enough year space through 2040.
+layout allows 100 patches per month and 999 development builds per patch, and
+has enough year space through 2229.
 
 For an installable development build, run the script with `--dev`. This keeps
-the current patch and increments `.devN`; `v26.07.3.dev0` has version code
-`607003001`, so it installs over `v26.07.3`. Development tags produce signed
+the current patch and increments `.devN`; `v2026.07.3.dev0` has version code
+`60703001`, so it installs over `v2026.07.3`. Development tags produce signed
 workflow artifacts rather than GitHub Releases. The next stable patch has a
 higher version code than all of its predecessor's development builds.
 

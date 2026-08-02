@@ -16,7 +16,7 @@ function metadataValue(name) {
   return match[1];
 }
 
-assert.match(version.versionName, /^\d{2}\.\d{2}\.\d+$/);
+assert.match(version.versionName, /^\d{4}\.\d{2}\.\d+$/);
 assert(Number.isSafeInteger(version.versionCode));
 assert.equal(
   Number(childProcess.execFileSync(

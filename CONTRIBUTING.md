@@ -59,7 +59,7 @@ entries in `NEWS.md` with the pending fragments.
 
 Stable Android release preparation consumes the fragments, moves their dated
 preview blocks into `NEWS.md` under an
-`Android Version vYY.MM.patch` heading and writes the same entries, without
+`Android Version vYYYY.MM.patch` heading and writes the same entries, without
 the individual dates, to Fastlane's version-specific F-Droid changelog. The
 `Web-only Preview` heading is omitted when there are no changes newer than the
 most recent Android release.

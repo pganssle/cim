@@ -134,10 +134,10 @@ function fdroid_changelog(preview) {
 }
 
 async function release_android(version, version_code) {
-    if (!/^\d{2}\.\d{2}\.\d+$/.test(version ?? "") ||
+    if (!/^\d{4}\.\d{2}\.\d+$/.test(version ?? "") ||
             !/^\d+$/.test(version_code ?? "")) {
         throw new Error(
-            "usage: update_changelog.mjs android YY.MM.PATCH VERSION_CODE");
+            "usage: update_changelog.mjs android YYYY.MM.PATCH VERSION_CODE");
     }
 
     const news = await readFile(NEWS_PATH, "utf8");
@@ -169,7 +169,7 @@ async function main() {
         await release_android(args[0], args[1]);
     } else {
         throw new Error(
-            "usage: update_changelog.mjs {build YYYY-MM-DD | web YYYY-MM-DD | android YY.MM.PATCH VERSION_CODE}");
+            "usage: update_changelog.mjs {build YYYY-MM-DD | web YYYY-MM-DD | android YYYY.MM.PATCH VERSION_CODE}");
     }
 }
 

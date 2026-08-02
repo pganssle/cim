@@ -20,9 +20,9 @@ RepoType: git
 Repo: https://github.com/pganssle/cim.git
 
 Builds:
-  - versionName: 26.08.0
-    versionCode: 608000000
-    commit: v26.08.0
+  - versionName: 2026.08.0
+    versionCode: 60800000
+    commit: v2026.08.0
     sudo:
       - apt-get update
       - apt-get install -y build-essential bundler ruby-dev xz-utils
@@ -48,8 +48,8 @@ Builds:
       - gradle assembleRelease -PcimVersionName=$$VERSION$$ -PcimVersionCode=$$VERCODE$$
 
 AutoUpdateMode: Version
-UpdateCheckMode: Tags ^v[0-9]{2}\.[0-9]{2}\.[0-9]+$
+UpdateCheckMode: Tags ^v[0-9]{4}\.[0-9]{2}\.[0-9]+$
 UpdateCheckData:
   android-version.json|"versionCode":\s*([0-9]+)|android-version.json|"versionName":\s*"([^"]+)"
-CurrentVersion: 26.08.0
-CurrentVersionCode: 608000000
+CurrentVersion: 2026.08.0
+CurrentVersionCode: 60800000

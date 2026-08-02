@@ -1,4 +1,4 @@
-## Android Version v26.08.0
+## Android Version v2026.08.0
 
 ### 2026-06-06
 - Fixed the stats history popup, which was too wide and required horizontal scrolling.

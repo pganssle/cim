@@ -17,12 +17,13 @@ assert_fails() {
     fi
 }
 
-assert_equal "$(version_code 26.07.3)" 607003000
-assert_equal "$(version_code v26.07.3.dev0)" 607003001
-assert_equal "$(version_code v26.07.3.dev998)" 607003999
+assert_equal "$(version_code 2026.07.3)" 60703000
+assert_equal "$(version_code v2026.07.3.dev0)" 60703001
+assert_equal "$(version_code v2026.07.3.dev998)" 60703999
+assert_equal "$(version_code v2229.12.99.dev998)" 2091299999
 
-for invalid in 1.2.3 26.00.0 26.13.0 26.07.1000 26.07.0.dev999 \
-        41.01.0 not-a-version; do
+for invalid in 1.2.3 26.07.3 2026.00.0 2026.13.0 2026.07.100 \
+        2026.07.0.dev999 2230.01.0 not-a-version; do
     assert_fails version_code "$invalid"
 done
 
@@ -35,10 +36,20 @@ git -C "$tmp" -c user.name=Test -c user.email=test@example.com \
     commit --quiet -m 'Initial commit'
 pushd "$tmp" > /dev/null
 
-year=$(date +%y)
+year=$(date +%Y)
 month=$(date +%m)
 assert_equal "$(next_version false)" "$year.$month.0"
 assert_equal "$(next_version true)" "$year.$month.0.dev0"
+
+cat > android-version.json <<EOF
+{
+  "versionName": "$year.$month.7",
+  "versionCode": 1
+}
+EOF
+assert_equal "$(next_version false)" "$year.$month.8"
+assert_equal "$(next_version true)" "$year.$month.7.dev0"
+rm android-version.json
 
 git tag "v$year.$month.3"
 assert_equal "$(next_version false)" "$year.$month.4"
@@ -57,16 +68,16 @@ cp "$OLDPWD/scripts/update_android_version.mjs" scripts/
 cp "$OLDPWD/scripts/update_changelog.mjs" scripts/
 cat > android-version.json <<'EOF'
 {
-  "versionName": "00.00.0",
+  "versionName": "2020.01.0",
   "versionCode": 1
 }
 EOF
 cat > fdroid/metadata/us.ganbar.cim.yml <<'EOF'
 Builds:
-  - versionName: 00.00.0
+  - versionName: 2020.01.0
     versionCode: 1
-    commit: v00.00.0
-CurrentVersion: 00.00.0
+    commit: v2020.01.0
+CurrentVersion: 2020.01.0
 CurrentVersionCode: 1
 EOF
 cat > NEWS.md <<'EOF'
@@ -75,7 +86,7 @@ cat > NEWS.md <<'EOF'
 ### 2099-12-31
 - Added a release test entry.
 
-## Android Version v00.00.0
+## Android Version v2020.01.0
 
 ### 2000-01-01
 - Added the original release.
