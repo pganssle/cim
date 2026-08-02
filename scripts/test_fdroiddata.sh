@@ -58,6 +58,11 @@ run_fdroid() {
         -v "$(realpath "$FDROIDSERVER_DIR"):/fdroidserver:ro" \
         -v "$tmp/config.yml:/repo/config.yml:ro" \
         -w /repo -e PYTHONPATH=/fdroidserver \
+        -e GIT_CONFIG_COUNT=2 \
+        -e GIT_CONFIG_KEY_0=safe.directory \
+        -e GIT_CONFIG_VALUE_0=/repo \
+        -e GIT_CONFIG_KEY_1=safe.directory \
+        -e 'GIT_CONFIG_VALUE_1=/repo/*' \
         "$BUILD_IMAGE" python3 -m fdroidserver "$@"
 }
 
@@ -107,6 +112,11 @@ case ${1:-lint} in
             -v "$tmp/config.yml:/repo/config.yml:ro" \
             -v "$SIGNED_APK:/signed.apk:ro" \
             -w /repo -e PYTHONPATH=/fdroidserver \
+            -e GIT_CONFIG_COUNT=2 \
+            -e GIT_CONFIG_KEY_0=safe.directory \
+            -e GIT_CONFIG_VALUE_0=/repo \
+            -e GIT_CONFIG_KEY_1=safe.directory \
+            -e 'GIT_CONFIG_VALUE_1=/repo/*' \
             "$BUILD_IMAGE" python3 -c \
             'import sys, tempfile; from fdroidserver import common; common.config = common.read_config(); tmp = tempfile.TemporaryDirectory(); result = common.verify_apks(sys.argv[1], sys.argv[2], tmp.name); print(result or "F-Droid APK matches the signed release APK"); raise SystemExit(bool(result))' \
             /signed.apk "/repo/unsigned/${APP_ID}_${VERSION_CODE}.apk"
