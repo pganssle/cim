@@ -74,6 +74,9 @@ case ${1:-lint} in
     build)
         [[ $# -le 2 ]] || { usage; exit 2; }
         readonly SOURCE_COMMIT=${2:-$(git rev-parse HEAD)}
+        if ! git cat-file -e "$SOURCE_COMMIT^{commit}" 2>/dev/null; then
+            git fetch --no-tags --depth=1 origin "$SOURCE_COMMIT"
+        fi
         sed -i "s/^    commit: .*/    commit: $SOURCE_COMMIT/" "$METADATA"
         source_date=$(git show -s --format=%cI "$SOURCE_COMMIT")
         git -C "$FDROIDDATA_DIR" add "metadata/$APP_ID.yml"
