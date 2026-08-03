@@ -90,7 +90,7 @@ test-fdroiddata-lint: test-fdroid-metadata
 
 .PHONY: test-fdroiddata
 test-fdroiddata: test-fdroid-metadata
-	./scripts/test_fdroiddata.sh build "$$(git rev-parse HEAD)"
+	./scripts/test_fdroiddata.sh build "$${FDROID_GIT_COMMIT:-$$(git rev-parse HEAD)}"
 
 .PHONY: test
 test: test-fdroid-metadata test-e2e
