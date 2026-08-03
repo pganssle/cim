@@ -62,7 +62,7 @@ run_fdroid() {
         -e GIT_CONFIG_KEY_0=safe.directory \
         -e GIT_CONFIG_VALUE_0=/repo \
         -e GIT_CONFIG_KEY_1=safe.directory \
-        -e 'GIT_CONFIG_VALUE_1=/repo/*' \
+        -e "GIT_CONFIG_VALUE_1=/repo/build/$APP_ID" \
         "$BUILD_IMAGE" python3 -m fdroidserver "$@"
 }
 
@@ -73,9 +73,15 @@ case ${1:-lint} in
         ;;
     build)
         [[ $# -le 2 ]] || { usage; exit 2; }
-        if [[ -n ${2:-} ]]; then
-            sed -i "s/^    commit: .*/    commit: $2/" "$METADATA"
-        fi
+        readonly SOURCE_COMMIT=${2:-$(git rev-parse HEAD)}
+        sed -i "s/^    commit: .*/    commit: $SOURCE_COMMIT/" "$METADATA"
+        source_date=$(git show -s --format=%cI "$SOURCE_COMMIT")
+        git -C "$FDROIDDATA_DIR" add "metadata/$APP_ID.yml"
+        GIT_AUTHOR_DATE=$source_date GIT_COMMITTER_DATE=$source_date \
+            git -C "$FDROIDDATA_DIR" \
+                -c user.name='CIM F-Droid test' \
+                -c user.email='test@example.com' \
+                commit --quiet -m "Test $APP_ID metadata"
         # The upstream APK does not exist until the release job completes.
         # Build it first, then compare it with the signed APK in `verify`.
         sed -i '/^Binaries:/d; /^AllowedAPKSigningKeys:/d' "$METADATA"
@@ -116,7 +122,7 @@ case ${1:-lint} in
             -e GIT_CONFIG_KEY_0=safe.directory \
             -e GIT_CONFIG_VALUE_0=/repo \
             -e GIT_CONFIG_KEY_1=safe.directory \
-            -e 'GIT_CONFIG_VALUE_1=/repo/*' \
+            -e "GIT_CONFIG_VALUE_1=/repo/build/$APP_ID" \
             "$BUILD_IMAGE" python3 -c \
             'import sys, tempfile; from fdroidserver import common; common.config = common.read_config(); tmp = tempfile.TemporaryDirectory(); result = common.verify_apks(sys.argv[1], sys.argv[2], tmp.name); print(result or "F-Droid APK matches the signed release APK"); raise SystemExit(bool(result))' \
             /signed.apk "/repo/unsigned/${APP_ID}_${VERSION_CODE}.apk"
