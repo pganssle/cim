@@ -112,6 +112,35 @@ if grep -q 'Web-only Preview' NEWS.md; then
     exit 1
 fi
 grep -q "^## Android Version v$year.$month.4$" NEWS.md
+
+released_head=$(git rev-parse HEAD)
+released_news=$(cat NEWS.md)
+if empty_release_output=$(printf '\n' | create_tag false 2>&1); then
+    echo 'error: empty release unexpectedly proceeded without confirmation' >&2
+    exit 1
+fi
+grep -q "warning: there are no changelog entries to include in v$year.$month.5" \
+    <<< "$empty_release_output"
+grep -q 'Create the release anyway? \[y/N\]' <<< "$empty_release_output"
+assert_equal "$(git rev-parse HEAD)" "$released_head"
+assert_equal "$(node -p "require('./android-version.json').versionName")" \
+    "$year.$month.4"
+if git tag --list "v$year.$month.5" | grep -q .; then
+    echo 'error: declining an empty release still created its tag' >&2
+    exit 1
+fi
+
+printf 'y\n' | create_tag false > /dev/null 2>&1
+assert_equal "$(git tag --points-at HEAD)" "v$year.$month.5"
+assert_equal "$(node -p "require('./android-version.json').versionName")" \
+    "$year.$month.5"
+assert_equal "$(git log -1 --format=%s)" "Prepare v$year.$month.5"
+assert_equal "$(cat NEWS.md)" "$released_news"
+empty_code=$(version_code "$year.$month.5")
+if [[ -e fastlane/metadata/android/en-US/changelogs/$empty_code.txt ]]; then
+    echo 'error: empty release created an F-Droid changelog' >&2
+    exit 1
+fi
 popd > /dev/null
 
 echo 'Version tagging tests passed'

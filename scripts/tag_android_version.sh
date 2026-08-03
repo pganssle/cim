@@ -119,6 +119,23 @@ next_version() {
     echo "$name"
 }
 
+confirm_empty_release() {
+    local version=$1
+    local response
+    echo "warning: there are no changelog entries to include in v$version" >&2
+    printf 'Create the release anyway? [y/N] ' >&2
+    if ! IFS= read -r response; then
+        response=
+    fi
+    case $response in
+        y|Y) return 0 ;;
+        *)
+            echo "Aborted v$version" >&2
+            return 1
+            ;;
+    esac
+}
+
 create_tag() {
     local dev=$1
     if [[ -n $(git status --porcelain) ]]; then
@@ -132,12 +149,28 @@ create_tag() {
     code=$(version_code "$version")
 
     if [[ $dev == false ]]; then
+        local allow_empty=()
+        local pending
+        pending=$(node scripts/update_changelog.mjs pending)
+        case $pending in
+            true) ;;
+            false)
+                confirm_empty_release "$version" || return 1
+                allow_empty=(--allow-empty)
+                ;;
+            *)
+                echo "error: could not determine whether changelog entries are pending" >&2
+                return 1
+                ;;
+        esac
+
         node scripts/update_changelog.mjs web "$(date +%F)"
-        node scripts/update_changelog.mjs android "$version" "$code"
+        node scripts/update_changelog.mjs android "$version" "$code" \
+            "${allow_empty[@]}"
         node scripts/update_android_version.mjs "$version" "$code"
         git add -A -- NEWS.md changelog.d android-version.json \
             fdroid/metadata/us.ganbar.cim.yml \
-            "fastlane/metadata/android/en-US/changelogs/$code.txt"
+            fastlane/metadata/android/en-US/changelogs
         if ! git diff --cached --quiet; then
             git commit -m "Prepare v$version"
         fi

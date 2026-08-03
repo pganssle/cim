@@ -30,7 +30,11 @@ test("web changelog entries appear only when fragments are pending", async ({}, 
         await writeFile(join(worktree, "changelog.d", "README"), "Contributor instructions.");
         await writeFile(join(worktree, "NEWS.md"), released_news);
 
-        let result = run_changelog(worktree, "build", "2099-12-31");
+        let result = run_changelog(worktree, "pending");
+        expect(result.status, result.stderr || result.stdout).toBe(0);
+        expect(result.stdout.trim()).toBe("false");
+
+        result = run_changelog(worktree, "build", "2099-12-31");
         expect(result.status, result.stderr || result.stdout).toBe(0);
         await expect(readFile(join(worktree, "NEWS.md"), "utf8"))
             .resolves.toBe(released_news);
@@ -41,6 +45,10 @@ test("web changelog entries appear only when fragments are pending", async ({}, 
 
         await writeFile(join(worktree, "changelog.d", "first.md"), "Added the first change.");
         await writeFile(join(worktree, "changelog.d", "second.md"), "Fixed the second change.");
+        result = run_changelog(worktree, "pending");
+        expect(result.status, result.stderr || result.stdout).toBe(0);
+        expect(result.stdout.trim()).toBe("true");
+
         result = run_changelog(worktree, "build", "2099-12-31");
         expect(result.status, result.stderr || result.stdout).toBe(0);
 
@@ -87,6 +95,10 @@ ${released_news}`);
         expect(news).toContain("### 2099-12-01");
         expect(news.indexOf("Android Version v2099.12.3"))
             .toBeLessThan(news.indexOf("Android Version v2025.01.0"));
+
+        const pending = run_changelog(worktree, "pending");
+        expect(pending.status, pending.stderr || pending.stdout).toBe(0);
+        expect(pending.stdout.trim()).toBe("false");
 
         const fdroid = await readFile(join(worktree,
             "fastlane/metadata/android/en-US/changelogs/123456.txt"), "utf8");

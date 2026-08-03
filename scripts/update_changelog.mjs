@@ -47,6 +47,16 @@ async function fragment_files() {
         .map((entry) => join(FRAGMENTS_DIRECTORY, entry));
 }
 
+async function has_pending_entries() {
+    if ((await fragment_files()).length !== 0) {
+        return true;
+    }
+
+    const news = await readFile(NEWS_PATH, "utf8");
+    const { preview } = split_preview(news);
+    return preview?.split("\n").some((line) => line.startsWith("- ")) ?? false;
+}
+
 function format_fragment(fragment, path) {
     const text = fragment.trim();
     if (!text) {
@@ -133,7 +143,7 @@ function fdroid_changelog(preview) {
     return `${included.join("\n")}\n`;
 }
 
-async function release_android(version, version_code) {
+async function release_android(version, version_code, allow_empty) {
     if (!/^\d{4}\.\d{2}\.\d+$/.test(version ?? "") ||
             !/^\d+$/.test(version_code ?? "")) {
         throw new Error(
@@ -143,6 +153,9 @@ async function release_android(version, version_code) {
     const news = await readFile(NEWS_PATH, "utf8");
     const { preview, released } = split_preview(news);
     if (!preview) {
+        if (allow_empty) {
+            return;
+        }
         throw new Error("There are no Web-only Preview entries to release");
     }
 
@@ -161,15 +174,19 @@ async function release_android(version, version_code) {
 
 async function main() {
     const [command, ...args] = process.argv.slice(2);
-    if (command === "web" && args.length === 1) {
+    if (command === "pending" && args.length === 0) {
+        console.log(await has_pending_entries() ? "true" : "false");
+    } else if (command === "web" && args.length === 1) {
         await release_web(args[0]);
     } else if (command === "build" && args.length === 1) {
         await build_web(args[0]);
-    } else if (command === "android" && args.length === 2) {
-        await release_android(args[0], args[1]);
+    } else if (command === "android" &&
+            (args.length === 2 ||
+             (args.length === 3 && args[2] === "--allow-empty"))) {
+        await release_android(args[0], args[1], args[2] === "--allow-empty");
     } else {
         throw new Error(
-            "usage: update_changelog.mjs {build YYYY-MM-DD | web YYYY-MM-DD | android YYYY.MM.PATCH VERSION_CODE}");
+            "usage: update_changelog.mjs {pending | build YYYY-MM-DD | web YYYY-MM-DD | android YYYY.MM.PATCH VERSION_CODE [--allow-empty]}");
     }
 }
 
