@@ -1,3 +1,9 @@
+## Android Version v2026.08.1
+
+### 2026-08-02
+
+- Made the statistics history popup taller so more sessions are visible at once.
+
 ## Android Version v2026.08.0
 
 ### 2026-06-06

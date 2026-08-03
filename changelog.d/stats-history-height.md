@@ -1,1 +1,0 @@
-Made the statistics history popup taller so more sessions are visible at once.
