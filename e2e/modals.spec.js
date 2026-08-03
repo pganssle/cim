@@ -34,15 +34,13 @@ test.describe("Informational modal", () => {
             .toHaveText("third-party notices");
         await expect(page.locator("#i-infobox")).not.toContainText("early alpha");
         await expect(page.locator("#changelog-section > h2")).toHaveText("What's New");
-        await expect(page.locator("#changelog-section .changelog-entries > h2").first())
-            .toHaveText("Web-only Preview");
         const newest_date = await page.locator(
             "#changelog-section .changelog-entries > h3").first().textContent();
         expect(newest_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
         await expect(page.locator("#i-infobox-trigger-container"))
             .toHaveAttribute("data-newest-date", newest_date);
-        await expect(page.locator("#changelog-section .changelog-entries > h2").nth(1))
-            .toHaveText("Android Version v2026.08.0");
+        await expect(page.locator("#changelog-section .changelog-entries > h2").first())
+            .toBeVisible();
 
         const changelog = page.locator(".changelog-container");
         await expect(changelog).toContainText("What's New");

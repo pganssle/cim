@@ -34,8 +34,10 @@ test("web changelog entries appear only when fragments are pending", async ({}, 
         expect(result.status, result.stderr || result.stdout).toBe(0);
         await expect(readFile(join(worktree, "NEWS.md"), "utf8"))
             .resolves.toBe(released_news);
-        await expect(readFile(join(worktree, "_includes/news.md"), "utf8"))
-            .resolves.toBe(released_news);
+        const released_build = await readFile(
+            join(worktree, "_includes/news.md"), "utf8");
+        expect(released_build).toBe(released_news);
+        expect(released_build).not.toContain("Web-only Preview");
 
         await writeFile(join(worktree, "changelog.d", "first.md"), "Added the first change.");
         await writeFile(join(worktree, "changelog.d", "second.md"), "Fixed the second change.");
