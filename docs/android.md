@@ -215,6 +215,12 @@ release appears after pushing the tag, check the corresponding `Android APK`
 workflow run. A failed prerequisite stops the job before it builds, signs, or
 publishes the APK.
 
+To exercise the stable release path before tagging, apply the
+`test-android-release` label to a same-repository pull request. The labeled run
+builds the F-Droid recipe, signs the release APK, verifies reproducibility, and
+uploads the signed APK as a workflow artifact. It deliberately does not create
+a GitHub Release. Subsequent pushes repeat the test while the label remains.
+
 Versions have the form `YYYY.MM.patch`. The script resets `patch` to `0` in a
 new month and otherwise increments the latest tag's patch number. Android's
 integer `versionCode` stores the year since 2020, followed by two digits for

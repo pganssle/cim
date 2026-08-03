@@ -5,8 +5,9 @@
 #   GitHub Release for the tag.
 # - Development tags: build a signed APK and upload it as an artifact.
 # - workflow_dispatch: build an unsigned debug APK.
-# - Pull requests touching the Android build: build an unsigned debug
-#   APK as a smoke test and upload it as a workflow artifact.
+# - Pull requests touching the Android build: build an unsigned debug APK.
+#   Applying the test-android-release label instead runs the signed stable
+#   release path without creating a GitHub Release.
 name: Android APK
 
 on:
@@ -16,6 +17,7 @@ on:
   workflow_dispatch:
 
   pull_request:
+    types: [opened, reopened, synchronize, labeled]
     paths:
       - "_data/theme.json"
       - "_config.yml"
@@ -51,6 +53,11 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TEST: >-
+        ${{ github.event_name == 'pull_request' &&
+            github.event.pull_request.head.repo.full_name == github.repository &&
+            contains(github.event.pull_request.labels.*.name, 'test-android-release') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -89,7 +96,9 @@ jobs:
         run: make test-android-reproducible
 
       - name: Test F-Droid build recipe
-        if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '.dev')
+        if: >-
+          (startsWith(github.ref, 'refs/tags/v') &&
+           !contains(github.ref_name, '.dev')) || env.RELEASE_TEST == 'true'
         run: make test-fdroiddata
 
       - name: Enable KVM
@@ -100,10 +109,14 @@ jobs:
 
       # --- Pull requests and manual runs: unsigned debug APK ---
       - name: Build debug APK
-        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+        if: >-
+          (github.event_name == 'pull_request' && env.RELEASE_TEST != 'true') ||
+          github.event_name == 'workflow_dispatch'
         run: cd android && ./gradlew assembleDebug
       - name: Upload debug APK
-        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+        if: >-
+          (github.event_name == 'pull_request' && env.RELEASE_TEST != 'true') ||
+          github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: cim-debug-apk
@@ -111,7 +124,7 @@ jobs:
 
       # --- Tags: signed APK ---
       - name: Decode keystore
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') || env.RELEASE_TEST == 'true'
         run: echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/cim-release.jks"
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -120,29 +133,33 @@ jobs:
       # Pinning only the signer leaves compilation on the current SDK while
       # allowing F-Droid to publish our verified, upstream-signed APK.
       - name: Install reproducible APK signer
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') || env.RELEASE_TEST == 'true'
         uses: android-actions/setup-android@v4
         with:
           packages: 'build-tools;34.0.0'
 
-      - name: Compute version from tag
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Compute release version
+        if: startsWith(github.ref, 'refs/tags/v') || env.RELEASE_TEST == 'true'
         id: version
         run: |
-          NAME="${GITHUB_REF_NAME#v}"
+          if [[ $GITHUB_REF == refs/tags/v* ]]; then
+            NAME="${GITHUB_REF_NAME#v}"
+          else
+            NAME=$(node -p "require('./android-version.json').versionName")
+          fi
           CODE=$(./scripts/tag_android_version.sh --version-code "$NAME")
           echo "name=$NAME" >> "$GITHUB_OUTPUT"
           echo "code=$CODE" >> "$GITHUB_OUTPUT"
 
       - name: Build unsigned release APK
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') || env.RELEASE_TEST == 'true'
         run: |
           cd android && ./gradlew assembleRelease \
             -PcimVersionName='${{ steps.version.outputs.name }}' \
             -PcimVersionCode='${{ steps.version.outputs.code }}'
 
       - name: Sign release APK
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') || env.RELEASE_TEST == 'true'
         run: |
           SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
           "$SDK/build-tools/34.0.0/apksigner" sign \
@@ -150,7 +167,7 @@ jobs:
             --ks-pass env:KEYSTORE_PASSWORD \
             --ks-key-alias "$KEY_ALIAS" \
             --key-pass env:KEY_PASSWORD \
-            --out "cim-${GITHUB_REF_NAME}.apk" \
+            --out "cim-v${{ steps.version.outputs.name }}.apk" \
             android/app/build/outputs/apk/release/app-release-unsigned.apk
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -158,8 +175,17 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Verify F-Droid reproducibility
-        if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '.dev')
-        run: ./scripts/test_fdroiddata.sh verify "cim-${GITHUB_REF_NAME}.apk"
+        if: >-
+          (startsWith(github.ref, 'refs/tags/v') &&
+           !contains(github.ref_name, '.dev')) || env.RELEASE_TEST == 'true'
+        run: ./scripts/test_fdroiddata.sh verify "cim-v${{ steps.version.outputs.name }}.apk"
+
+      - name: Upload release-test APK
+        if: env.RELEASE_TEST == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cim-release-test-apk
+          path: cim-*.apk
 
       - name: Upload development APK artifact
         if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '.dev')
