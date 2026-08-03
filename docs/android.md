@@ -210,6 +210,11 @@ signed APK and attaches it as `cim-vYYYY.MM.patch.apk` to a GitHub Release for
 the tag. Sideload it directly, or use Obtainium as described above to track
 the releases page.
 
+If there are no pending changelog entries, the script warns and asks for
+confirmation before proceeding. An empty release updates the version metadata
+and creates the tag, but does not add an empty section to `NEWS.md` or create
+an empty F-Droid changelog file.
+
 The tag workflow creates the GitHub Release; don't create one manually. If no
 release appears after pushing the tag, check the corresponding `Android APK`
 workflow run. A failed prerequisite stops the job before it builds, signs, or
