@@ -1,10 +1,16 @@
 --- a/app/src/main/java/us/ganbar/cim/MainActivity.java
 +++ b/app/src/main/java/us/ganbar/cim/MainActivity.java
-@@ -1,5 +1,16 @@
+@@ -1,5 +1,50 @@
  package us.ganbar.cim;
  
 +import android.os.Bundle;
 +import android.view.WindowManager;
++
++import androidx.core.graphics.Insets;
++import androidx.core.view.ViewCompat;
++import androidx.core.view.WindowCompat;
++import androidx.core.view.WindowInsetsCompat;
++import androidx.core.view.WindowInsetsControllerCompat;
 +
  import com.getcapacitor.BridgeActivity;
  
@@ -16,5 +22,33 @@
 +        // Training sessions are listen-only for long stretches; don't let the
 +        // screen turn off mid-exercise.
 +        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
++
++        configureSystemBars();
++    }
++
++    static boolean shouldHideNavigationBar(WindowInsetsCompat windowInsets) {
++        // A nonzero tappable bottom inset identifies three-button navigation.
++        Insets tappableInsets =
++                windowInsets.getInsetsIgnoringVisibility(
++                        WindowInsetsCompat.Type.tappableElement());
++        return tappableInsets.bottom == 0;
++    }
++
++    private void configureSystemBars() {
++        WindowInsetsControllerCompat controller =
++                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
++
++        ViewCompat.setOnApplyWindowInsetsListener(
++                getWindow().getDecorView(),
++                (view, windowInsets) -> {
++                    controller.hide(WindowInsetsCompat.Type.statusBars());
++                    if (shouldHideNavigationBar(windowInsets)) {
++                        controller.hide(WindowInsetsCompat.Type.navigationBars());
++                    } else {
++                        controller.show(WindowInsetsCompat.Type.navigationBars());
++                    }
++                    return windowInsets;
++                });
++        ViewCompat.requestApplyInsets(getWindow().getDecorView());
 +    }
 +}
