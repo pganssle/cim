@@ -1,3 +1,9 @@
+## Android Version v2026.08.2
+
+### 2026-08-05
+
+- On Android, the app now hides the status bar while keeping three-button navigation controls visible.
+
 ## Android Version v2026.08.1
 
 ### 2026-08-02
